@@ -5,16 +5,19 @@ import {
   Between,
   In,
   Equal,
+  FindOptionsOrder,
 } from 'typeorm';
 
-type GenericOrder<T> = Partial<Record<keyof T, 'asc' | 'desc'>>;
-type DateRange = [string | Date, string | Date];
+type DateInput = string | Date;
+type DateRange = [DateInput, DateInput];
+type RelationKey<T> = Extract<keyof T, string>;
+type DateLike = string | number | Date;
 
 type BuildFindOptionsInput<T> = {
   search?: string;
   filter?: Partial<Record<keyof T, any>>;
-  order?: GenericOrder<T>;
-  includes?: (keyof T)[];
+  order?: FindOptionsOrder<T>;
+  includes?: RelationKey<T>[];
   searchField?: keyof T; // campo usado para busca textual
   page?: number;
   pageSize?: number;
@@ -63,10 +66,10 @@ export function buildFindOptions<T>(
         } else {
           where[typedKey] = In(value) as any;
         }
-      } else if (isDate(value)) {
-        where[typedKey] = Equal(new Date(value)) as any;
+      } else if (isDateLike(value)) {
+        where[typedKey] = Equal(toDate(value)) as any;
       } else {
-        where[typedKey] = value;
+        where[typedKey] = value as any;
       }
     }
   }
@@ -83,12 +86,24 @@ export function buildFindOptions<T>(
   return options;
 }
 
+function isDateLike(v: unknown): v is DateLike {
+  if (v instanceof Date) return !Number.isNaN(v.getTime());
+  if (typeof v === 'string' || typeof v === 'number') {
+    return !Number.isNaN(new Date(v).getTime());
+  }
+  return false;
+}
+
 function isDate(value: any): boolean {
   return (
     typeof value === 'string' &&
     !isNaN(Date.parse(value)) &&
-    value.match(/^\d{4}-\d{2}-\d{2}/)
+    /^\d{4}-\d{2}-\d{2}$/.test(value)
   );
+}
+
+function toDate(v: DateLike): Date {
+  return v instanceof Date ? v : new Date(v);
 }
 
 function isDateRange(value: any): value is DateRange {
