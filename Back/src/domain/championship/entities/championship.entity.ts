@@ -1,4 +1,3 @@
-import { Bracket } from 'src/domain/bracket/entities/bracket.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('championship')
@@ -23,7 +22,4 @@ export class Championship {
 
   @Column({ name: 'description' })
   description: string;
-
-  @OneToMany(() => Bracket, (bracket) => bracket.championship)
-  brackets: Bracket[];
 }

@@ -1,0 +1,80 @@
+Modalidade por equipe: Critérios :
+-  Será dividido por pesos diferente e faixa, categorias de até 10 danos e 10 anos em diante
+- As equipes serão formadas pelos proprios alunos
+- Cadastras as equipes
+- Cadastro de atletas via Form google
+- Exportar cadastro dos atletas em um csv
+- Pesagem:
+    - Busca por atleta para  confirmar pesagem
+    - Margem de aceitação 200g
+    - Se um atleta estiver acima do peso, o mesmo será desclassificado
+    - Adicionar o peso real que foi aferido no momento da pesagem
+    - Cadastro de equipes de acordo com os atletas cadastrados
+
+- Gerenciar lutas por equipe
+    - Iniciar uma luta
+    - Finalizar uma luta
+    - escolher vencedor
+    - Salvar resultados das lutas individual  de cada atleta de cada equipe
+
+- Gerenciar resultado de cada luta
+    - Controlar qual equipe tem mais vitória em um competição melhor de tres
+
+- Relatório de lutas por area (distribuir lutas de acordo com areas)(quantidade de areas de lutas variavel)
+    - Ao distribuir as lutas dividir categorias até 10 anos em uma area 1 e de 10 em diante na area 2 por exemplo
+    - As lutas por equipe devem iniciar e terminar na mesma area
+- Distribuição por area disponível
+- Adicionar tempo de descanso por atleta, 2 lutas
+
+- Integrar com placar
+ - Adicionar nome dos atletas
+ - Adicionar animação com o nome do  atleta e cor de fundo no qual representa o atleta
+ - Botao para selecionar vencedor
+ - Marcar ganhador, se acaso, for vencido por pontos
+
+
+ - Dashboard para acompanhar em tempo real as lutas
+  - mostrar lutas em andamento
+  - mostrar lutas que estão aguardando
+  - mostrar proxima luta,
+  - deve mostrar nome dos atletas e qual a area que sera a luta
+
+
+
+
+----------------------------------------
+
+GP Absoluto
+
+
+Lutas de 6 min. Em caso de empate vai para golden score
+Faixas: Branca, Azul e Roxa, Marrom
+
+
+- Cadastro de atletas pelo form
+
+- Separar por categoria até 80 kg e acima de 80 kg
+- Gerar chaves de lutas
+ - Se for 2 atletas na chave, será melhor de 3
+- Se for 3 atletas, será todos contra todos com critério de desempate, se foi por finalização, golden score ou pontuação, ou por punição do adversario
+- Se for mais que 3 atletas deve ser definido uma chave olimpica
+
+
+------------------------------------------------------------------
+
+
+
+
+
+
+- Fazer uma rede local
+
+-----
+
+usuarios padrão:
+
+usuario / senha
+staff / staff123
+mesa / mesa123
+publico / publico123
+organizacao / organizacao123

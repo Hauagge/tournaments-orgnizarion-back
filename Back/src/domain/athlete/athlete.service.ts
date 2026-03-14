@@ -1,15 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Athlete } from './entities/athlete.entity';
 import { ListAthletesDTO } from './dto/list-athletes.dto';
-import { AthleteRepository } from './repository/athlete.repository';
+import { IAthleteRepository } from './repository/IAthleteRepository.repository';
 import { CreateAthleteDTO } from './dto/create-athlete.dto';
 import { generateSubscriptionNumber } from 'src/core/helper/genarate-number.helper';
 
-type AthleteSlot = 'athlete1Id' | 'athlete2Id';
-
 @Injectable()
 export class AthleteService {
-  constructor(private readonly repo: AthleteRepository) {}
+  constructor(private readonly repo: IAthleteRepository) {}
 
   async create(data: CreateAthleteDTO) {
     const subscriptionNumber = await generateSubscriptionNumber();
@@ -31,11 +29,11 @@ export class AthleteService {
     }
     athlete.weighInConfirmed = true;
     athlete.eligible = eligible;
-    return this.repo.update(id, athlete);
+    return this.repo.updateAthlete(id, athlete);
   }
 
   async setAthleteOnBrackets(athlete: Athlete) {
-    await this.repo.update(athlete.id, athlete);
+    await this.repo.updateAthlete(athlete.id, athlete);
     return athlete;
   }
 

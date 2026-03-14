@@ -1,4 +1,3 @@
-import { Bracket } from 'src/domain/bracket/entities/bracket.entity';
 import {
   Column,
   Entity,
@@ -23,10 +22,6 @@ export class Fight {
 
   @Column({ name: 'winner_id' })
   winnerId: number;
-
-  @ManyToOne(() => Bracket, (bracket) => bracket.fights)
-  @JoinColumn({ name: 'bracket_id', referencedColumnName: 'id' })
-  bracket: Bracket;
 
   @Column({ name: 'athlete1_score' })
   athlete1Score: number;
