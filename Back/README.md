@@ -26,6 +26,26 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Architecture
+
+The project follows a modular architecture standard documented in
+[ARCHITECTURE.md](./ARCHITECTURE.md).
+
+New and refactored modules should follow this structure:
+
+```text
+domain/
+application/
+infra/
+```
+
+With global support areas in:
+
+```text
+shared/
+database/
+```
+
 ## Project setup
 
 ```bash
