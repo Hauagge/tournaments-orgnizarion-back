@@ -1,4 +1,4 @@
-import { Fight } from '../../../src/domain/fight/entities/fight.entinty';
+import { Fight } from '../../../src/domain/fight/entities/fight.typeorm-entity';
 import { makeFight } from '../../factories';
 
 export class InMemoryFightRepository {
@@ -33,4 +33,3 @@ export class InMemoryFightRepository {
     return [...this.fights];
   }
 }
-

@@ -1,19 +1,17 @@
-import { Athlete } from '../../src/domain/athlete/entities/athlete.entity';
+import { Athlete } from '../../src/domain/athlete/domain/entities/athlete.entity';
 
-export function makeAthlete(overrides: Partial<Athlete> = {}): Athlete {
-  return {
+export function makeAthlete(
+  overrides: Partial<ReturnType<Athlete['toJSON']>> = {},
+): Athlete {
+  return Athlete.restore({
     id: 1,
-    name: 'Athlete Test',
-    age: 16,
-    weight: 60,
-    beltId: 1,
-    categoryId: 1,
-    weighInConfirmed: false,
-    eligible: null,
-    fightBracketId: null,
-    tutor: 'Tutor Test',
-    subscriptionNumber: 'SUB-0001',
+    competitionId: 1,
+    fullName: 'Athlete Test',
+    birthDate: new Date('2010-05-10T00:00:00.000Z'),
+    belt: 'white',
+    declaredWeightGrams: 50000,
+    teamId: 3,
+    createdAt: new Date('2026-01-10T00:00:00.000Z'),
     ...overrides,
-  };
+  });
 }
-

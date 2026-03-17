@@ -1,5 +1,5 @@
 import { AuthRole } from '../../src/domain/auth/auth-role.enum';
-import { User } from '../../src/domain/auth/entities/user.entity';
+import { User } from '../../src/domain/auth/entities/user.typeorm-entity';
 
 export function makeUser(overrides: Partial<User> = {}): User {
   return {
@@ -10,4 +10,3 @@ export function makeUser(overrides: Partial<User> = {}): User {
     ...overrides,
   };
 }
-

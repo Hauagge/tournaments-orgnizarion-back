@@ -1,4 +1,4 @@
-import { Championship } from '../../../src/domain/championship/entities/championship.entity';
+import { Championship } from '../../../src/domain/championship/entities/championship.typeorm-entity';
 import { makeChampionship } from '../../factories';
 
 export class InMemoryChampionshipRepository {
@@ -34,4 +34,3 @@ export class InMemoryChampionshipRepository {
     return [...this.championships];
   }
 }
-

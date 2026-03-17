@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeCompetition } from '../../../../../test/factories';
 import { NotFoundError } from '../../../../shared/errors/not-found.error';
 import { CompetitionRepository } from './competition.repository';
-import { CompetitionTypeOrmEntity } from './entities/competition.entity';
+import { CompetitionTypeOrmEntity } from './entities/competition.typeorm-entity';
 
 describe('CompetitionRepository', () => {
   const ormEntity: CompetitionTypeOrmEntity = {

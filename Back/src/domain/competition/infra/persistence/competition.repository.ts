@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { NotFoundError } from 'src/shared/errors/not-found.error';
 import { Competition } from '../../domain/entities/competition.entity';
 import { ICompetitionRepository } from '../../repository/ICompetitionRepository.repository';
-import { CompetitionTypeOrmEntity } from './entities/competition.entity';
+import { CompetitionTypeOrmEntity } from './entities/competition.typeorm-entity';
 import { CompetitionMapper } from './mappers/competition.mapper';
 
 @Injectable()

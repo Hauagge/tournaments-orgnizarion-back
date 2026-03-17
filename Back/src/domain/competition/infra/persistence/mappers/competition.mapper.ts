@@ -1,5 +1,5 @@
 import { Competition } from '../../../domain/entities/competition.entity';
-import { CompetitionTypeOrmEntity } from '../entities/competition.entity';
+import { CompetitionTypeOrmEntity } from '../entities/competition.typeorm-entity';
 
 export class CompetitionMapper {
   static toDomain(entity: CompetitionTypeOrmEntity): Competition {

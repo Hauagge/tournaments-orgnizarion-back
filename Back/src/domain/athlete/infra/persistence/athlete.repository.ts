@@ -1,0 +1,68 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ILike, Repository } from 'typeorm';
+import { NotFoundError } from '@/shared/errors/not-found.error';
+import { Athlete } from '../../domain/entities/athlete.entity';
+import { IAthleteRepository } from '../../repository/IAthleteRepository.repository';
+import { AthleteTypeOrmEntity } from './entities/athlete.typeorm-entity';
+import { AthleteMapper } from './mappers/athlete.mapper';
+
+@Injectable()
+export class AthleteRepository implements IAthleteRepository {
+  constructor(
+    @InjectRepository(AthleteTypeOrmEntity)
+    private readonly repository: Repository<AthleteTypeOrmEntity>,
+  ) {}
+
+  async create(athlete: Athlete): Promise<Athlete> {
+    const entity = this.repository.create(AthleteMapper.toPersistence(athlete));
+    const savedEntity = await this.repository.save(entity);
+    return AthleteMapper.toDomain(savedEntity);
+  }
+
+  async update(athlete: Athlete): Promise<Athlete> {
+    await this.repository.update(athlete.id as number, {
+      fullName: athlete.fullName,
+      birthDate: athlete.birthDate,
+      belt: athlete.belt,
+      declaredWeightGrams: athlete.declaredWeightGrams,
+      teamId: athlete.teamId,
+    });
+
+    const updatedEntity = await this.repository.findOneBy({
+      id: athlete.id as number,
+    });
+
+    if (!updatedEntity) {
+      throw new NotFoundError(`Athlete with id ${athlete.id as number} not found`);
+    }
+
+    return AthleteMapper.toDomain(updatedEntity);
+  }
+
+  async findById(id: number): Promise<Athlete | null> {
+    const entity = await this.repository.findOneBy({ id });
+    return entity ? AthleteMapper.toDomain(entity) : null;
+  }
+
+  async search(input: {
+    competitionId: number;
+    query?: string;
+    teamId?: number;
+  }): Promise<Athlete[]> {
+    const where = {
+      competitionId: input.competitionId,
+      ...(input.query ? { fullName: ILike(`%${input.query.trim()}%`) } : {}),
+      ...(input.teamId !== undefined ? { teamId: input.teamId } : {}),
+    };
+
+    const entities = await this.repository.find({
+      where,
+      order: {
+        fullName: 'ASC',
+      },
+    });
+
+    return entities.map(AthleteMapper.toDomain);
+  }
+}

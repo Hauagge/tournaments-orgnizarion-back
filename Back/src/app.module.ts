@@ -2,11 +2,12 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
+import { AthleteModule } from './domain/athlete/athlete.module';
 import { AuthModule } from './domain/auth/auth.module';
 import { CompetitionModule } from './domain/competition/competition.module';
 
 @Module({
-  imports: [DatabaseModule, AuthModule, CompetitionModule],
+  imports: [DatabaseModule, AuthModule, CompetitionModule, AthleteModule],
   controllers: [AppController],
   providers: [AppService],
 })

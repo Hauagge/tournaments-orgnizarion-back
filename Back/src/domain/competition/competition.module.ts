@@ -6,7 +6,7 @@ import { ListCompetitionsUseCase } from './application/use-cases/list-competitio
 import { UpdateCompetitionSettingsUseCase } from './application/use-cases/update-competition-settings.use-case';
 import { CompetitionController } from './infra/http/competition.controller';
 import { CompetitionRepository } from './infra/persistence/competition.repository';
-import { CompetitionTypeOrmEntity } from './infra/persistence/entities/competition.entity';
+import { CompetitionTypeOrmEntity } from './infra/persistence/entities/competition.typeorm-entity';
 import { ICompetitionRepository } from './repository/ICompetitionRepository.repository';
 
 @Module({

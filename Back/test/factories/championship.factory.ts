@@ -1,4 +1,4 @@
-import { Championship } from '../../src/domain/championship/entities/championship.entity';
+import { Championship } from '../../src/domain/championship/entities/championship.typeorm-entity';
 
 export function makeChampionship(
   overrides: Partial<Championship> = {},
@@ -14,4 +14,3 @@ export function makeChampionship(
     ...overrides,
   };
 }
-

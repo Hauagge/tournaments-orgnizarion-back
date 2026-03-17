@@ -7,7 +7,7 @@ import { GetCompetitionUseCase } from './application/use-cases/get-competition.u
 import { ListCompetitionsUseCase } from './application/use-cases/list-competitions.use-case';
 import { UpdateCompetitionSettingsUseCase } from './application/use-cases/update-competition-settings.use-case';
 import { CompetitionRepository } from './infra/persistence/competition.repository';
-import { CompetitionTypeOrmEntity } from './infra/persistence/entities/competition.entity';
+import { CompetitionTypeOrmEntity } from './infra/persistence/entities/competition.typeorm-entity';
 import { ICompetitionRepository } from './repository/ICompetitionRepository.repository';
 
 describe('CompetitionModule', () => {

@@ -1,4 +1,4 @@
-import { Fight } from '../../src/domain/fight/entities/fight.entinty';
+import { Fight } from '../../src/domain/fight/entities/fight.typeorm-entity';
 
 export function makeFight(overrides: Partial<Fight> = {}): Fight {
   return {
@@ -15,4 +15,3 @@ export function makeFight(overrides: Partial<Fight> = {}): Fight {
     ...overrides,
   };
 }
-

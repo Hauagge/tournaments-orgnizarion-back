@@ -7,7 +7,7 @@ import dataSource from 'ormconfig';
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         ...dataSource.options,
-        entities: [__dirname + '/../**/*.entity.{ts,js}'],
+        entities: [__dirname + '/../**/*.typeorm-entity.{ts,js}'],
         synchronize: process.env.ENVIRONMENT === 'test',
       }),
     }),

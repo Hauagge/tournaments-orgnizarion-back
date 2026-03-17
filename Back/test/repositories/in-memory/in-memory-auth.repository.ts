@@ -1,4 +1,4 @@
-import { User } from '../../../src/domain/auth/entities/user.entity';
+import { User } from '../../../src/domain/auth/entities/user.typeorm-entity';
 import { IUserRepository } from '../../../src/domain/auth/repository/IUserRepository.repository';
 
 export class InMemoryAuthRepository implements IUserRepository {

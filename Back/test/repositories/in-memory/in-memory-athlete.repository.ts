@@ -1,4 +1,5 @@
-import { Athlete } from '../../../src/domain/athlete/entities/athlete.entity';
+import { NotFoundError } from '../../../src/shared/errors/not-found.error';
+import { Athlete } from '../../../src/domain/athlete/domain/entities/athlete.entity';
 import { IAthleteRepository } from '../../../src/domain/athlete/repository/IAthleteRepository.repository';
 import { makeAthlete } from '../../factories';
 
@@ -20,47 +21,44 @@ export class InMemoryAthleteRepository implements IAthleteRepository {
     return this.athletes.find((athlete) => athlete.id === id) ?? null;
   }
 
-  async createAthlete(data: Partial<Athlete>): Promise<Athlete> {
-    const athlete = makeAthlete({
+  async create(athlete: Athlete): Promise<Athlete> {
+    const createdAthlete = makeAthlete({
+      ...athlete.toJSON(),
       id: this.nextId++,
-      ...data,
     });
-    this.athletes.push(athlete);
+    this.athletes.push(createdAthlete);
+    return createdAthlete;
+  }
+
+  async update(athlete: Athlete): Promise<Athlete> {
+    const index = this.athletes.findIndex((item) => item.id === athlete.id);
+    if (index < 0) {
+      throw new NotFoundError(
+        `Athlete with id ${athlete.id as number} not found`,
+      );
+    }
+
+    this.athletes[index] = athlete;
     return athlete;
   }
 
-  private async update(
-    id: number,
-    data: Partial<Athlete>,
-  ): Promise<Athlete | null> {
-    const index = this.athletes.findIndex((athlete) => athlete.id === id);
-    if (index < 0) {
-      return null;
-    }
+  async search(input: {
+    competitionId: number;
+    query?: string;
+    teamId?: number;
+  }): Promise<Athlete[]> {
+    const normalizedQuery = input.query?.trim().toLowerCase();
 
-    this.athletes[index] = {
-      ...this.athletes[index],
-      ...data,
-    };
-
-    return this.athletes[index];
-  }
-
-  async updateAthlete(
-    id: number,
-    data: Partial<Athlete>,
-  ): Promise<Athlete | null> {
-    return this.update(id, data);
-  }
-
-  async find(query: Partial<Athlete> = {}): Promise<Athlete[]> {
-    const queryEntries = Object.entries(query);
-    if (!queryEntries.length) {
-      return [...this.athletes];
-    }
-
-    return this.athletes.filter((athlete) => {
-      return queryEntries.every(([key, value]) => athlete[key] === value);
-    });
+    return [...this.athletes]
+      .filter((athlete) => athlete.competitionId === input.competitionId)
+      .filter((athlete) =>
+        normalizedQuery
+          ? athlete.fullName.toLowerCase().includes(normalizedQuery)
+          : true,
+      )
+      .filter((athlete) =>
+        input.teamId !== undefined ? athlete.teamId === input.teamId : true,
+      )
+      .sort((left, right) => left.fullName.localeCompare(right.fullName));
   }
 }
