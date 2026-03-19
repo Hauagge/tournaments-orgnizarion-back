@@ -1,10 +1,14 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it } from 'vitest';
+import { AthleteTypeOrmEntity } from '../athlete/infra/persistence/entities/athlete.typeorm-entity';
+import { TeamTypeOrmEntity } from '../team/infra/persistence/entities/team.typeorm-entity';
 import { CompetitionModule } from './competition.module';
 import { CreateCompetitionUseCase } from './application/use-cases/create-competition.use-case';
 import { GetCompetitionUseCase } from './application/use-cases/get-competition.use-case';
+import { ImportAthletesUseCase } from './application/use-cases/import-athletes.use-case';
 import { ListCompetitionsUseCase } from './application/use-cases/list-competitions.use-case';
+import { PreviewAthleteImportUseCase } from './application/use-cases/preview-athlete-import.use-case';
 import { UpdateCompetitionSettingsUseCase } from './application/use-cases/update-competition-settings.use-case';
 import { CompetitionRepository } from './infra/persistence/competition.repository';
 import { CompetitionTypeOrmEntity } from './infra/persistence/entities/competition.typeorm-entity';
@@ -21,6 +25,21 @@ describe('CompetitionModule', () => {
         save: async () => undefined,
         update: async () => undefined,
         findOneBy: async () => null,
+        findAndCount: async () => [[], 0],
+      })
+      .overrideProvider(getRepositoryToken(AthleteTypeOrmEntity))
+      .useValue({
+        create: () => undefined,
+        save: async () => undefined,
+        update: async () => undefined,
+        findOneBy: async () => null,
+        find: async () => [],
+      })
+      .overrideProvider(getRepositoryToken(TeamTypeOrmEntity))
+      .useValue({
+        create: () => undefined,
+        save: async () => undefined,
+        findOneBy: async () => null,
       })
       .compile();
 
@@ -35,6 +54,12 @@ describe('CompetitionModule', () => {
     );
     expect(moduleRef.get(ListCompetitionsUseCase)).toBeInstanceOf(
       ListCompetitionsUseCase,
+    );
+    expect(moduleRef.get(PreviewAthleteImportUseCase)).toBeInstanceOf(
+      PreviewAthleteImportUseCase,
+    );
+    expect(moduleRef.get(ImportAthletesUseCase)).toBeInstanceOf(
+      ImportAthletesUseCase,
     );
     expect(moduleRef.get(ICompetitionRepository)).toBeInstanceOf(
       CompetitionRepository,
