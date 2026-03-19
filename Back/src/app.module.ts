@@ -5,10 +5,17 @@ import { DatabaseModule } from './database/database.module';
 import { AthleteModule } from './domain/athlete/athlete.module';
 import { AuthModule } from './domain/auth/auth.module';
 import { CompetitionModule } from './domain/competition/competition.module';
+import { TeamModule } from './domain/team/team.module';
 import { LoggerMiddleware } from './core/middlewares';
 
 @Module({
-  imports: [DatabaseModule, AuthModule, CompetitionModule, AthleteModule],
+  imports: [
+    DatabaseModule,
+    AuthModule,
+    CompetitionModule,
+    AthleteModule,
+    TeamModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
