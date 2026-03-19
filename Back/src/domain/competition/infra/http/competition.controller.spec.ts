@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeCompetition } from '../../../../../test/factories';
+import { makeAthlete, makeCompetition } from '../../../../../test/factories';
 import { CompetitionController } from './competition.controller';
 import { CreateCompetitionUseCase } from '../../application/use-cases/create-competition.use-case';
 import { GetCompetitionUseCase } from '../../application/use-cases/get-competition.use-case';
+import { ImportAthletesUseCase } from '../../application/use-cases/import-athletes.use-case';
 import { ListCompetitionsUseCase } from '../../application/use-cases/list-competitions.use-case';
+import { PreviewAthleteImportUseCase } from '../../application/use-cases/preview-athlete-import.use-case';
 import { UpdateCompetitionSettingsUseCase } from '../../application/use-cases/update-competition-settings.use-case';
 import { CompetitionMode } from '../../domain/value-objects/competition-mode.enum';
 
@@ -20,12 +22,20 @@ describe('CompetitionController', () => {
   const listCompetitionsUseCase = {
     execute: vi.fn(),
   } as unknown as ListCompetitionsUseCase;
+  const previewAthleteImportUseCase = {
+    execute: vi.fn(),
+  } as unknown as PreviewAthleteImportUseCase;
+  const importAthletesUseCase = {
+    execute: vi.fn(),
+  } as unknown as ImportAthletesUseCase;
 
   const controller = new CompetitionController(
     createCompetitionUseCase,
     updateCompetitionSettingsUseCase,
     getCompetitionUseCase,
     listCompetitionsUseCase,
+    previewAthleteImportUseCase,
+    importAthletesUseCase,
   );
 
   beforeEach(() => {
@@ -107,6 +117,58 @@ describe('CompetitionController', () => {
 
     expect(result).toEqual({
       data: makeCompetition({ id: 3 }).toJSON(),
+      error: null,
+    });
+  });
+
+  it('should preview athlete import and return wrapped response', async () => {
+    vi.mocked(previewAthleteImportUseCase.execute).mockResolvedValue({
+      rows: [],
+      totalRows: 0,
+      totalErrors: 0,
+    });
+
+    const result = await controller.previewAthletesImport(
+      { id: 3 },
+      { csvText: 'fullName,birthDate,belt,weight' },
+    );
+
+    expect(result).toEqual({
+      data: {
+        rows: [],
+        totalRows: 0,
+        totalErrors: 0,
+      },
+      error: null,
+    });
+  });
+
+  it('should import athletes from uploaded csv and return wrapped response', async () => {
+    vi.mocked(importAthletesUseCase.execute).mockResolvedValue({
+      importedCount: 1,
+      failedCount: 0,
+      athletes: [makeAthlete({ id: 99 }).toJSON()],
+      errors: [],
+    });
+
+    const result = await controller.importAthletes(
+      { id: 7 },
+      {
+        buffer: Buffer.from('fullName,birthDate,belt,weight\nAna,2010-05-10,white,65'),
+      },
+    );
+
+    expect(importAthletesUseCase.execute).toHaveBeenCalledWith({
+      competitionId: 7,
+      csvText: 'fullName,birthDate,belt,weight\nAna,2010-05-10,white,65',
+    });
+    expect(result).toEqual({
+      data: {
+        importedCount: 1,
+        failedCount: 0,
+        athletes: [makeAthlete({ id: 99 }).toJSON()],
+        errors: [],
+      },
       error: null,
     });
   });
