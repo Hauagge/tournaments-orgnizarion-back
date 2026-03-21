@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { Athlete } from '../../domain/entities/athlete.entity';
 import { IAthleteRepository } from '../../repository/IAthleteRepository.repository';
@@ -43,6 +43,24 @@ export class AthleteRepository implements IAthleteRepository {
   async findById(id: number): Promise<Athlete | null> {
     const entity = await this.repository.findOneBy({ id });
     return entity ? AthleteMapper.toDomain(entity) : null;
+  }
+
+
+  async findByIds(ids: number[]): Promise<Athlete[]> {
+    if (!ids.length) {
+      return [];
+    }
+
+    const entities = await this.repository.find({
+      where: {
+        id: In(ids),
+      },
+      order: {
+        fullName: 'ASC',
+      },
+    });
+
+    return entities.map(AthleteMapper.toDomain);
   }
 
   async search(input: {
