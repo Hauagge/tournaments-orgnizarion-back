@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ZodValidationPipe } from 'src/core/pipe/zod-validation.pipe';
 import { ApiResponse } from 'src/shared/result/api-response.type';
+import { AthleteListItemView } from '../../application/use-cases/athlete-list-item.view';
 import { CreateAthleteUseCase } from '../../application/use-cases/create-athlete.use-case';
 import { SearchAthletesUseCase } from '../../application/use-cases/search-athletes.use-case';
 import { UpdateAthleteUseCase } from '../../application/use-cases/update-athlete.use-case';
@@ -58,7 +59,7 @@ export class AthleteController {
     params: CompetitionAthleteParamDto,
     @Query(new ZodValidationPipe(SearchAthletesSchema))
     query: SearchAthletesDto,
-  ): Promise<ApiResponse<ReturnType<Athlete['toJSON']>[]>> {
+  ): Promise<ApiResponse<AthleteListItemView[]>> {
     const athletes = await this.searchAthletesUseCase.execute({
       competitionId: params.id,
       query: query.query,
@@ -66,7 +67,7 @@ export class AthleteController {
     });
 
     return {
-      data: athletes.map((athlete) => athlete.toJSON()),
+      data: athletes,
       error: null,
     };
   }

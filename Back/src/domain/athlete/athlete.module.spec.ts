@@ -1,6 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it } from 'vitest';
+import { TeamTypeOrmEntity } from '../team/infra/persistence/entities/team.typeorm-entity';
+import { WeighInTypeOrmEntity } from '../weighin/infra/persistence/entities/weigh-in.typeorm-entity';
 import { AthleteModule } from './athlete.module';
 import { CreateAthleteUseCase } from './application/use-cases/create-athlete.use-case';
 import { GetAthleteUseCase } from './application/use-cases/get-athlete.use-case';
@@ -22,6 +24,22 @@ describe('AthleteModule', () => {
         update: async () => undefined,
         findOneBy: async () => null,
         find: async () => [],
+      })
+      .overrideProvider(getRepositoryToken(TeamTypeOrmEntity))
+      .useValue({
+        create: () => undefined,
+        save: async () => undefined,
+        update: async () => undefined,
+        findOneBy: async () => null,
+        findBy: async () => [],
+        find: async () => [],
+      })
+      .overrideProvider(getRepositoryToken(WeighInTypeOrmEntity))
+      .useValue({
+        save: async () => undefined,
+        findOneBy: async () => null,
+        find: async () => [],
+        create: () => undefined,
       })
       .compile();
 
