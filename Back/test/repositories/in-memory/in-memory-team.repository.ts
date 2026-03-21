@@ -9,7 +9,8 @@ export class InMemoryTeamRepository implements ITeamRepository {
 
   constructor(seed: Team[] = []) {
     this.teams = [...seed];
-    this.nextId = seed.reduce((max, item) => Math.max(max, item.id ?? 0), 0) + 1;
+    this.nextId =
+      seed.reduce((max, item) => Math.max(max, item.id ?? 0), 0) + 1;
   }
 
   async create(team: Team): Promise<Team> {
@@ -54,7 +55,9 @@ export class InMemoryTeamRepository implements ITeamRepository {
     competitionId: number,
     names: string[],
   ): Promise<Team[]> {
-    const normalizedNames = new Set(names.map((name) => Team.normalizeName(name)));
+    const normalizedNames = new Set(
+      names.map((name) => Team.normalizeName(name)),
+    );
 
     if (normalizedNames.size === 0) {
       return [];

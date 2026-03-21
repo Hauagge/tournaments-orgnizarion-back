@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const TeamAthleteParamSchema = z.object({
   id: z.coerce.number().int().positive(),
