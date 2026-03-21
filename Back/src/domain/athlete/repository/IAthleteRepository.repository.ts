@@ -4,6 +4,7 @@ export abstract class IAthleteRepository {
   abstract create(athlete: Athlete): Promise<Athlete>;
   abstract update(athlete: Athlete): Promise<Athlete>;
   abstract findById(id: number): Promise<Athlete | null>;
+  abstract findByIds(ids: number[]): Promise<Athlete[]>;
   abstract search(input: {
     competitionId: number;
     query?: string;
