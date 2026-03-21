@@ -1,4 +1,12 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { TeamTypeOrmEntity } from '@/domain/team/infra/persistence/entities/team.typeorm-entity';
 
 @Entity('athletes')
 export class AthleteTypeOrmEntity {
@@ -22,6 +30,12 @@ export class AthleteTypeOrmEntity {
 
   @Column({ name: 'team_id', type: 'int', nullable: true })
   teamId: number | null;
+
+  @ManyToOne(() => TeamTypeOrmEntity, (team) => team.athletes, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'team_id' })
+  team?: TeamTypeOrmEntity | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;

@@ -5,6 +5,8 @@ export type TeamProps = {
   createdAt: Date;
 };
 
+type UpdateTeamProps = Partial<Pick<TeamProps, 'name'>>;
+
 export class Team {
   private constructor(private readonly props: TeamProps) {}
 
@@ -20,6 +22,16 @@ export class Team {
     return new Team({
       ...props,
       name: Team.normalizeName(props.name),
+    });
+  }
+
+  update(input: UpdateTeamProps): Team {
+    return new Team({
+      ...this.props,
+      name:
+        input.name === undefined
+          ? this.props.name
+          : Team.normalizeName(input.name),
     });
   }
 

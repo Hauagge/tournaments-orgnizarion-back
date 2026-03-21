@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import { NotFoundError } from '@/shared/errors/not-found.error';
 import { Team } from '../../domain/entities/team.entity';
 import { ITeamRepository } from '../../repository/ITeamRepository.repository';
 import { TeamTypeOrmEntity } from './entities/team.typeorm-entity';
@@ -19,6 +20,24 @@ export class TeamRepository implements ITeamRepository {
     return TeamMapper.toDomain(savedEntity);
   }
 
+  async update(team: Team): Promise<Team> {
+    const result = await this.repository.update(
+      { id: team.id as number },
+      TeamMapper.toPersistence(team),
+    );
+
+    if (!result.affected) {
+      throw new NotFoundError(`Team with id ${team.id as number} not found`);
+    }
+
+    return team;
+  }
+
+  async findById(id: number): Promise<Team | null> {
+    const entity = await this.repository.findOneBy({ id });
+    return entity ? TeamMapper.toDomain(entity) : null;
+  }
+
   async findByCompetitionIdAndName(
     competitionId: number,
     name: string,
@@ -35,7 +54,9 @@ export class TeamRepository implements ITeamRepository {
     competitionId: number,
     names: string[],
   ): Promise<Team[]> {
-    const normalizedNames = [...new Set(names.map((name) => Team.normalizeName(name)))];
+    const normalizedNames = [
+      ...new Set(names.map((name) => Team.normalizeName(name))),
+    ];
 
     if (normalizedNames.length === 0) {
       return [];
@@ -44,6 +65,15 @@ export class TeamRepository implements ITeamRepository {
     const entities = await this.repository.findBy({
       competitionId,
       name: In(normalizedNames),
+    });
+
+    return entities.map((entity) => TeamMapper.toDomain(entity));
+  }
+
+  async listByCompetitionId(competitionId: number): Promise<Team[]> {
+    const entities = await this.repository.find({
+      where: { competitionId },
+      order: { name: 'ASC' },
     });
 
     return entities.map((entity) => TeamMapper.toDomain(entity));
