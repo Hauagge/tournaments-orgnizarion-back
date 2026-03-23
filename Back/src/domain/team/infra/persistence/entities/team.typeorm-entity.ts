@@ -5,7 +5,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { AthleteTypeOrmEntity } from '@/domain/athlete/infra/persistence/entities/athlete.typeorm-entity';
+import { TeamMemberTypeOrmEntity } from './team-member.typeorm-entity';
 
 @Entity('teams')
 export class TeamTypeOrmEntity {
@@ -18,8 +18,8 @@ export class TeamTypeOrmEntity {
   @Column({ type: 'varchar' })
   name: string;
 
-  @OneToMany(() => AthleteTypeOrmEntity, (athlete) => athlete.team)
-  athletes?: AthleteTypeOrmEntity[];
+  @OneToMany(() => TeamMemberTypeOrmEntity, (member) => member.team)
+  members?: TeamMemberTypeOrmEntity[];
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
