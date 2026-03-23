@@ -42,7 +42,6 @@ export class InMemoryAthleteRepository implements IAthleteRepository {
     return athlete;
   }
 
-
   async findByIds(ids: number[]): Promise<Athlete[]> {
     if (!ids.length) {
       return [];
@@ -58,7 +57,7 @@ export class InMemoryAthleteRepository implements IAthleteRepository {
   async search(input: {
     competitionId: number;
     query?: string;
-    teamId?: number;
+    academyId?: number;
   }): Promise<Athlete[]> {
     const normalizedQuery = input.query?.trim().toLowerCase();
 
@@ -70,7 +69,9 @@ export class InMemoryAthleteRepository implements IAthleteRepository {
           : true,
       )
       .filter((athlete) =>
-        input.teamId !== undefined ? athlete.teamId === input.teamId : true,
+        input.academyId !== undefined
+          ? athlete.academyId === input.academyId
+          : true,
       )
       .sort((left, right) => left.fullName.localeCompare(right.fullName));
   }

@@ -10,4 +10,5 @@ export abstract class IWeighInRepository {
     competitionId: number,
     athleteIds: number[],
   ): Promise<WeighIn[]>;
+  abstract hasAnyForCompetition(competitionId: number): Promise<boolean>;
 }

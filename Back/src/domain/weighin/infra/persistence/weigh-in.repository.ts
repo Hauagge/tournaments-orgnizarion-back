@@ -50,4 +50,13 @@ export class WeighInRepository implements IWeighInRepository {
 
     return entities.map(WeighInMapper.toDomain);
   }
+
+  async hasAnyForCompetition(competitionId: number): Promise<boolean> {
+    const count = await this.repository.count({
+      where: { competitionId },
+      take: 1,
+    });
+
+    return count > 0;
+  }
 }

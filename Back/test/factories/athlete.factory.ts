@@ -10,7 +10,7 @@ export function makeAthlete(
     birthDate: new Date('2010-05-10T00:00:00.000Z'),
     belt: 'white',
     declaredWeightGrams: 50000,
-    teamId: 3,
+    academyId: 3,
     createdAt: new Date('2026-01-10T00:00:00.000Z'),
     ...overrides,
   });

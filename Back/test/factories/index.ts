@@ -2,5 +2,5 @@ export * from './athlete.factory';
 export * from './competition.factory';
 export * from './championship.factory';
 export * from './fight.factory';
-export * from './team.factory';
+export * from './academy.factory';
 export * from './user.factory';

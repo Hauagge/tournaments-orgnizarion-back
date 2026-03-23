@@ -12,6 +12,7 @@ export function makeFight(overrides: Partial<Fight> = {}): Fight {
     athlete1Penalty: 0,
     athlete2Penalty: 0,
     isSubmission: false,
+    orderIndex: null,
     ...overrides,
   };
 }
