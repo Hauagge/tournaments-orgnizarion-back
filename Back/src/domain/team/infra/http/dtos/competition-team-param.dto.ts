@@ -4,6 +4,4 @@ export const CompetitionTeamParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
 
-export type CompetitionTeamParamDto = z.infer<
-  typeof CompetitionTeamParamSchema
->;
+export type CompetitionTeamParamDto = z.infer<typeof CompetitionTeamParamSchema>;

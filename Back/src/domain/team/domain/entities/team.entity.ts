@@ -1,7 +1,10 @@
+import { TeamMemberTypeOrmEntity } from '../../infra/persistence/entities/team-member.typeorm-entity';
+
 export type TeamProps = {
   id?: number;
   competitionId: number;
   name: string;
+  members?: TeamMemberTypeOrmEntity[];
   createdAt: Date;
 };
 
@@ -10,10 +13,11 @@ type UpdateTeamProps = Partial<Pick<TeamProps, 'name'>>;
 export class Team {
   private constructor(private readonly props: TeamProps) {}
 
-  static create(props: Omit<TeamProps, 'id' | 'createdAt'>): Team {
+  static create(props: Omit<TeamProps, 'id' | 'createdAt' | 'members'>): Team {
     return new Team({
       ...props,
       name: Team.normalizeName(props.name),
+      members: [],
       createdAt: new Date(),
     });
   }
@@ -22,6 +26,7 @@ export class Team {
     return new Team({
       ...props,
       name: Team.normalizeName(props.name),
+      members: props.members ?? [],
     });
   }
 
@@ -44,6 +49,7 @@ export class Team {
       id: this.id,
       competitionId: this.competitionId,
       name: this.name,
+      members: this.members,
       createdAt: this.createdAt,
     };
   }
@@ -62,5 +68,9 @@ export class Team {
 
   get createdAt(): Date {
     return this.props.createdAt;
+  }
+
+  get members(): TeamMemberTypeOrmEntity[] {
+    return this.props.members ?? [];
   }
 }
