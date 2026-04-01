@@ -11,7 +11,9 @@ export function makeCompetition(
     fightDurationSeconds: 300,
     weighInMarginGrams: 500,
     ageSplitYears: 2,
+    lockTeamsAfterWeighInStarts: false,
     createdAt: new Date('2026-01-10T00:00:00.000Z'),
+
     ...overrides,
   });
 }
