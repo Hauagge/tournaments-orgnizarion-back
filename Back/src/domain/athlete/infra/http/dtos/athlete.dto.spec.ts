@@ -19,18 +19,18 @@ describe('Athlete DTO schemas', () => {
       birthDate: new Date('2010-05-10T00:00:00.000Z'),
       belt: 'white',
       declaredWeightGrams: 50000,
-      teamId: null,
+      academyId: null,
     });
   });
 
   it('should validate update payload', () => {
     const result = UpdateAthleteSchema.parse({
-      teamId: null,
+      academyId: null,
       declaredWeightGrams: '47000',
     });
 
     expect(result).toEqual({
-      teamId: null,
+      academyId: null,
       declaredWeightGrams: 47000,
     });
   });
@@ -42,12 +42,12 @@ describe('Athlete DTO schemas', () => {
   it('should validate search query', () => {
     const result = SearchAthletesSchema.parse({
       query: ' ana ',
-      teamId: '8',
+      academyId: '8',
     });
 
     expect(result).toEqual({
       query: 'ana',
-      teamId: 8,
+      academyId: 8,
     });
   });
 

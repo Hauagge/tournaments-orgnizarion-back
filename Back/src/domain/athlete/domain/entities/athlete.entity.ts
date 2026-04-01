@@ -5,14 +5,14 @@ export type AthleteProps = {
   birthDate: Date;
   belt: string;
   declaredWeightGrams: number;
-  teamId: number | null;
+  academyId: number | null;
   createdAt: Date;
 };
 
 type UpdatableAthleteProps = Partial<
   Pick<
     AthleteProps,
-    'fullName' | 'birthDate' | 'belt' | 'declaredWeightGrams' | 'teamId'
+    'fullName' | 'birthDate' | 'belt' | 'declaredWeightGrams' | 'academyId'
   >
 >;
 
@@ -49,7 +49,7 @@ export class Athlete {
       belt: input.belt !== undefined ? input.belt.trim() : this.props.belt,
       declaredWeightGrams:
         input.declaredWeightGrams ?? this.props.declaredWeightGrams,
-      teamId: input.teamId !== undefined ? input.teamId : this.props.teamId,
+      academyId: input.academyId !== undefined ? input.academyId : this.props.academyId,
     });
   }
 
@@ -65,7 +65,7 @@ export class Athlete {
       birthDate: this.birthDate,
       belt: this.belt,
       declaredWeightGrams: this.declaredWeightGrams,
-      teamId: this.teamId,
+      academyId: this.academyId,
       createdAt: this.createdAt,
     };
   }
@@ -94,8 +94,8 @@ export class Athlete {
     return this.props.declaredWeightGrams;
   }
 
-  get teamId(): number | null {
-    return this.props.teamId;
+  get academyId(): number | null {
+    return this.props.academyId;
   }
 
   get createdAt(): Date {

@@ -2,6 +2,6 @@ import { WeighInStatus } from '@/domain/weighin/domain/value-objects/weigh-in-st
 import { Athlete } from '../../domain/entities/athlete.entity';
 
 export type AthleteListItemView = ReturnType<Athlete['toJSON']> & {
-  teamName: string | null;
+  academyName: string | null;
   weighInStatus: WeighInStatus;
 };

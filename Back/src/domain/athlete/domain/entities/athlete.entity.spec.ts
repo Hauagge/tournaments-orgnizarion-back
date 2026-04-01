@@ -9,7 +9,7 @@ describe('Athlete', () => {
       birthDate: new Date('2010-05-10T00:00:00.000Z'),
       belt: ' white ',
       declaredWeightGrams: 50200,
-      teamId: null,
+      academyId: null,
     });
 
     expect(athlete.id).toBeUndefined();
@@ -27,13 +27,13 @@ describe('Athlete', () => {
       birthDate: new Date('2010-05-10T00:00:00.000Z'),
       belt: 'gray',
       declaredWeightGrams: 48000,
-      teamId: 5,
+      academyId: 5,
       createdAt,
     });
 
     const updated = athlete.update({
       fullName: '  Ana   Clara  Silva ',
-      teamId: null,
+      academyId: null,
     });
 
     expect(athlete.fullName).toBe('Ana Silva');
@@ -44,7 +44,7 @@ describe('Athlete', () => {
       birthDate: new Date('2010-05-10T00:00:00.000Z'),
       belt: 'gray',
       declaredWeightGrams: 48000,
-      teamId: null,
+      academyId: null,
       createdAt,
     });
   });

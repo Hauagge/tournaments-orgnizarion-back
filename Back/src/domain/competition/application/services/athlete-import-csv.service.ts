@@ -18,7 +18,8 @@ export type ParsedAthleteImportRow = {
     birthDate: Date;
     belt: string;
     declaredWeightGrams: number;
-    teamName: string | null;
+    academyName: string | null;
+    phone: string | null;
     age: string | null;
   } | null;
   errors: string[];
@@ -28,8 +29,9 @@ type HeaderMap = {
   fullName: string | null;
   birthDate: string | null;
   belt: string | null;
-  weight: string | null;
-  teamName: string | null;
+  declaredWeightKg: string | null;
+  academyName: string | null;
+  phone: string | null;
   age: string | null;
 };
 
@@ -44,6 +46,7 @@ export class AthleteImportCsvService {
 
     const headers = normalizeCsvHeaders(rows[0]);
     const headerMap = this.buildHeaderMap(headers);
+
     return rows.slice(1).map((columns, index) => {
       const lineNumber = index + 2;
       const raw = mapRowValuesByHeaders(headers, columns);
@@ -58,11 +61,14 @@ export class AthleteImportCsvService {
       const belt = normalizeWhitespace(
         getColumnValueByHeader(columns, headers, headerMap.belt),
       );
-      const weightInput = normalizeWhitespace(
-        getColumnValueByHeader(columns, headers, headerMap.weight),
+      const declaredWeightKgInput = normalizeWhitespace(
+        getColumnValueByHeader(columns, headers, headerMap.declaredWeightKg),
       );
-      const teamNameValue = normalizeWhitespace(
-        getColumnValueByHeader(columns, headers, headerMap.teamName),
+      const academyNameValue = normalizeWhitespace(
+        getColumnValueByHeader(columns, headers, headerMap.academyName),
+      );
+      const phoneValue = normalizeWhitespace(
+        getColumnValueByHeader(columns, headers, headerMap.phone),
       );
       const ageValue = normalizeWhitespace(
         getColumnValueByHeader(columns, headers, headerMap.age),
@@ -81,7 +87,7 @@ export class AthleteImportCsvService {
         errors.push('Faixa e obrigatoria.');
       }
 
-      const declaredWeightGrams = parseMassToGrams(weightInput);
+      const declaredWeightGrams = parseMassToGrams(declaredWeightKgInput);
       if (declaredWeightGrams === null) {
         errors.push('Peso invalido.');
       }
@@ -96,7 +102,8 @@ export class AthleteImportCsvService {
                 birthDate,
                 belt,
                 declaredWeightGrams,
-                teamName: teamNameValue || null,
+                academyName: academyNameValue || null,
+                phone: phoneValue || null,
                 age: ageValue || null,
               }
             : null,
@@ -108,7 +115,6 @@ export class AthleteImportCsvService {
   private buildHeaderMap(headers: string[]): HeaderMap {
     return buildHeaderAliasMap(headers, {
       fullName: ['FULLNAME', 'NOME', 'NAME'],
-      belt: ['BELT', 'FAIXA'],
       birthDate: [
         'BIRTHDATE',
         'NASCIMENTO',
@@ -117,18 +123,26 @@ export class AthleteImportCsvService {
         'DATA_DE_ANIVERSARIO',
         'DATADENASC',
       ],
-      weight: [
-        'WIEGHT',
-        'PESO',
+      belt: ['BELT', 'FAIXA'],
+      declaredWeightKg: [
+        'DECLAREDWEIGHTKG',
+        'DECLARED_WEIGHT_KG',
         'DECLAREDWEIGHT',
         'DECLARED_WEIGHT',
+        'WEIGHT',
+        'WIEGHT',
+        'PESO',
       ],
-      teamName: [
+      academyName: [
+        'ACADEMYNAME',
+        'ACADEMY_NAME',
+        'ACADEMY',
         'TEAMNAME',
+        'TEAM_NAME',
         'TEAM',
         'EQUIPE',
-        'ACADEMY',
       ],
+      phone: ['PHONE', 'PHONE_NUMBER', 'CELLPHONE', 'CELULAR', 'TELEFONE'],
       age: ['AGE', 'IDADE'],
     });
   }

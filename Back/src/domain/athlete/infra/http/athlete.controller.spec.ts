@@ -38,7 +38,7 @@ describe('AthleteController', () => {
         birthDate: new Date('2010-05-10T00:00:00.000Z'),
         belt: 'white',
         declaredWeightGrams: 50000,
-        teamId: null,
+        academyId: null,
       },
     );
 
@@ -56,7 +56,7 @@ describe('AthleteController', () => {
 
     const result = await controller.search(
       { id: 10 },
-      { query: 'ana', teamId: 3 },
+      { query: 'ana', academyId: 3 },
     );
 
     expect(result).toEqual({

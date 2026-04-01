@@ -26,7 +26,7 @@ export class AthleteRepository implements IAthleteRepository {
       birthDate: athlete.birthDate,
       belt: athlete.belt,
       declaredWeightGrams: athlete.declaredWeightGrams,
-      teamId: athlete.teamId,
+      academyId: athlete.academyId,
     });
 
     const updatedEntity = await this.repository.findOneBy({
@@ -66,12 +66,12 @@ export class AthleteRepository implements IAthleteRepository {
   async search(input: {
     competitionId: number;
     query?: string;
-    teamId?: number;
+    academyId?: number;
   }): Promise<Athlete[]> {
     const where = {
       competitionId: input.competitionId,
       ...(input.query ? { fullName: ILike(`%${input.query.trim()}%`) } : {}),
-      ...(input.teamId !== undefined ? { teamId: input.teamId } : {}),
+      ...(input.academyId !== undefined ? { academyId: input.academyId } : {}),
     };
 
     const entities = await this.repository.find({

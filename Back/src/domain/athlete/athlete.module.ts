@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TeamProviderModule } from '../team/team-provider.module';
+import { AcademyProviderModule } from '../academy/academy-provider.module';
 import { WeighInProviderModule } from '../weighin/weighin-provider.module';
 import { CreateAthleteUseCase } from './application/use-cases/create-athlete.use-case';
 import { GetAthleteUseCase } from './application/use-cases/get-athlete.use-case';
@@ -9,7 +9,7 @@ import { AthleteController } from './infra/http/athlete.controller';
 import { AthleteProviderModule } from './athlete-provider.module';
 
 @Module({
-  imports: [AthleteProviderModule, TeamProviderModule, WeighInProviderModule],
+  imports: [AthleteProviderModule, AcademyProviderModule, WeighInProviderModule],
   controllers: [AthleteController],
   providers: [
     CreateAthleteUseCase,

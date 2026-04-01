@@ -10,7 +10,7 @@ export class AthleteMapper {
       birthDate: new Date(entity.birthDate),
       belt: entity.belt,
       declaredWeightGrams: entity.declaredWeightGrams,
-      teamId: entity.teamId,
+      academyId: entity.academyId,
       createdAt: entity.createdAt,
     });
   }
@@ -23,7 +23,7 @@ export class AthleteMapper {
     entity.birthDate = athlete.birthDate;
     entity.belt = athlete.belt;
     entity.declaredWeightGrams = athlete.declaredWeightGrams;
-    entity.teamId = athlete.teamId;
+    entity.academyId = athlete.academyId;
     entity.createdAt = athlete.createdAt;
     return entity;
   }

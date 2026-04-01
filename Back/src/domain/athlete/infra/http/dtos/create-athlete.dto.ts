@@ -5,7 +5,7 @@ export const CreateAthleteSchema = z.object({
   birthDate: z.coerce.date(),
   belt: z.string().min(1),
   declaredWeightGrams: z.coerce.number().int().min(0),
-  teamId: z.coerce.number().int().positive().nullable().optional().default(null),
+  academyId: z.coerce.number().int().positive().nullable().optional().default(null),
 });
 
 export type CreateAthleteDto = z.infer<typeof CreateAthleteSchema>;

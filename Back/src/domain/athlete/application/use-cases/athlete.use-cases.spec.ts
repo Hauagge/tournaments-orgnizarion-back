@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { makeAthlete, makeTeam } from '../../../../../test/factories';
 import {
   InMemoryAthleteRepository,
-  InMemoryTeamRepository,
+  InMemoryAcademyRepository,
   InMemoryWeighInRepository,
 } from '../../../../../test/repositories/in-memory';
 import { WeighIn } from '@/domain/weighin/domain/entities/weigh-in.entity';
@@ -15,12 +15,12 @@ import { UpdateAthleteUseCase } from './update-athlete.use-case';
 
 describe('Athlete use cases', () => {
   let repository: InMemoryAthleteRepository;
-  let teamRepository: InMemoryTeamRepository;
+  let teamRepository: InMemoryAcademyRepository;
   let weighInRepository: InMemoryWeighInRepository;
 
   beforeEach(() => {
     repository = new InMemoryAthleteRepository();
-    teamRepository = new InMemoryTeamRepository();
+    teamRepository = new InMemoryAcademyRepository();
     weighInRepository = new InMemoryWeighInRepository();
   });
 
@@ -33,7 +33,7 @@ describe('Athlete use cases', () => {
       birthDate: new Date('2010-05-10T00:00:00.000Z'),
       belt: ' white ',
       declaredWeightGrams: 50000,
-      teamId: null,
+      academyId: null,
     });
 
     expect(result.id).toBe(1);
@@ -64,14 +64,14 @@ describe('Athlete use cases', () => {
       id: 5,
       fullName: '  Julia   Costa ',
       declaredWeightGrams: 47000,
-      teamId: null,
+      academyId: null,
     });
 
     expect(result.toJSON()).toMatchObject({
       id: 5,
       fullName: 'Julia Costa',
       declaredWeightGrams: 47000,
-      teamId: null,
+      academyId: null,
     });
   });
 
@@ -81,13 +81,13 @@ describe('Athlete use cases', () => {
     const useCase = new UpdateAthleteUseCase(repository);
     const result = await useCase.execute({
       id: 6,
-      teamId: 10,
+      academyId: 10,
     });
 
     expect(result.toJSON()).toMatchObject({
       id: 6,
       belt: 'yellow',
-      teamId: 10,
+      academyId: 10,
     });
   });
 
@@ -99,14 +99,14 @@ describe('Athlete use cases', () => {
     );
   });
 
-  it('should search athletes by partial name and team with weigh-in status and team name', async () => {
+  it('should search athletes by partial name and academy with weigh-in status and academy name', async () => {
     repository.setAthletes([
-      makeAthlete({ id: 1, competitionId: 10, fullName: 'Ana Silva', teamId: 3 }),
-      makeAthlete({ id: 2, competitionId: 10, fullName: 'Ana Costa', teamId: 4 }),
-      makeAthlete({ id: 3, competitionId: 10, fullName: 'Bruna Silva', teamId: 3 }),
-      makeAthlete({ id: 4, competitionId: 11, fullName: 'Ana Silva', teamId: 3 }),
+      makeAthlete({ id: 1, competitionId: 10, fullName: 'Ana Silva', academyId: 3 }),
+      makeAthlete({ id: 2, competitionId: 10, fullName: 'Ana Costa', academyId: 4 }),
+      makeAthlete({ id: 3, competitionId: 10, fullName: 'Bruna Silva', academyId: 3 }),
+      makeAthlete({ id: 4, competitionId: 11, fullName: 'Ana Silva', academyId: 3 }),
     ]);
-    teamRepository = new InMemoryTeamRepository([
+    teamRepository = new InMemoryAcademyRepository([
       makeTeam({ id: 3, competitionId: 10, name: 'Equipe A' }),
       makeTeam({ id: 4, competitionId: 10, name: 'Equipe B' }),
     ]);
@@ -130,21 +130,21 @@ describe('Athlete use cases', () => {
     const result = await useCase.execute({
       competitionId: 10,
       query: 'ana',
-      teamId: 3,
+      academyId: 3,
     });
 
     expect(result).toEqual([
       expect.objectContaining({
         id: 1,
-        teamName: 'Equipe A',
+        academyName: 'Equipe A',
         weighInStatus: WeighInStatus.APPROVED,
       }),
     ]);
   });
 
-  it('should return null team name and pending weigh-in status when athlete has no team or weigh-in record', async () => {
+  it('should return null academy name and pending weigh-in status when athlete has no academy or weigh-in record', async () => {
     repository.setAthletes([
-      makeAthlete({ id: 9, competitionId: 12, fullName: 'Marina Costa', teamId: null }),
+      makeAthlete({ id: 9, competitionId: 12, fullName: 'Marina Costa', academyId: null }),
     ]);
 
     const useCase = new SearchAthletesUseCase(
@@ -159,7 +159,7 @@ describe('Athlete use cases', () => {
     expect(result).toEqual([
       expect.objectContaining({
         id: 9,
-        teamName: null,
+        academyName: null,
         weighInStatus: WeighInStatus.PENDING,
       }),
     ]);

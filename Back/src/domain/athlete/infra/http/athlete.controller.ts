@@ -63,7 +63,7 @@ export class AthleteController {
     const athletes = await this.searchAthletesUseCase.execute({
       competitionId: params.id,
       query: query.query,
-      teamId: query.teamId,
+      academyId: query.academyId,
     });
 
     return {

@@ -6,7 +6,7 @@ export const UpdateAthleteSchema = z
     birthDate: z.coerce.date().optional(),
     belt: z.string().min(1).optional(),
     declaredWeightGrams: z.coerce.number().int().min(0).optional(),
-    teamId: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
+    academyId: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
   })
   .refine((value) => Object.keys(value).length > 0, {
     message: 'At least one field must be provided',

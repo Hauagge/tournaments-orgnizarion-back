@@ -12,7 +12,7 @@ describe('AthleteRepository', () => {
     birthDate: new Date('2010-05-10'),
     belt: 'white',
     declaredWeightGrams: 50000,
-    teamId: 3,
+    academyId: 3,
     createdAt: new Date('2026-01-10T00:00:00.000Z'),
   };
 
@@ -75,7 +75,7 @@ describe('AthleteRepository', () => {
     const result = await repository.search({
       competitionId: 9,
       query: 'ath',
-      teamId: 3,
+      academyId: 3,
     });
 
     expect(repositoryMock.find).toHaveBeenCalledOnce();

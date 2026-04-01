@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it } from 'vitest';
-import { TeamTypeOrmEntity } from '../team/infra/persistence/entities/team.typeorm-entity';
+import { AcademyTypeOrmEntity } from '../academy/infra/persistence/entities/academy.typeorm-entity';
 import { WeighInTypeOrmEntity } from '../weighin/infra/persistence/entities/weigh-in.typeorm-entity';
 import { AthleteModule } from './athlete.module';
 import { CreateAthleteUseCase } from './application/use-cases/create-athlete.use-case';
@@ -25,7 +25,7 @@ describe('AthleteModule', () => {
         findOneBy: async () => null,
         find: async () => [],
       })
-      .overrideProvider(getRepositoryToken(TeamTypeOrmEntity))
+      .overrideProvider(getRepositoryToken(AcademyTypeOrmEntity))
       .useValue({
         create: () => undefined,
         save: async () => undefined,

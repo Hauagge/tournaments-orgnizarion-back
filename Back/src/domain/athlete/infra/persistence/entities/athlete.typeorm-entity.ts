@@ -6,7 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { TeamTypeOrmEntity } from '@/domain/team/infra/persistence/entities/team.typeorm-entity';
+import { AcademyTypeOrmEntity } from '@/domain/academy/infra/persistence/entities/academy.typeorm-entity';
 
 @Entity('athletes')
 export class AthleteTypeOrmEntity {
@@ -28,14 +28,14 @@ export class AthleteTypeOrmEntity {
   @Column({ name: 'declared_weight_grams', type: 'int' })
   declaredWeightGrams: number;
 
-  @Column({ name: 'team_id', type: 'int', nullable: true })
-  teamId: number | null;
+  @Column({ name: 'academy_id', type: 'int', nullable: true })
+  academyId: number | null;
 
-  @ManyToOne(() => TeamTypeOrmEntity, (team) => team.athletes, {
+  @ManyToOne(() => AcademyTypeOrmEntity, (academy) => academy.athletes, {
     nullable: true,
   })
-  @JoinColumn({ name: 'team_id' })
-  team?: TeamTypeOrmEntity | null;
+  @JoinColumn({ name: 'academy_id' })
+  academy?: AcademyTypeOrmEntity | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;

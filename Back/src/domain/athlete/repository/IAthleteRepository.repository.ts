@@ -8,6 +8,6 @@ export abstract class IAthleteRepository {
   abstract search(input: {
     competitionId: number;
     query?: string;
-    teamId?: number;
+    academyId?: number;
   }): Promise<Athlete[]>;
 }
