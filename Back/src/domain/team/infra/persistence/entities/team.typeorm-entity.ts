@@ -2,10 +2,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { TeamMemberTypeOrmEntity } from './team-member.typeorm-entity';
+import { CompetitionTypeOrmEntity } from '@/domain/competition/infra/persistence/entities/competition.typeorm-entity';
 
 @Entity('teams')
 export class TeamTypeOrmEntity {
@@ -20,6 +22,16 @@ export class TeamTypeOrmEntity {
 
   @OneToMany(() => TeamMemberTypeOrmEntity, (member) => member.team)
   members?: TeamMemberTypeOrmEntity[];
+
+  @ManyToOne(
+    () => CompetitionTypeOrmEntity,
+    (competition) => competition.teams,
+    {
+      nullable: false,
+      onDelete: 'CASCADE',
+    },
+  )
+  competition: CompetitionTypeOrmEntity;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
