@@ -30,7 +30,11 @@ export class Competition {
     input: Partial<
       Pick<
         CompetitionProps,
-        'name' | 'mode' | 'fightDurationSeconds' | 'weighInMarginGrams' | 'ageSplitYears'
+        | 'name'
+        | 'mode'
+        | 'fightDurationSeconds'
+        | 'weighInMarginGrams'
+        | 'ageSplitYears'
       >
     >,
   ): Competition {

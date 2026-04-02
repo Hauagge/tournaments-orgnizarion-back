@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ICompetitionRepository } from '../../repository/ICompetitionRepository.repository';
 import { Competition } from '../../domain/entities/competition.entity';
+import { ICompetitionRepository } from '../../repository/ICompetitionRepository.repository';
+import { CompetitionTeamsHydratorService } from '../services/competition-teams-hydrator.service';
 
 export type ListCompetitionsInput = {
   page: number;
@@ -20,15 +21,17 @@ export class ListCompetitionsUseCase {
   constructor(
     @Inject(ICompetitionRepository)
     private readonly competitionRepository: ICompetitionRepository,
+    private readonly competitionTeamsHydrator: CompetitionTeamsHydratorService,
   ) {}
 
   async execute(
     input: ListCompetitionsInput,
   ): Promise<ListCompetitionsOutput> {
     const [items, total] = await this.competitionRepository.list(input);
+    const hydratedItems = await this.competitionTeamsHydrator.attachTeamsToMany(items);
 
     return {
-      items,
+      items: hydratedItems,
       page: input.page,
       pageSize: input.pageSize,
       total,

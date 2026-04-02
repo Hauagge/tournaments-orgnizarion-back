@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it } from 'vitest';
 import { AthleteTypeOrmEntity } from '../athlete/infra/persistence/entities/athlete.typeorm-entity';
-import { TeamTypeOrmEntity } from '../team/infra/persistence/entities/team.typeorm-entity';
+import { AcademyTypeOrmEntity } from '../academy/infra/persistence/entities/academy.typeorm-entity';
 import { CompetitionModule } from './competition.module';
 import { CreateCompetitionUseCase } from './application/use-cases/create-competition.use-case';
 import { GetCompetitionUseCase } from './application/use-cases/get-competition.use-case';
@@ -35,7 +35,7 @@ describe('CompetitionModule', () => {
         findOneBy: async () => null,
         find: async () => [],
       })
-      .overrideProvider(getRepositoryToken(TeamTypeOrmEntity))
+      .overrideProvider(getRepositoryToken(AcademyTypeOrmEntity))
       .useValue({
         create: () => undefined,
         save: async () => undefined,

@@ -20,6 +20,7 @@ import { ListCompetitionsUseCase } from '../../application/use-cases/list-compet
 import { PreviewAthleteImportUseCase } from '../../application/use-cases/preview-athlete-import.use-case';
 import { UpdateCompetitionSettingsUseCase } from '../../application/use-cases/update-competition-settings.use-case';
 import { Competition } from '../../domain/entities/competition.entity';
+import { CompetitionMode } from '../../domain/value-objects/competition-mode.enum';
 import {
   CompetitionIdParamDto,
   CompetitionIdParamSchema,
@@ -88,7 +89,10 @@ export class CompetitionController {
     @Body(new ZodValidationPipe(CreateCompetitionSchema))
     body: CreateCompetitionDto,
   ): Promise<ApiResponse<ReturnType<Competition['toJSON']>>> {
-    const competition = await this.createCompetitionUseCase.execute(body);
+    const competition = await this.createCompetitionUseCase.execute({
+      ...body,
+      mode: body.mode as CompetitionMode,
+    });
     return {
       data: competition.toJSON(),
       error: null,
@@ -104,7 +108,11 @@ export class CompetitionController {
   ): Promise<ApiResponse<ReturnType<Competition['toJSON']>>> {
     const competition = await this.updateCompetitionSettingsUseCase.execute({
       id: params.id,
-      ...body,
+      name: body.name,
+      mode: body.mode ? (body.mode as CompetitionMode) : undefined,
+      fightDurationSeconds: body.fightDurationSeconds,
+      weighInMarginGrams: body.weighInMarginGrams,
+      ageSplitYears: body.ageSplitYears,
     });
 
     return {
