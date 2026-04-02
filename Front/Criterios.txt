@@ -78,3 +78,37 @@ staff / staff123
 mesa / mesa123
 publico / publico123
 organizacao / organizacao123
+
+
+
+----------------------------------------------
+
+
+
+Reuniao 28/03
+
+Torneio 
+ - Usar tabela de peso de IBJJ
+ - Chave MAnual 
+   - Criar chaves manual com quantidade máxima de 4 atletas por chave conforme for separado
+   - Será separado por idade e Faixa podendo mesclar:
+	- BRANCA E CINZA
+	- AMARELA
+	- LARANJA
+	- VERDE
+	
+   - Depois será separado por peso
+   - E assim será montado as chaves (Da mesma forma que foi feito no paranaense de JUDO)
+   
+
+
+ABSOLUTO GP 
+
+- Tempo de luta 6 minutos
+- Será dividido por faixas e categoria de peso:
+	- BRANCA
+	- AZUL
+	- ROXA
+	- MARROM e PRETA 
+	
+	

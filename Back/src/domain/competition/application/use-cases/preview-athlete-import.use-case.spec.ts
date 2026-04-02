@@ -11,7 +11,7 @@ describe('PreviewAthleteImportUseCase', () => {
     const result = await useCase.execute({
       csvText: [
         'nome,datadenasc,faixa,peso,equipe',
-        '  Ana   Silva  ,10/05/2010, branca ,65, Team One ',
+        '  Ana   Silva  ,10/05/2010, branca ,65, Academy One ',
         'Bruno,,azul,',
       ].join('\n'),
     });
@@ -26,14 +26,14 @@ describe('PreviewAthleteImportUseCase', () => {
           datadenasc: '10/05/2010',
           faixa: ' branca ',
           peso: '65',
-          equipe: ' Team One ',
+          equipe: ' Academy One ',
         },
         athlete: {
           fullName: 'Ana Silva',
           birthDate: '2010-05-10T00:00:00.000Z',
           belt: 'branca',
           declaredWeightGrams: 65000,
-          teamName: 'Team One',
+          academyName: 'Academy One',
           age: null,
         },
         errors: [],

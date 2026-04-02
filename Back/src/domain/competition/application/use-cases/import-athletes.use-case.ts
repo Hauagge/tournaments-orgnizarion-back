@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Logger } from '@/configuration/logger.configuration';
-import { NotFoundError } from '@/shared/errors/not-found.error';
-import { IAthleteRepository } from '@/domain/athlete/repository/IAthleteRepository.repository';
+import { Academy } from '@/domain/academy/domain/entities/academy.entity';
+import { IAcademyRepository } from '@/domain/academy/repository/IAcademyRepository.repository';
 import { Athlete } from '@/domain/athlete/domain/entities/athlete.entity';
+import { IAthleteRepository } from '@/domain/athlete/repository/IAthleteRepository.repository';
+import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ICompetitionRepository } from '../../repository/ICompetitionRepository.repository';
-import { ITeamRepository } from '@/domain/team/repository/ITeamRepository.repository';
-import { Team } from '@/domain/team/domain/entities/team.entity';
 import { AthleteImportCsvService } from '../services/athlete-import-csv.service';
 
 export type ImportAthletesInput = {
@@ -22,8 +22,8 @@ export class ImportAthletesUseCase {
     private readonly competitionRepository: ICompetitionRepository,
     @Inject(IAthleteRepository)
     private readonly athleteRepository: IAthleteRepository,
-    @Inject(ITeamRepository)
-    private readonly teamRepository: ITeamRepository,
+    @Inject(IAcademyRepository)
+    private readonly academyRepository: IAcademyRepository,
     private readonly athleteImportCsvService: AthleteImportCsvService,
   ) {}
 
@@ -39,7 +39,7 @@ export class ImportAthletesUseCase {
     const parsedRows = this.athleteImportCsvService.parse(input.csvText);
     const importedAthletes: Athlete[] = [];
     const errors: { lineNumber: number; errors: string[] }[] = [];
-    const teamCache = await this.buildTeamCache(
+    const academyCache = await this.buildAcademyCache(
       input.competitionId,
       parsedRows,
     );
@@ -54,26 +54,38 @@ export class ImportAthletesUseCase {
       }
 
       try {
-        let teamId: number | null = null;
+        let academyId: number | null = null;
 
-        if (row.athlete.teamName) {
-          const normalizedTeamName = Team.normalizeName(row.athlete.teamName);
-          const cachedTeamId = teamCache.get(normalizedTeamName);
+        if (row.athlete.academyName) {
+          const academyCacheKey = this.buildAcademyCacheKey(
+            row.athlete.academyName,
+          );
+          const cachedAcademyId = academyCache.get(academyCacheKey);
 
-          if (cachedTeamId !== undefined) {
-            teamId = cachedTeamId;
+          if (cachedAcademyId !== undefined) {
+            academyId = cachedAcademyId;
           } else {
-            const team = await this.teamRepository.create(
-              Team.create({
-                competitionId: input.competitionId,
-                name: row.athlete.teamName,
-              }),
-            );
+            const existingAcademy =
+              await this.academyRepository.findByCompetitionIdAndName(
+                input.competitionId,
+                row.athlete.academyName,
+              );
 
-            teamId = team.id ?? null;
+            if (existingAcademy) {
+              academyId = existingAcademy.id ?? null;
+            } else {
+              const academy = await this.academyRepository.create(
+                Academy.create({
+                  competitionId: input.competitionId,
+                  name: row.athlete.academyName,
+                }),
+              );
 
-            if (teamId) {
-              teamCache.set(normalizedTeamName, teamId);
+              academyId = academy.id ?? null;
+            }
+
+            if (academyId !== null) {
+              academyCache.set(academyCacheKey, academyId);
             }
           }
         }
@@ -85,7 +97,7 @@ export class ImportAthletesUseCase {
             birthDate: row.athlete.birthDate,
             belt: row.athlete.belt,
             declaredWeightGrams: row.athlete.declaredWeightGrams,
-            teamId,
+            academyId,
           }),
         );
 
@@ -114,27 +126,34 @@ export class ImportAthletesUseCase {
     };
   }
 
-  private async buildTeamCache(
+  private async buildAcademyCache(
     competitionId: number,
     parsedRows: ReturnType<AthleteImportCsvService['parse']>,
   ): Promise<Map<string, number>> {
-    const teamNames = [
+    const academyNames = [
       ...new Set(
         parsedRows
-          .flatMap((row) => (row.athlete?.teamName ? [row.athlete.teamName] : []))
-          .map((teamName) => Team.normalizeName(teamName)),
+          .flatMap((row) =>
+            row.athlete?.academyName ? [row.athlete.academyName] : [],
+          )
+          .map((academyName) => this.buildAcademyCacheKey(academyName)),
       ),
     ];
 
-    const existingTeams = await this.teamRepository.findByCompetitionIdAndNames(
-      competitionId,
-      teamNames,
-    );
+    const existingAcademies =
+      await this.academyRepository.findByCompetitionIdAndNames(
+        competitionId,
+        academyNames,
+      );
 
     return new Map(
-      existingTeams
-        .filter((team) => team.id !== undefined)
-        .map((team) => [team.name, team.id as number]),
+      existingAcademies
+        .filter((academy) => academy.id !== undefined)
+        .map((academy) => [this.buildAcademyCacheKey(academy.name), academy.id as number]),
     );
+  }
+
+  private buildAcademyCacheKey(value: string): string {
+    return Academy.normalizeName(value).toLocaleLowerCase('en-US');
   }
 }

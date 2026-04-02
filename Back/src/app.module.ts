@@ -1,21 +1,31 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { LoggerMiddleware } from './core/middlewares';
 import { DatabaseModule } from './database/database.module';
+import { AcademyModule } from './domain/academy/academy.module';
+import { AreaModule } from './domain/area/area.module';
 import { AthleteModule } from './domain/athlete/athlete.module';
 import { AuthModule } from './domain/auth/auth.module';
+import { CategoryModule } from './domain/category/category.module';
 import { CompetitionModule } from './domain/competition/competition.module';
-import { TeamModule } from './domain/team/team.module';
+import { FightModule } from './domain/fight/fight.module';
+import { KeyGroupModule } from './domain/key-group/key-group.module';
+import { ScoreboardModule } from './domain/scoreboard/scoreboard.module';
 import { WeighInModule } from './domain/weighin/weighin.module';
-import { LoggerMiddleware } from './core/middlewares';
 
 @Module({
   imports: [
     DatabaseModule,
     AuthModule,
     CompetitionModule,
+    CategoryModule,
     AthleteModule,
-    TeamModule,
+    AcademyModule,
+    KeyGroupModule,
+    ScoreboardModule,
+    FightModule,
+    AreaModule,
     WeighInModule,
   ],
   controllers: [AppController],

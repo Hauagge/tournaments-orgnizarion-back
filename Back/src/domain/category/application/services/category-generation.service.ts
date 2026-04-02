@@ -185,10 +185,15 @@ export class CategoryGenerationService {
       }
 
       const weightKg = athlete.declaredWeightGrams / 1000;
-      const weightClass = this.findWeightClass(division.weightClasses, weightKg);
+      const weightClass = this.findWeightClass(
+        division.weightClasses,
+        weightKg,
+      );
 
       if (!weightClass) {
-        unsupportedAthletes.push(`${athlete.fullName} (${weightKg.toFixed(3)}kg)`);
+        unsupportedAthletes.push(
+          `${athlete.fullName} (${weightKg.toFixed(3)}kg)`,
+        );
         continue;
       }
 
@@ -213,9 +218,12 @@ export class CategoryGenerationService {
     }
 
     if (unsupportedAthletes.length > 0) {
-      throw new ValidationError('Unable to generate categories for some athletes', {
-        athletes: unsupportedAthletes,
-      });
+      throw new ValidationError(
+        'Unable to generate categories for some athletes',
+        {
+          athletes: unsupportedAthletes,
+        },
+      );
     }
 
     return Array.from(grouped.values())
@@ -267,7 +275,10 @@ export class CategoryGenerationService {
       }
 
       const weightKg = athlete.declaredWeightGrams / 1000;
-      const weightClass = this.findWeightClass(ABSOLUTE_GP_WEIGHT_CLASSES, weightKg);
+      const weightClass = this.findWeightClass(
+        ABSOLUTE_GP_WEIGHT_CLASSES,
+        weightKg,
+      );
 
       if (!weightClass) {
         continue;
@@ -305,20 +316,22 @@ export class CategoryGenerationService {
         }),
         athleteIds: [...group.athleteIds].sort((left, right) => left - right),
       }))
-      .sort((left, right) => left.category.name.localeCompare(right.category.name));
+      .sort((left, right) =>
+        left.category.name.localeCompare(right.category.name),
+      );
   }
 
   private calculateAge(birthDate: Date): number {
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
+    // const monthDiff = today.getMonth() - birthDate.getMonth();
 
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age -= 1;
-    }
+    // if (
+    //   monthDiff < 0 ||
+    //   (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    // ) {
+    //   age -= 1;
+    // }
 
     return age;
   }

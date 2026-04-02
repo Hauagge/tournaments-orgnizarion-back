@@ -4,7 +4,7 @@ export type CategoryDetailAthleteView = {
   id: number;
   fullName: string;
   belt: string;
-  teamName: string | null;
+  academyName: string | null;
   weighInStatus: WeighInStatus;
 };
 

@@ -1,40 +1,44 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { FightStatus } from '../domain/value-objects/fight-status.enum';
 
-@Entity('Fight')
-export class Fight {
+@Entity('fights')
+export class FightTypeOrmEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'athlete1_id' })
-  athlete1Id: number;
+  @Column({ name: 'competition_id', type: 'int' })
+  competitionId: number;
 
-  @Column({ name: 'athlete2_id' })
-  athlete2Id: number;
+  @Column({ name: 'category_id', type: 'int', nullable: true })
+  categoryId: number | null;
 
-  @Column({ name: 'bracket_id' })
-  bracketId: number;
+  @Column({ name: 'key_group_id', type: 'int', nullable: true })
+  keyGroupId: number | null;
 
-  @Column({ name: 'winner_id' })
-  winnerId: number;
+  @Column({ name: 'area_id', type: 'int', nullable: true })
+  areaId: number | null;
 
-  @Column({ name: 'athlete1_score' })
-  athlete1Score: number;
+  @Column({ type: 'varchar' })
+  status: FightStatus;
 
-  @Column({ name: 'athlete2_score' })
-  athlete2Score: number;
+  @Column({ name: 'athlete_a_id', type: 'int' })
+  athleteAId: number;
 
-  @Column({ name: 'athlete1_penalty' })
-  athlete1Penalty: number;
+  @Column({ name: 'athlete_b_id', type: 'int' })
+  athleteBId: number;
 
-  @Column({ name: 'athlete2_penalty' })
-  athlete2Penalty: number;
+  @Column({ name: 'winner_athlete_id', type: 'int', nullable: true })
+  winnerAthleteId: number | null;
 
-  @Column({ name: 'is_submission' })
-  isSubmission: boolean;
+  @Column({ name: 'win_type', type: 'varchar', nullable: true })
+  winType: string | null;
+
+  @Column({ name: 'started_at', type: 'timestamp', nullable: true })
+  startedAt: Date | null;
+
+  @Column({ name: 'finished_at', type: 'timestamp', nullable: true })
+  finishedAt: Date | null;
+
+  @Column({ name: 'order_index', type: 'int' })
+  orderIndex: number;
 }

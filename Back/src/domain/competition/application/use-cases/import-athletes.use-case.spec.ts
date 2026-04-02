@@ -3,7 +3,7 @@ import { Logger } from '@/configuration/logger.configuration';
 import {
   InMemoryAthleteRepository,
   InMemoryCompetitionRepository,
-  InMemoryTeamRepository,
+  InMemoryAcademyRepository,
 } from '../../../../../test/repositories/in-memory';
 import { makeCompetition, makeTeam } from '../../../../../test/factories';
 import { AthleteImportCsvService } from '../services/athlete-import-csv.service';
@@ -12,7 +12,7 @@ import { ImportAthletesUseCase } from './import-athletes.use-case';
 describe('ImportAthletesUseCase', () => {
   let competitionRepository: InMemoryCompetitionRepository;
   let athleteRepository: InMemoryAthleteRepository;
-  let teamRepository: InMemoryTeamRepository;
+  let teamRepository: InMemoryAcademyRepository;
   let useCase: ImportAthletesUseCase;
 
   beforeEach(() => {
@@ -23,7 +23,7 @@ describe('ImportAthletesUseCase', () => {
       makeCompetition({ id: 10 }),
     ]);
     athleteRepository = new InMemoryAthleteRepository();
-    teamRepository = new InMemoryTeamRepository();
+    teamRepository = new InMemoryAcademyRepository();
     useCase = new ImportAthletesUseCase(
       competitionRepository,
       athleteRepository,
@@ -32,12 +32,12 @@ describe('ImportAthletesUseCase', () => {
     );
   });
 
-  it('should import athletes, normalize values and create team when teamName exists', async () => {
+  it('should import athletes, normalize values and create academy when academyName exists', async () => {
     const result = await useCase.execute({
       competitionId: 10,
       csvText: [
         'nome,datadenasc,faixa,peso,equipe',
-        '  Ana   Silva  ,10/05/2010, white ,65, Team One ',
+        '  Ana   Silva  ,10/05/2010, white ,65, Academy One ',
         'Bruno Souza,2012-08-20,blue,72.5,',
       ].join('\n'),
     });
@@ -50,14 +50,14 @@ describe('ImportAthletesUseCase', () => {
         fullName: 'Ana Silva',
         belt: 'white',
         declaredWeightGrams: 65000,
-        teamId: 1,
+        academyId: 1,
       }),
       expect.objectContaining({
         competitionId: 10,
         fullName: 'Bruno Souza',
         belt: 'blue',
         declaredWeightGrams: 72500,
-        teamId: null,
+        academyId: null,
       }),
     ]);
   });
@@ -82,12 +82,12 @@ describe('ImportAthletesUseCase', () => {
     ]);
   });
 
-  it('should reuse existing teams loaded in batch before importing athletes', async () => {
-    teamRepository = new InMemoryTeamRepository([
+  it('should reuse existing academies loaded in batch before importing athletes', async () => {
+    teamRepository = new InMemoryAcademyRepository([
       makeTeam({
         id: 7,
         competitionId: 10,
-        name: 'Team One',
+        name: 'Academy One',
       }),
     ]);
     useCase = new ImportAthletesUseCase(
@@ -101,8 +101,8 @@ describe('ImportAthletesUseCase', () => {
       competitionId: 10,
       csvText: [
         'nome,datadenasc,faixa,peso,equipe',
-        'Ana Silva,10/05/2010,white,65,Team One',
-        'Bruno Souza,20/08/2012,blue,72.5, Team One ',
+        'Ana Silva,10/05/2010,white,65,Academy One',
+        'Bruno Souza,20/08/2012,blue,72.5, Academy One ',
       ].join('\n'),
     });
 
@@ -111,11 +111,11 @@ describe('ImportAthletesUseCase', () => {
     expect(result.athletes).toEqual([
       expect.objectContaining({
         fullName: 'Ana Silva',
-        teamId: 7,
+        academyId: 7,
       }),
       expect.objectContaining({
         fullName: 'Bruno Souza',
-        teamId: 7,
+        academyId: 7,
       }),
     ]);
   });

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
+import { AcademyProviderModule } from '../academy/academy-provider.module';
 import { AthleteProviderModule } from '../athlete/athlete-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
-import { TeamProviderModule } from '../team/team-provider.module';
 import { WeighInProviderModule } from '../weighin/weighin-provider.module';
 import { GetCategoryUseCase } from './application/use-cases/get-category.use-case';
 import { GenerateCategoriesUseCase } from './application/use-cases/generate-categories.use-case';
@@ -15,7 +15,7 @@ import { CategoryProviderModule } from './category-provider.module';
     CategoryProviderModule,
     CompetitionProviderModule,
     AthleteProviderModule,
-    TeamProviderModule,
+    AcademyProviderModule,
     WeighInProviderModule,
   ],
   controllers: [CategoryController],
