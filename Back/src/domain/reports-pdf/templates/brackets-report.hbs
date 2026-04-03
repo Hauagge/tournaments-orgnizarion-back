@@ -4,132 +4,210 @@
     <meta charset="UTF-8" />
     <title>Brackets Report</title>
     <style>
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
+
+      @page {
+        size: A4;
+        margin: 18mm 12mm 16mm;
+      }
+
       body {
         margin: 0;
         font-family: Arial, Helvetica, sans-serif;
-        color: #111827;
-        font-size: 12px;
-        background: #ffffff;
+        color: #111;
+        font-size: 11px;
+        background: #fff;
       }
+
       .page {
         page-break-after: always;
-        min-height: 277mm;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
       }
-      .page:last-child { page-break-after: auto; }
+
+      .page:last-child {
+        page-break-after: auto;
+      }
+
       .header {
-        border-bottom: 2px solid #111827;
-        padding-bottom: 8px;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        margin-bottom: 16px;
+        border-bottom: 1px solid #d6d6d6;
+        padding-bottom: 10px;
       }
-      .title {
-        font-size: 22px;
+
+      .brand {
+        font-size: 12px;
         font-weight: 700;
-        margin-bottom: 6px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
       }
-      .meta {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        color: #4b5563;
+
+      .event-title {
+        text-align: center;
+        font-size: 20px;
+        font-weight: 700;
       }
+
+      .header-right {
+        text-align: right;
+        font-size: 10px;
+        color: #555;
+      }
+
+      .category-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .category-meta {
+        font-size: 11px;
+        color: #4f4f4f;
+        margin-bottom: 14px;
+      }
+
       .section-title {
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
-        margin-bottom: 6px;
+        margin: 0 0 8px;
       }
-      .summary {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-      }
-      .box {
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        padding: 10px;
-      }
-      .athlete-list {
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-      .athlete-item {
-        padding: 8px 0;
-        border-bottom: 1px solid #e5e7eb;
-      }
-      .athlete-item:last-child { border-bottom: 0; }
-      .athlete-name {
-        font-weight: 600;
-      }
-      .athlete-meta {
-        color: #6b7280;
-        font-size: 11px;
-        margin-top: 3px;
-      }
-      .bracket-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        align-items: start;
-      }
-      .stage-column {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        justify-content: center;
-      }
-      .stage-card {
-        border: 1px solid #111827;
-        border-radius: 8px;
-        padding: 10px;
-        min-height: 88px;
-      }
-      .stage-label {
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        margin-bottom: 8px;
-      }
-      .fight-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-        padding: 6px 0;
-        border-bottom: 1px dashed #d1d5db;
-      }
-      .fight-row:last-child { border-bottom: 0; }
-      .placeholder {
-        color: #6b7280;
-        font-style: italic;
-      }
-      table {
+
+      .athletes-table {
         width: 100%;
         border-collapse: collapse;
+        margin-bottom: 18px;
       }
-      th, td {
-        border: 1px solid #d1d5db;
-        padding: 7px;
+
+      .athletes-table th,
+      .athletes-table td {
+        border: 1px solid #e5e5e5;
+        padding: 6px 8px;
         text-align: left;
         vertical-align: top;
       }
-      th {
-        background: #f3f4f6;
-        font-size: 11px;
+
+      .athletes-table th {
+        background: #f4f4f4;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
       }
-      .empty {
-        border: 1px dashed #9ca3af;
-        border-radius: 8px;
-        padding: 16px;
+
+      .bracket-heading {
         text-align: center;
-        color: #6b7280;
+        font-weight: 700;
+        font-size: 13px;
+        margin: 8px 0 12px;
       }
-      .result {
-        margin-top: 6px;
-        font-size: 11px;
-        color: #374151;
+
+      .semis-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-bottom: 16px;
+      }
+
+      .fight-card {
+        border: 1px solid #000;
+      }
+
+      .fight-title {
+        text-align: center;
+        font-weight: 700;
+        padding: 6px 8px 4px;
+        font-size: 12px;
+      }
+
+      .fight-lines {
+        border-top: 1px solid #000;
+      }
+
+      .fight-line,
+      .fight-vs {
+        min-height: 38px;
+        padding: 10px 12px;
+        border-top: 1px solid #000;
+      }
+
+      .fight-line:first-child,
+      .fight-vs:first-child {
+        border-top: 0;
+      }
+
+      .fight-vs {
+        text-align: center;
+        font-weight: 700;
+        min-height: 26px;
+        padding: 6px 12px;
+      }
+
+      .fight-athlete {
+        font-weight: 600;
+      }
+
+      .fight-meta {
+        margin-top: 4px;
+        font-size: 10px;
+        color: #505050;
+      }
+
+      .placeholder {
+        color: #6b6b6b;
+        font-style: italic;
+      }
+
+      .single-card {
+        margin-bottom: 16px;
+      }
+
+      .podium {
+        margin-top: 18px;
+      }
+
+      .podium-line {
+        text-align: center;
+        margin: 7px 0;
+        font-size: 12px;
+      }
+
+      .generated-fights {
+        margin-top: 16px;
+      }
+
+      .fights-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .fights-table th,
+      .fights-table td {
+        border: 1px solid #d8d8d8;
+        padding: 6px 7px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .fights-table th {
+        background: #f4f4f4;
+        font-size: 10px;
+        text-transform: uppercase;
+      }
+
+      .footer-text {
+        margin-top: 14px;
+        font-size: 10px;
+        color: #555;
+      }
+
+      .empty {
+        border: 1px dashed #aaa;
+        padding: 18px;
+        text-align: center;
+        color: #666;
       }
     </style>
   </head>
@@ -138,84 +216,114 @@
       {{#each brackets}}
         <section class="page">
           <header class="header">
-            <div class="title">{{../competitionName}}</div>
-            <div class="meta">
-              <div>
-                <div><strong>Categoria:</strong> {{categoryName}}</div>
-                <div><strong>Chave:</strong> {{bracketName}}</div>
-              </div>
-              <div>
-                <div><strong>Modo:</strong> {{../competitionMode}}</div>
-                <div><strong>Exportado em:</strong> {{../exportedAt}}</div>
-              </div>
+            <div class="brand">Relatório de Chaves</div>
+            <div class="event-title">{{../competitionName}}</div>
+            <div class="header-right">
+              <div>{{../competitionMode}}</div>
+              <div>{{../exportedAt}}</div>
             </div>
           </header>
 
-          <section class="summary">
-            <div class="box">
-              <div class="section-title">Atletas</div>
-              <ul class="athlete-list">
-                {{#each athletes}}
-                  <li class="athlete-item">
-                    <div class="athlete-name">{{fullName}}</div>
-                    <div class="athlete-meta">
-                      {{birthDate}} | {{belt}}{{#if academyName}} | {{academyName}}{{/if}}
-                    </div>
-                  </li>
-                {{/each}}
-              </ul>
-            </div>
+          <div class="category-title">{{categoryName}}</div>
+          <div class="category-meta">
+            Chave: {{bracketName}} • Total de atletas: {{athletes.length}}
+          </div>
 
-            <div class="box">
-              <div class="section-title">Estrutura da Chave</div>
-              <div class="bracket-grid">
-                <div class="stage-column">
-                  {{#each stage.semiFinals}}
-                    <div class="stage-card">
-                      <div class="stage-label">{{label}}</div>
-                      <div class="fight-row">
-                        <span>{{athleteA}}</span>
-                        <span>vs</span>
-                      </div>
-                      <div class="fight-row">
-                        <span>{{athleteB}}</span>
-                        <span>{{#if areaName}}Área {{areaName}}{{/if}}</span>
-                      </div>
+          <h2 class="section-title">Atletas</h2>
+          <table class="athletes-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nome</th>
+                <th>Academia</th>
+                <th>Nascimento</th>
+                <th>Faixa</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each athletes}}
+                <tr>
+                  <td>{{id}}</td>
+                  <td>{{fullName}}</td>
+                  <td>{{academyName}}</td>
+                  <td>{{birthDate}}</td>
+                  <td>{{belt}}</td>
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+
+          {{#if stage.semiFinals.length}}
+            <div class="bracket-heading">SEMIFINAIS</div>
+            <div class="semis-grid">
+              {{#each stage.semiFinals}}
+                <div class="fight-card">
+                  <div class="fight-title">{{label}}</div>
+                  <div class="fight-lines">
+                    <div class="fight-line">
+                      <div class="fight-athlete">{{athleteA}}</div>
+                    </div>
+                    <div class="fight-vs">VS</div>
+                    <div class="fight-line">
+                      <div class="fight-athlete">{{athleteB}}</div>
+                      {{#if areaName}}
+                        <div class="fight-meta">Área: {{areaName}}</div>
+                      {{/if}}
                       {{#if winner}}
-                        <div class="result">Vencedor: {{winner}}{{#if winType}} | {{winType}}{{/if}}</div>
-                      {{else}}
-                        <div class="result placeholder">Campo para preenchimento manual</div>
+                        <div class="fight-meta">Vencedor: {{winner}}{{#if winType}} | {{winType}}{{/if}}</div>
                       {{/if}}
                     </div>
-                  {{/each}}
-                </div>
-
-                <div class="stage-column">
-                  <div class="stage-card">
-                    <div class="stage-label">{{stage.final.label}}</div>
-                    <div class="fight-row">
-                      <span>{{stage.final.athleteA}}</span>
-                      <span>vs</span>
-                    </div>
-                    <div class="fight-row">
-                      <span>{{stage.final.athleteB}}</span>
-                      <span>{{#if stage.final.areaName}}Área {{stage.final.areaName}}{{/if}}</span>
-                    </div>
-                    {{#if stage.final.winner}}
-                      <div class="result">Vencedor: {{stage.final.winner}}{{#if stage.final.winType}} | {{stage.final.winType}}{{/if}}</div>
-                    {{else}}
-                      <div class="result placeholder">Campo para preenchimento manual</div>
-                    {{/if}}
                   </div>
                 </div>
+              {{/each}}
+            </div>
+          {{/if}}
+
+          <div class="fight-card single-card">
+            <div class="fight-title">{{stage.final.label}}</div>
+            <div class="fight-lines">
+              <div class="fight-line">
+                <div class="fight-athlete">{{stage.final.athleteA}}</div>
+              </div>
+              <div class="fight-vs">VS</div>
+              <div class="fight-line">
+                <div class="fight-athlete">{{stage.final.athleteB}}</div>
+                {{#if stage.final.areaName}}
+                  <div class="fight-meta">Área: {{stage.final.areaName}}</div>
+                {{/if}}
+                {{#if stage.final.winner}}
+                  <div class="fight-meta">Vencedor: {{stage.final.winner}}{{#if stage.final.winType}} | {{stage.final.winType}}{{/if}}</div>
+                {{else}}
+                  <div class="fight-meta placeholder">Campo para preenchimento manual</div>
+                {{/if}}
               </div>
             </div>
-          </section>
+          </div>
 
-          <section class="box">
-            <div class="section-title">Lutas Geradas</div>
+          <div class="fight-card single-card">
+            <div class="fight-title">Disputa do 3º lugar</div>
+            <div class="fight-lines">
+              <div class="fight-line">
+                <div class="fight-athlete">Eliminado Luta 1</div>
+              </div>
+              <div class="fight-vs">VS</div>
+              <div class="fight-line">
+                <div class="fight-athlete">Eliminado Luta 2</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="podium">
+            <div class="podium-line">1: _________________________________</div>
+            <div class="podium-line">2: _________________________________</div>
+            <div class="podium-line">3: _________________________________</div>
+            <div class="podium-line">4: _________________________________</div>
+          </div>
+
+          <div class="generated-fights">
+            <h2 class="section-title">Lutas Geradas</h2>
             {{#if fights.length}}
-              <table>
+              <table class="fights-table">
                 <thead>
                   <tr>
                     <th>Round</th>
@@ -248,20 +356,23 @@
             {{else}}
               <div class="empty">Nenhuma luta gerada para esta chave.</div>
             {{/if}}
-          </section>
+          </div>
+
+          <div class="footer-text">Total de atletas: {{athletes.length}}</div>
         </section>
       {{/each}}
     {{else}}
       <section class="page">
         <header class="header">
-          <div class="title">{{competitionName}}</div>
-          <div class="meta">
-            <div><strong>Modo:</strong> {{competitionMode}}</div>
-            <div><strong>Exportado em:</strong> {{exportedAt}}</div>
+          <div class="brand">Relatório de Chaves</div>
+          <div class="event-title">{{competitionName}}</div>
+          <div class="header-right">
+            <div>{{competitionMode}}</div>
+            <div>{{exportedAt}}</div>
           </div>
         </header>
         <div class="empty">Nenhuma chave encontrada para os filtros informados.</div>
       </section>
     {{/if}}
   </body>
-  </html>
+</html>

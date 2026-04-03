@@ -8,8 +8,9 @@ import { CreateAreasUseCase } from './application/use-cases/create-areas.use-cas
 import { DistributeAreaFightsUseCase } from './application/use-cases/distribute-area-fights.use-case';
 import { GetAreaQueueUseCase } from './application/use-cases/get-area-queue.use-case';
 import { ListAreasByCompetitionUseCase } from './application/use-cases/list-areas-by-competition.use-case';
+import { AreaDistributionStrategyResolverService } from './application/services/area-distribution-strategy-resolver.service';
 import { RestPolicyService } from './application/services/rest-policy.service';
-import { AreaDistributionStrategy } from './application/strategies/area-distribution.strategy';
+import { KeysAreaDistributionStrategy } from './application/strategies/keys-area-distribution.strategy';
 import { SplitByAgeStrategy } from './application/strategies/split-by-age.strategy';
 import { AreaController } from './infra/http/area.controller';
 import { AreaProviderModule } from './area-provider.module';
@@ -31,10 +32,8 @@ import { AreaProviderModule } from './area-provider.module';
     CallNextAreaFightUseCase,
     RestPolicyService,
     SplitByAgeStrategy,
-    {
-      provide: AreaDistributionStrategy,
-      useExisting: SplitByAgeStrategy,
-    },
+    KeysAreaDistributionStrategy,
+    AreaDistributionStrategyResolverService,
   ],
   exports: [
     CreateAreasUseCase,

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
 import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { ValidationError } from '@/shared/errors/validation.error';
 import {
@@ -10,6 +11,8 @@ import {
 
 @Injectable()
 export class SplitByAgeStrategy implements AreaDistributionStrategy {
+  readonly mode = CompetitionMode.ABSOLUTE_GP;
+
   distribute(context: AreaDistributionContext): AreaDistributionResult {
     if (context.areas.length === 0) {
       throw new ValidationError('At least one area is required for distribution');

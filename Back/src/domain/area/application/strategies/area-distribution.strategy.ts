@@ -1,3 +1,4 @@
+import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
 import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 
 export type FightQueueGroup = {
@@ -22,5 +23,6 @@ export type AreaDistributionResult = Array<{
 }>;
 
 export abstract class AreaDistributionStrategy {
+  abstract readonly mode: CompetitionMode;
   abstract distribute(context: AreaDistributionContext): AreaDistributionResult;
 }

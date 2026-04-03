@@ -9,8 +9,8 @@ import { ValidationError } from '@/shared/errors/validation.error';
 import { AreaQueueItem } from '../../domain/entities/area-queue-item.entity';
 import { IAreaRepository } from '../../repository/IAreaRepository.repository';
 import { IAreaQueueItemRepository } from '../../repository/IAreaQueueItemRepository.repository';
+import { AreaDistributionStrategyResolverService } from '../services/area-distribution-strategy-resolver.service';
 import { RestPolicyService } from '../services/rest-policy.service';
-import { AreaDistributionStrategy } from '../strategies/area-distribution.strategy';
 
 export type DistributeAreaFightsInput = {
   competitionId: number;
@@ -31,7 +31,7 @@ export class DistributeAreaFightsUseCase {
     private readonly fightRepository: IFightRepository,
     @Inject(IAthleteRepository)
     private readonly athleteRepository: IAthleteRepository,
-    private readonly areaDistributionStrategy: AreaDistributionStrategy,
+    private readonly areaDistributionStrategyResolver: AreaDistributionStrategyResolverService,
     private readonly restPolicyService: RestPolicyService,
     @Inject(EventBus)
     private readonly eventBus: EventBus,
@@ -64,7 +64,11 @@ export class DistributeAreaFightsUseCase {
       athletes.map((athlete) => [athlete.id as number, athlete.birthDate]),
     );
 
-    const distributed = this.areaDistributionStrategy.distribute({
+    const areaDistributionStrategy = this.areaDistributionStrategyResolver.resolve(
+      competition.mode,
+    );
+
+    const distributed = areaDistributionStrategy.distribute({
       competitionId: input.competitionId,
       ageSplitYears: input.ageSplitYears ?? competition.ageSplitYears,
       areas: areas.map((area) => ({ id: area.id as number, order: area.order })),
