@@ -38,6 +38,43 @@ export type KeyGroupDetailsFightView = {
   orderIndex: number;
 };
 
+export type KeyGroupReportAthleteView = {
+  id: number;
+  fullName: string;
+  birthDate: Date;
+  belt: string;
+  academyName: string | null;
+};
+
+export type KeyGroupReportFightView = {
+  id: number;
+  keyGroupId: number;
+  areaId: number | null;
+  areaName: string | null;
+  athleteAId: number;
+  athleteAName: string | null;
+  academyAName: string | null;
+  athleteBId: number;
+  athleteBName: string | null;
+  academyBName: string | null;
+  status: FightStatus;
+  winnerAthleteId: number | null;
+  winType: string | null;
+  orderIndex: number;
+};
+
+export type KeyGroupReportView = {
+  id: number;
+  competitionId: number;
+  categoryId: number | null;
+  categoryName: string | null;
+  name: string | null;
+  status: string;
+  createdAt: Date;
+  members: KeyGroupReportAthleteView[];
+  fights: KeyGroupReportFightView[];
+};
+
 export type KeyGroupDetailsView = {
   id: number;
   competitionId: number;
@@ -58,6 +95,11 @@ export abstract class IKeyGroupRepository {
     categoryId?: number;
   }): Promise<KeyGroupListItemView[]>;
   abstract getDetails(id: number): Promise<KeyGroupDetailsView | null>;
+  abstract listReportByCompetitionId(input: {
+    competitionId: number;
+    categoryId?: number;
+    areaId?: number;
+  }): Promise<KeyGroupReportView[]>;
   abstract listMembersByKeyGroupId(keyGroupId: number): Promise<KeyGroupMember[]>;
   abstract findByCompetitionIdAndAthleteId(
     competitionId: number,

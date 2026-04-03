@@ -19,6 +19,17 @@ import { KeyGroupMemberParamDto, KeyGroupMemberParamSchema } from './dtos/key-gr
 import { ListKeyGroupsDto, ListKeyGroupsSchema } from './dtos/list-key-groups.dto';
 import { UpdateKeyGroupDto, UpdateKeyGroupSchema } from './dtos/update-key-group.dto';
 
+type CreateKeyGroupResponse = {
+  id: number;
+  competitionId: number;
+  categoryId: number | null;
+  name: string | null;
+  status: string;
+  createdAt: Date;
+  athletes: KeyGroupDetailsView['members'];
+  fights: KeyGroupDetailsView['fights'];
+};
+
 @Controller()
 export class KeyGroupController {
   constructor(
@@ -39,14 +50,23 @@ export class KeyGroupController {
     params: CompetitionIdParamDto,
     @Body(new ZodValidationPipe(CreateKeyGroupSchema))
     body: CreateKeyGroupDto,
-  ): Promise<ApiResponse<ReturnType<KeyGroup['toJSON']>>> {
+  ): Promise<ApiResponse<CreateKeyGroupResponse>> {
     const group = await this.createKeyGroupUseCase.execute({
       competitionId: params.id,
       ...body,
     });
 
     return {
-      data: group.toJSON(),
+      data: {
+        id: group.id,
+        competitionId: group.competitionId,
+        categoryId: group.categoryId,
+        name: group.name,
+        status: group.status,
+        createdAt: group.createdAt,
+        athletes: group.members,
+        fights: group.fights,
+      },
       error: null,
     };
   }

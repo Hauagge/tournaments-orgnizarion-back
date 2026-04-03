@@ -11,6 +11,7 @@ import { CategoryModule } from './domain/category/category.module';
 import { CompetitionModule } from './domain/competition/competition.module';
 import { FightModule } from './domain/fight/fight.module';
 import { KeyGroupModule } from './domain/key-group/key-group.module';
+import { ReportsPdfModule } from './domain/reports-pdf/reports-pdf.module';
 import { ScoreboardModule } from './domain/scoreboard/scoreboard.module';
 import { WeighInModule } from './domain/weighin/weighin.module';
 
@@ -23,6 +24,7 @@ import { WeighInModule } from './domain/weighin/weighin.module';
     AthleteModule,
     AcademyModule,
     KeyGroupModule,
+    ReportsPdfModule,
     ScoreboardModule,
     FightModule,
     AreaModule,
