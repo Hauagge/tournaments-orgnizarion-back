@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { Athlete } from '@/domain/athlete/domain/entities/athlete.entity';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
 import { FightEntity } from '../../domain/entities/fight.entity';
-import { FightGenerationResult, FightGenerationStrategy } from './fight-generation.strategy';
+import {
+  FightGenerationResult,
+  FightGenerationStrategy,
+} from './fight-generation.strategy';
 
 export type AbsoluteGpFightGenerationInput = {
   competitionId: number;
@@ -38,6 +41,7 @@ export class AbsoluteGpFightGenerationStrategy
             categoryId: input.categoryId,
             keyGroupId: null,
             areaId: null,
+            areaName: null,
             athleteAId,
             athleteBId,
             orderIndex,
@@ -66,6 +70,8 @@ export class AbsoluteGpFightGenerationStrategy
             categoryId: input.categoryId,
             keyGroupId: null,
             areaId: null,
+            areaName: null,
+
             athleteAId,
             athleteBId,
             orderIndex: index + 1,
@@ -97,6 +103,7 @@ export class AbsoluteGpFightGenerationStrategy
           categoryId: input.categoryId,
           keyGroupId: null,
           areaId: null,
+          areaName: null,
           athleteAId,
           athleteBId,
           orderIndex: orderIndex++,
