@@ -26,7 +26,7 @@ export class AthleteTypeOrmEntity {
   belt: string;
 
   @Column({ name: 'declared_weight_grams', type: 'int' })
-  declaredWeightGrams: number;
+  declaredWeight: number;
 
   @Column({ name: 'academy_id', type: 'int', nullable: true })
   academyId: number | null;
