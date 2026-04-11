@@ -4,7 +4,7 @@ export type AthleteProps = {
   fullName: string;
   birthDate: Date;
   belt: string;
-  declaredWeightGrams: number;
+  declaredWeight: number;
   academyId: number | null;
   createdAt: Date;
 };
@@ -12,16 +12,14 @@ export type AthleteProps = {
 type UpdatableAthleteProps = Partial<
   Pick<
     AthleteProps,
-    'fullName' | 'birthDate' | 'belt' | 'declaredWeightGrams' | 'academyId'
+    'fullName' | 'birthDate' | 'belt' | 'declaredWeight' | 'academyId'
   >
 >;
 
 export class Athlete {
   private constructor(private readonly props: AthleteProps) {}
 
-  static create(
-    props: Omit<AthleteProps, 'id' | 'createdAt'>,
-  ): Athlete {
+  static create(props: Omit<AthleteProps, 'id' | 'createdAt'>): Athlete {
     return new Athlete({
       ...props,
       fullName: Athlete.normalizeFullName(props.fullName),
@@ -47,9 +45,9 @@ export class Athlete {
           : this.props.fullName,
       birthDate: input.birthDate ?? this.props.birthDate,
       belt: input.belt !== undefined ? input.belt.trim() : this.props.belt,
-      declaredWeightGrams:
-        input.declaredWeightGrams ?? this.props.declaredWeightGrams,
-      academyId: input.academyId !== undefined ? input.academyId : this.props.academyId,
+      declaredWeight: input.declaredWeight ?? this.props.declaredWeight,
+      academyId:
+        input.academyId !== undefined ? input.academyId : this.props.academyId,
     });
   }
 
@@ -64,7 +62,7 @@ export class Athlete {
       fullName: this.fullName,
       birthDate: this.birthDate,
       belt: this.belt,
-      declaredWeightGrams: this.declaredWeightGrams,
+      declaredWeight: this.declaredWeight,
       academyId: this.academyId,
       createdAt: this.createdAt,
     };
@@ -90,8 +88,8 @@ export class Athlete {
     return this.props.belt;
   }
 
-  get declaredWeightGrams(): number {
-    return this.props.declaredWeightGrams;
+  get declaredWeight(): number {
+    return this.props.declaredWeight;
   }
 
   get academyId(): number | null {
