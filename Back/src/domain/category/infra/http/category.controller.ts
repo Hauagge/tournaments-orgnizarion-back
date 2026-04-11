@@ -1,21 +1,42 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { CompetitionIdParamDto, CompetitionIdParamSchema } from '@/domain/competition/infra/http/dtos/competition-id-param.dto';
 import { ZodValidationPipe } from 'src/core/pipe/zod-validation.pipe';
 import { ApiResponse } from 'src/shared/result/api-response.type';
+import { CreateCategoryUseCase } from '../../application/use-cases/create-category.use-case';
 import { GenerateCategoriesUseCase } from '../../application/use-cases/generate-categories.use-case';
 import { GetCategoryUseCase } from '../../application/use-cases/get-category.use-case';
 import { ListCategoriesUseCase } from '../../application/use-cases/list-categories.use-case';
 import { CategoryDetailView } from '../../application/use-cases/category-detail.view';
 import { Category } from '../../domain/entities/category.entity';
 import { CategoryIdParamDto, CategoryIdParamSchema } from './dtos/category-id-param.dto';
+import { CreateCategoryDto, CreateCategorySchema } from './dtos/create-category.dto';
 
 @Controller()
 export class CategoryController {
   constructor(
+    private readonly createCategoryUseCase: CreateCategoryUseCase,
     private readonly generateCategoriesUseCase: GenerateCategoriesUseCase,
     private readonly listCategoriesUseCase: ListCategoriesUseCase,
     private readonly getCategoryUseCase: GetCategoryUseCase,
   ) {}
+
+  @Post('competitions/:id/categories')
+  async create(
+    @Param(new ZodValidationPipe(CompetitionIdParamSchema))
+    params: CompetitionIdParamDto,
+    @Body(new ZodValidationPipe(CreateCategorySchema))
+    body: CreateCategoryDto,
+  ): Promise<ApiResponse<ReturnType<Category['toJSON']>>> {
+    const category = await this.createCategoryUseCase.execute({
+      competitionId: params.id,
+      ...body,
+    });
+
+    return {
+      data: category.toJSON(),
+      error: null,
+    };
+  }
 
   @Post('competitions/:id/categories/generate')
   async generate(
