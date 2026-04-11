@@ -19,6 +19,14 @@ export class CategoryRepository implements ICategoryRepository {
     private readonly categoryAthleteRepository: Repository<CategoryAthleteTypeOrmEntity>,
   ) {}
 
+  async create(category: Category): Promise<Category> {
+    const entity = this.categoryRepository.create(
+      CategoryMapper.toPersistence(category),
+    );
+    const saved = await this.categoryRepository.save(entity);
+    return CategoryMapper.toDomain(saved);
+  }
+
   async replaceCompetitionCategories(input: {
     competitionId: number;
     assignments: CategoryAssignment[];
