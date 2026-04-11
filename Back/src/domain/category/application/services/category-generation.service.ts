@@ -184,7 +184,7 @@ export class CategoryGenerationService {
         continue;
       }
 
-      const weightKg = athlete.declaredWeightGrams / 1000;
+      const weightKg = athlete.declaredWeight / 1000;
       const weightClass = this.findWeightClass(
         division.weightClasses,
         weightKg,
@@ -274,7 +274,7 @@ export class CategoryGenerationService {
         continue;
       }
 
-      const weightKg = athlete.declaredWeightGrams / 1000;
+      const weightKg = athlete.declaredWeight / 1000;
       const weightClass = this.findWeightClass(
         ABSOLUTE_GP_WEIGHT_CLASSES,
         weightKg,
