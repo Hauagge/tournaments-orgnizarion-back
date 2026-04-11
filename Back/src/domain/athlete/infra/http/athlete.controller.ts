@@ -6,6 +6,7 @@ import { CreateAthleteUseCase } from '../../application/use-cases/create-athlete
 import { SearchAthletesUseCase } from '../../application/use-cases/search-athletes.use-case';
 import { UpdateAthleteUseCase } from '../../application/use-cases/update-athlete.use-case';
 import { Athlete } from '../../domain/entities/athlete.entity';
+import { BELTS } from '../../domain/value-objects/belts.constant';
 import {
   AthleteIdParamDto,
   AthleteIdParamSchema,
@@ -34,6 +35,14 @@ export class AthleteController {
     private readonly updateAthleteUseCase: UpdateAthleteUseCase,
     private readonly searchAthletesUseCase: SearchAthletesUseCase,
   ) {}
+
+  @Get('belts')
+  async listBelts(): Promise<ApiResponse<typeof BELTS[number][]>> {
+    return {
+      data: [...BELTS],
+      error: null,
+    };
+  }
 
   @Post('competitions/:id/athletes')
   async create(
