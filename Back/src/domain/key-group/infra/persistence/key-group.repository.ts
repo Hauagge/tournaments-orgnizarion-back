@@ -38,7 +38,9 @@ export class KeyGroupRepository implements IKeyGroupRepository {
   ) {}
 
   async create(group: KeyGroup): Promise<KeyGroup> {
-    const entity = this.keyGroupRepository.create(KeyGroupMapper.toPersistence(group));
+    const entity = this.keyGroupRepository.create(
+      KeyGroupMapper.toPersistence(group),
+    );
     const saved = await this.keyGroupRepository.save(entity);
     return KeyGroupMapper.toDomain(saved);
   }
@@ -50,7 +52,9 @@ export class KeyGroupRepository implements IKeyGroupRepository {
     );
 
     if (!result.affected) {
-      throw new NotFoundError(`Key group with id ${group.id as number} not found`);
+      throw new NotFoundError(
+        `Key group with id ${group.id as number} not found`,
+      );
     }
 
     return group;
@@ -173,9 +177,12 @@ export class KeyGroupRepository implements IKeyGroupRepository {
           'athleteB',
           'athleteB.id = fight.athlete_b_id',
         )
+        .leftJoin(AreaTypeOrmEntity, 'area', 'area.id = fight.area_id')
         .where('fight.key_group_id = :id', { id })
         .select('fight.id', 'id')
         .addSelect('fight.key_group_id', 'keyGroupId')
+        .addSelect('fight.area_id', 'areaId')
+        .addSelect('area.name', 'areaName')
         .addSelect('fight.athlete_a_id', 'athleteAId')
         .addSelect('athleteA.full_name', 'athleteAName')
         .addSelect('athleteA.birth_date', 'athleteABirthDate')
@@ -201,6 +208,8 @@ export class KeyGroupRepository implements IKeyGroupRepository {
           winnerAthleteId: string | null;
           winType: string | null;
           orderIndex: string;
+          areaName: string | null;
+          areaId: number | null;
         }>(),
     ]);
 
@@ -217,6 +226,8 @@ export class KeyGroupRepository implements IKeyGroupRepository {
     const fights: KeyGroupDetailsFightView[] = fightRows.map((row) => ({
       id: Number(row.id),
       keyGroupId: row.keyGroupId === null ? null : Number(row.keyGroupId),
+      areaId: row.areaId === null ? null : Number(row.areaId),
+      areaName: row.areaName,
       athleteAId: Number(row.athleteAId),
       athleteAName: row.athleteAName,
       athleteABirthDate:
@@ -360,16 +371,10 @@ export class KeyGroupRepository implements IKeyGroupRepository {
           'academyB',
           'academyB.id = athleteB.academy_id',
         )
-        .leftJoin(
-          AreaTypeOrmEntity,
-          'area',
-          'area.id = fight.area_id',
-        )
+        .leftJoin(AreaTypeOrmEntity, 'area', 'area.id = fight.area_id')
         .where('fight.key_group_id IN (:...groupIds)', { groupIds })
         .andWhere(
-          input.areaId === undefined
-            ? '1 = 1'
-            : 'fight.area_id = :fightAreaId',
+          input.areaId === undefined ? '1 = 1' : 'fight.area_id = :fightAreaId',
           input.areaId === undefined ? {} : { fightAreaId: input.areaId },
         )
         .select('fight.id', 'id')
@@ -489,8 +494,14 @@ export class KeyGroupRepository implements IKeyGroupRepository {
     return entity ? KeyGroupMapper.toDomain(entity) : null;
   }
 
-  async addMember(keyGroupId: number, athleteId: number): Promise<KeyGroupMember> {
-    const entity = this.keyGroupMemberRepository.create({ keyGroupId, athleteId });
+  async addMember(
+    keyGroupId: number,
+    athleteId: number,
+  ): Promise<KeyGroupMember> {
+    const entity = this.keyGroupMemberRepository.create({
+      keyGroupId,
+      athleteId,
+    });
     const saved = await this.keyGroupMemberRepository.save(entity);
     return KeyGroupMapper.memberToDomain(saved);
   }

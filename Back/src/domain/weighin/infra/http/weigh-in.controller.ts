@@ -50,6 +50,7 @@ export class WeighInController {
       competitionId: params.id,
       athleteId: body.athleteId,
       measuredWeightGrams: body.realWeightGrams,
+      weighInStatus: body.weighInStatus,
       performedBy,
     });
 

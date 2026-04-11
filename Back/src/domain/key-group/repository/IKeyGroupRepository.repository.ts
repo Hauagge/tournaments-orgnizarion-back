@@ -26,6 +26,8 @@ export type KeyGroupDetailsAthleteView = {
 export type KeyGroupDetailsFightView = {
   id: number;
   keyGroupId: number | null;
+  areaId: number | null;
+  areaName: string | null;
   athleteAId: number;
   athleteAName: string | null;
   athleteABirthDate: Date | null;
