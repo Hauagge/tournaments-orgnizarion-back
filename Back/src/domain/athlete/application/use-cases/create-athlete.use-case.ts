@@ -10,7 +10,7 @@ export type CreateAthleteInput = {
   fullName: string;
   birthDate: Date;
   belt: string;
-  declaredWeightGrams: number;
+  declaredWeight: number;
   academyId: number | null;
 };
 
