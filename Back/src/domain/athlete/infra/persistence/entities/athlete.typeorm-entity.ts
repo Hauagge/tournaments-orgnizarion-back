@@ -19,6 +19,9 @@ export class AthleteTypeOrmEntity {
   @Column({ name: 'full_name', type: 'varchar' })
   fullName: string;
 
+  @Column({ name: 'document_number', type: 'varchar', nullable: true })
+  documentNumber: string | null;
+
   @Column({ name: 'birth_date', type: 'date' })
   birthDate: Date;
 

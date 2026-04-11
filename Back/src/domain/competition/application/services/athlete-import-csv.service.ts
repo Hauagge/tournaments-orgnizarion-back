@@ -15,6 +15,7 @@ export type ParsedAthleteImportRow = {
   raw: Record<string, string>;
   athlete: {
     fullName: string;
+    documentNumber: string | null;
     birthDate: Date;
     belt: string;
     declaredWeightGrams: number;
@@ -27,6 +28,7 @@ export type ParsedAthleteImportRow = {
 
 type HeaderMap = {
   fullName: string | null;
+  documentNumber: string | null;
   birthDate: string | null;
   belt: string | null;
   declaredWeightKg: string | null;
@@ -54,6 +56,9 @@ export class AthleteImportCsvService {
 
       const fullName = normalizeWhitespace(
         getColumnValueByHeader(columns, headers, headerMap.fullName),
+      );
+      const documentNumberValue = normalizeWhitespace(
+        getColumnValueByHeader(columns, headers, headerMap.documentNumber),
       );
       const birthDateInput = normalizeWhitespace(
         getColumnValueByHeader(columns, headers, headerMap.birthDate),
@@ -99,6 +104,7 @@ export class AthleteImportCsvService {
           errors.length === 0 && birthDate && declaredWeightGrams !== null
             ? {
                 fullName,
+                documentNumber: documentNumberValue || null,
                 birthDate,
                 belt,
                 declaredWeightGrams,
@@ -115,6 +121,14 @@ export class AthleteImportCsvService {
   private buildHeaderMap(headers: string[]): HeaderMap {
     return buildHeaderAliasMap(headers, {
       fullName: ['FULLNAME', 'NOME', 'NAME'],
+      documentNumber: [
+        'DOCUMENTNUMBER',
+        'DOCUMENT_NUMBER',
+        'DOCUMENT',
+        'DOC',
+        'CPF',
+        'RG',
+      ],
       birthDate: [
         'BIRTHDATE',
         'NASCIMENTO',
@@ -122,6 +136,8 @@ export class AthleteImportCsvService {
         'DATADEANIVERSARIO',
         'DATA_DE_ANIVERSARIO',
         'DATADENASC',
+        'DATA DE NASCIMENTO',
+        'DATA  NASCIMENTO',
       ],
       belt: ['BELT', 'FAIXA'],
       declaredWeightKg: [

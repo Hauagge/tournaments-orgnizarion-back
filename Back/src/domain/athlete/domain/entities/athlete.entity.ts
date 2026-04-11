@@ -2,6 +2,7 @@ export type AthleteProps = {
   id?: number;
   competitionId: number;
   fullName: string;
+  documentNumber: string | null;
   birthDate: Date;
   belt: string;
   declaredWeight: number;
@@ -12,7 +13,12 @@ export type AthleteProps = {
 type UpdatableAthleteProps = Partial<
   Pick<
     AthleteProps,
-    'fullName' | 'birthDate' | 'belt' | 'declaredWeight' | 'academyId'
+    | 'fullName'
+    | 'documentNumber'
+    | 'birthDate'
+    | 'belt'
+    | 'declaredWeight'
+    | 'academyId'
   >
 >;
 
@@ -23,6 +29,7 @@ export class Athlete {
     return new Athlete({
       ...props,
       fullName: Athlete.normalizeFullName(props.fullName),
+      documentNumber: Athlete.normalizeDocumentNumber(props.documentNumber),
       belt: props.belt.trim(),
       createdAt: new Date(),
     });
@@ -32,6 +39,7 @@ export class Athlete {
     return new Athlete({
       ...props,
       fullName: Athlete.normalizeFullName(props.fullName),
+      documentNumber: Athlete.normalizeDocumentNumber(props.documentNumber),
       belt: props.belt.trim(),
     });
   }
@@ -43,6 +51,10 @@ export class Athlete {
         input.fullName !== undefined
           ? Athlete.normalizeFullName(input.fullName)
           : this.props.fullName,
+      documentNumber:
+        input.documentNumber !== undefined
+          ? Athlete.normalizeDocumentNumber(input.documentNumber)
+          : this.props.documentNumber,
       birthDate: input.birthDate ?? this.props.birthDate,
       belt: input.belt !== undefined ? input.belt.trim() : this.props.belt,
       declaredWeight: input.declaredWeight ?? this.props.declaredWeight,
@@ -55,11 +67,16 @@ export class Athlete {
     return value.trim().replace(/\s+/g, ' ');
   }
 
+  static normalizeDocumentNumber(value: string | null): string | null {
+    return value?.trim().replace(/\s+/g, ' ') || null;
+  }
+
   toJSON(): AthleteProps {
     return {
       id: this.id,
       competitionId: this.competitionId,
       fullName: this.fullName,
+      documentNumber: this.documentNumber,
       birthDate: this.birthDate,
       belt: this.belt,
       declaredWeight: this.declaredWeight,
@@ -78,6 +95,10 @@ export class Athlete {
 
   get fullName(): string {
     return this.props.fullName;
+  }
+
+  get documentNumber(): string | null {
+    return this.props.documentNumber;
   }
 
   get birthDate(): Date {

@@ -23,6 +23,7 @@ export class AthleteRepository implements IAthleteRepository {
   async update(athlete: Athlete): Promise<Athlete> {
     await this.repository.update(athlete.id as number, {
       fullName: athlete.fullName,
+      documentNumber: athlete.documentNumber,
       birthDate: athlete.birthDate,
       belt: athlete.belt,
       declaredWeight: athlete.declaredWeight,

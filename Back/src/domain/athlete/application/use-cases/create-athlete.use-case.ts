@@ -8,6 +8,7 @@ import { IAthleteRepository } from '../../repository/IAthleteRepository.reposito
 export type CreateAthleteInput = {
   competitionId: number;
   fullName: string;
+  documentNumber: string | null;
   birthDate: Date;
   belt: string;
   declaredWeight: number;

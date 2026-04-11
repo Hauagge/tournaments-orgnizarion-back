@@ -96,6 +96,7 @@ export class ImportAthletesUseCase {
           Athlete.create({
             competitionId: input.competitionId,
             fullName: row.athlete.fullName,
+            documentNumber: row.athlete.documentNumber,
             birthDate: row.athlete.birthDate,
             belt: row.athlete.belt,
             declaredWeight: row.athlete.declaredWeightGrams,
