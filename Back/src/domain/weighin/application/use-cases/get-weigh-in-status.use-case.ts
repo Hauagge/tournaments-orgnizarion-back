@@ -46,17 +46,18 @@ export class GetWeighInStatusUseCase {
       );
     }
 
-    const weighIn = await this.weighInRepository.findByCompetitionIdAndAthleteId(
-      input.competitionId,
-      input.athleteId,
-    );
+    const weighIn =
+      await this.weighInRepository.findByCompetitionIdAndAthleteId(
+        input.competitionId,
+        input.athleteId,
+      );
 
     return {
       id: weighIn?.id ?? null,
       competitionId: athlete.competitionId,
       athleteId: athlete.id as number,
       athleteName: athlete.fullName,
-      declaredWeightGrams: athlete.declaredWeightGrams,
+      declaredWeightGrams: athlete.declaredWeight,
       measuredWeightGrams: weighIn?.measuredWeightGrams ?? null,
       status: weighIn?.status ?? WeighInStatus.PENDING,
       performedAt: weighIn?.performedAt ?? null,
