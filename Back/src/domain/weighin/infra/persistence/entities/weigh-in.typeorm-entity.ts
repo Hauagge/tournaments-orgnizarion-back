@@ -4,6 +4,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { AthleteTypeOrmEntity } from '@/domain/athlete/infra/persistence/entities/athlete.typeorm-entity';
@@ -26,7 +27,7 @@ export class WeighInTypeOrmEntity {
   @JoinColumn({ name: 'competition_id' })
   competition?: CompetitionTypeOrmEntity;
 
-  @ManyToOne(() => AthleteTypeOrmEntity, { nullable: false })
+  @OneToOne(() => AthleteTypeOrmEntity, { nullable: false })
   @JoinColumn({ name: 'athlete_id' })
   athlete?: AthleteTypeOrmEntity;
 

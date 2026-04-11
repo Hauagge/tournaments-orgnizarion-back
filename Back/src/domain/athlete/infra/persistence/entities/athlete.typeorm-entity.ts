@@ -4,9 +4,11 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { AcademyTypeOrmEntity } from '@/domain/academy/infra/persistence/entities/academy.typeorm-entity';
+import { WeighInTypeOrmEntity } from '@/domain/weighin/infra/persistence/entities/weigh-in.typeorm-entity';
 
 @Entity('athletes')
 export class AthleteTypeOrmEntity {
@@ -42,4 +44,7 @@ export class AthleteTypeOrmEntity {
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
+
+  @OneToOne(() => WeighInTypeOrmEntity, (weighIn) => weighIn.athlete)
+  weighIn?: WeighInTypeOrmEntity;
 }
