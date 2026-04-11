@@ -6,6 +6,7 @@ export type CategoryAssignment = {
 };
 
 export abstract class ICategoryRepository {
+  abstract create(category: Category): Promise<Category>;
   abstract replaceCompetitionCategories(input: {
     competitionId: number;
     assignments: CategoryAssignment[];
