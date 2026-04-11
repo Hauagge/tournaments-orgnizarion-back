@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
-import { FightGenerationResult, FightGenerationStrategy } from '@/domain/fight/application/strategies/fight-generation.strategy';
+import {
+  FightGenerationResult,
+  FightGenerationStrategy,
+} from '@/domain/fight/application/strategies/fight-generation.strategy';
 import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 
 export type FourAthleteOlympicBracketFightGenerationInput = {
@@ -12,7 +15,8 @@ export type FourAthleteOlympicBracketFightGenerationInput = {
 
 @Injectable()
 export class FourAthleteOlympicBracketFightGenerationStrategy
-  implements FightGenerationStrategy<FourAthleteOlympicBracketFightGenerationInput>
+  implements
+    FightGenerationStrategy<FourAthleteOlympicBracketFightGenerationInput>
 {
   readonly mode = CompetitionMode.KEYS;
 
@@ -28,6 +32,7 @@ export class FourAthleteOlympicBracketFightGenerationStrategy
           categoryId: input.categoryId,
           keyGroupId: input.keyGroupId,
           areaId: null,
+          areaName: null,
           athleteAId: seed1,
           athleteBId: seed4,
           orderIndex: 1,
@@ -37,6 +42,7 @@ export class FourAthleteOlympicBracketFightGenerationStrategy
           categoryId: input.categoryId,
           keyGroupId: input.keyGroupId,
           areaId: null,
+          areaName: null,
           athleteAId: seed2,
           athleteBId: seed3,
           orderIndex: 2,
