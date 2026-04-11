@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
 import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
-import { FightGenerationResult, FightGenerationStrategy } from '@/domain/fight/application/strategies/fight-generation.strategy';
+import {
+  FightGenerationResult,
+  FightGenerationStrategy,
+} from '@/domain/fight/application/strategies/fight-generation.strategy';
 import { FourAthleteOlympicBracketFightGenerationStrategy } from './four-athlete-olympic-bracket-fight-generation.strategy';
 
 export type KeysFightGenerationInput = {
@@ -44,12 +47,17 @@ export class KeysFightGenerationStrategy
     let orderIndex = 1;
 
     for (let index = 0; index < athleteIds.length; index++) {
-      for (let nextIndex = index + 1; nextIndex < athleteIds.length; nextIndex++) {
+      for (
+        let nextIndex = index + 1;
+        nextIndex < athleteIds.length;
+        nextIndex++
+      ) {
         fights.push(
           FightEntity.create({
             competitionId: input.competitionId,
             categoryId: input.categoryId,
             keyGroupId: input.keyGroupId,
+            areaName: null,
             areaId: null,
             athleteAId: athleteIds[index],
             athleteBId: athleteIds[nextIndex],
@@ -65,7 +73,9 @@ export class KeysFightGenerationStrategy
         {
           categoryId: input.categoryId,
           format: 'ROUND_ROBIN',
-          notes: [`Key group ${input.keyGroupId} generated with ${athleteIds.length} athletes`],
+          notes: [
+            `Key group ${input.keyGroupId} generated with ${athleteIds.length} athletes`,
+          ],
         },
       ],
     };
