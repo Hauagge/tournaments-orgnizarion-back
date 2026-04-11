@@ -9,6 +9,7 @@ export class FightMapper {
       categoryId: entity.categoryId,
       keyGroupId: entity.keyGroupId,
       areaId: entity.areaId,
+      areaName: entity?.area?.name || null,
       status: entity.status,
       athleteAId: entity.athleteAId,
       athleteBId: entity.athleteBId,
