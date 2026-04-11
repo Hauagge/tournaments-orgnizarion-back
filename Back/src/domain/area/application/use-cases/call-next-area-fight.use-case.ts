@@ -57,6 +57,7 @@ export class CallNextAreaFightUseCase {
       payload: {
         competitionId: area.competitionId,
         areaId: area.id as number,
+        areaName: area.name,
         fightId: updatedFight.id as number,
         queueItemId: updatedQueueItem.id as number,
       },
@@ -68,6 +69,7 @@ export class CallNextAreaFightUseCase {
       payload: {
         competitionId: area.competitionId,
         areaId: area.id as number,
+        areaName: area.name,
         currentFightId: updatedFight.id as number,
         nextFightId:
           queueItems.find((item) => item.id !== nextItem.id && item.status === AreaQueueItemStatus.QUEUED)
