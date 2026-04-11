@@ -3,6 +3,7 @@ import { AcademyProviderModule } from '../academy/academy-provider.module';
 import { AthleteProviderModule } from '../athlete/athlete-provider.module';
 import { CategoryProviderModule } from '../category/category-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
+import { AreaProviderModule } from '../area/area-provider.module';
 import { FightGenerationStrategyModule } from '../fight/fight-generation-strategy.module';
 import { FightProviderModule } from '../fight/fight-provider.module';
 import { WeighInProviderModule } from '../weighin/weighin-provider.module';
@@ -18,6 +19,7 @@ import { UpdateKeyGroupUseCase } from './application/use-cases/update-key-group.
 import { AbsoluteGpPdfRendererStrategy } from './application/strategies/absolute-gp-pdf-renderer.strategy';
 import { KeysPdfRendererStrategy } from './application/strategies/keys-pdf-renderer.strategy';
 import { PdfRendererResolverService } from './application/services/pdf-renderer-resolver.service';
+import { KeyGroupAreaSelectionService } from './application/services/key-group-area-selection.service';
 import { SimplePdfBuilderService } from './application/services/simple-pdf-builder.service';
 import { KeyGroupController } from './infra/http/key-group.controller';
 import { KeyGroupProviderModule } from './key-group-provider.module';
@@ -27,6 +29,7 @@ import { KeyGroupProviderModule } from './key-group-provider.module';
     KeyGroupProviderModule,
     CompetitionProviderModule,
     CategoryProviderModule,
+    AreaProviderModule,
     AthleteProviderModule,
     AcademyProviderModule,
     WeighInProviderModule,
@@ -47,6 +50,7 @@ import { KeyGroupProviderModule } from './key-group-provider.module';
     KeysPdfRendererStrategy,
     AbsoluteGpPdfRendererStrategy,
     PdfRendererResolverService,
+    KeyGroupAreaSelectionService,
     SimplePdfBuilderService,
   ],
   exports: [
