@@ -3,6 +3,7 @@ import { AcademyProviderModule } from '../academy/academy-provider.module';
 import { AthleteProviderModule } from '../athlete/athlete-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
 import { WeighInProviderModule } from '../weighin/weighin-provider.module';
+import { CreateCategoryUseCase } from './application/use-cases/create-category.use-case';
 import { GetCategoryUseCase } from './application/use-cases/get-category.use-case';
 import { GenerateCategoriesUseCase } from './application/use-cases/generate-categories.use-case';
 import { ListCategoriesUseCase } from './application/use-cases/list-categories.use-case';
@@ -20,6 +21,7 @@ import { CategoryProviderModule } from './category-provider.module';
   ],
   controllers: [CategoryController],
   providers: [
+    CreateCategoryUseCase,
     GenerateCategoriesUseCase,
     ListCategoriesUseCase,
     GetCategoryUseCase,
