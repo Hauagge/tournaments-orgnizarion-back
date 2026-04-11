@@ -33,7 +33,9 @@ export class ImportAthletesUseCase {
     );
 
     if (!competition) {
-      throw new NotFoundError(`Competition with id ${input.competitionId} not found`);
+      throw new NotFoundError(
+        `Competition with id ${input.competitionId} not found`,
+      );
     }
 
     const parsedRows = this.athleteImportCsvService.parse(input.csvText);
@@ -96,7 +98,7 @@ export class ImportAthletesUseCase {
             fullName: row.athlete.fullName,
             birthDate: row.athlete.birthDate,
             belt: row.athlete.belt,
-            declaredWeightGrams: row.athlete.declaredWeightGrams,
+            declaredWeight: row.athlete.declaredWeightGrams,
             academyId,
           }),
         );
@@ -149,7 +151,10 @@ export class ImportAthletesUseCase {
     return new Map(
       existingAcademies
         .filter((academy) => academy.id !== undefined)
-        .map((academy) => [this.buildAcademyCacheKey(academy.name), academy.id as number]),
+        .map((academy) => [
+          this.buildAcademyCacheKey(academy.name),
+          academy.id as number,
+        ]),
     );
   }
 
