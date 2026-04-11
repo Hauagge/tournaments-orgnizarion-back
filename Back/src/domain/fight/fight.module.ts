@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { EventBusModule } from '@/core/events/event-bus.module';
+import { AcademyProviderModule } from '../academy/academy-provider.module';
 import { AreaProviderModule } from '../area/area-provider.module';
 import { AthleteProviderModule } from '../athlete/athlete-provider.module';
 import { CategoryProviderModule } from '../category/category-provider.module';
@@ -16,6 +17,7 @@ import { FightProviderModule } from './fight-provider.module';
   imports: [
     FightProviderModule,
     EventBusModule,
+    AcademyProviderModule,
     CompetitionProviderModule,
     CategoryProviderModule,
     AthleteProviderModule,
