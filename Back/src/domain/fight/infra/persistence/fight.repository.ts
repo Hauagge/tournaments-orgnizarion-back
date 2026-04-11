@@ -17,7 +17,9 @@ export class FightRepository implements IFightRepository {
 
   async createMany(fights: FightEntity[]): Promise<FightEntity[]> {
     const saved = await this.repository.save(
-      fights.map((fight) => this.repository.create(FightMapper.toPersistence(fight))),
+      fights.map((fight) =>
+        this.repository.create(FightMapper.toPersistence(fight)),
+      ),
     );
 
     return saved.map(FightMapper.toDomain);
@@ -56,6 +58,9 @@ export class FightRepository implements IFightRepository {
         orderIndex: 'ASC',
         id: 'ASC',
       },
+      relations: {
+        area: true,
+      },
     });
 
     return entities.map(FightMapper.toDomain);
@@ -92,37 +97,42 @@ export class FightRepository implements IFightRepository {
       [FightStatus.CANCELED]: 4,
     };
 
-    return entities
-      .map(FightMapper.toDomain)
-      .sort((a, b) => {
-        const statusCompare = statusPriority[a.status] - statusPriority[b.status];
-        if (statusCompare !== 0) {
-          return statusCompare;
-        }
+    return entities.map(FightMapper.toDomain).sort((a, b) => {
+      const statusCompare = statusPriority[a.status] - statusPriority[b.status];
+      if (statusCompare !== 0) {
+        return statusCompare;
+      }
 
-        const categoryCompare = (a.categoryId ?? Number.MAX_SAFE_INTEGER) - (b.categoryId ?? Number.MAX_SAFE_INTEGER);
-        if (categoryCompare !== 0) {
-          return categoryCompare;
-        }
+      const categoryCompare =
+        (a.categoryId ?? Number.MAX_SAFE_INTEGER) -
+        (b.categoryId ?? Number.MAX_SAFE_INTEGER);
+      if (categoryCompare !== 0) {
+        return categoryCompare;
+      }
 
-        const keyGroupCompare = (a.keyGroupId ?? Number.MAX_SAFE_INTEGER) - (b.keyGroupId ?? Number.MAX_SAFE_INTEGER);
-        if (keyGroupCompare !== 0) {
-          return keyGroupCompare;
-        }
+      const keyGroupCompare =
+        (a.keyGroupId ?? Number.MAX_SAFE_INTEGER) -
+        (b.keyGroupId ?? Number.MAX_SAFE_INTEGER);
+      if (keyGroupCompare !== 0) {
+        return keyGroupCompare;
+      }
 
-        if (a.orderIndex !== b.orderIndex) {
-          return a.orderIndex - b.orderIndex;
-        }
+      if (a.orderIndex !== b.orderIndex) {
+        return a.orderIndex - b.orderIndex;
+      }
 
-        return (a.id as number) - (b.id as number);
-      });
+      return (a.id as number) - (b.id as number);
+    });
   }
 
   async assignAreas(
     assignments: Array<{ fightId: number; areaId: number | null }>,
   ): Promise<void> {
     for (const assignment of assignments) {
-      await this.repository.update({ id: assignment.fightId }, { areaId: assignment.areaId });
+      await this.repository.update(
+        { id: assignment.fightId },
+        { areaId: assignment.areaId },
+      );
     }
   }
 
