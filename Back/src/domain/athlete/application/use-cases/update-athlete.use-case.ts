@@ -48,7 +48,7 @@ export class UpdateAthleteUseCase {
       fullName: input.fullName,
       birthDate: input.birthDate,
       belt: input.belt,
-      declaredWeightGrams: input.declaredWeightGrams,
+      declaredWeight: input.declaredWeightGrams,
       academyId: input.academyId,
     });
 
