@@ -25,7 +25,7 @@ export class AthleteRepository implements IAthleteRepository {
       fullName: athlete.fullName,
       birthDate: athlete.birthDate,
       belt: athlete.belt,
-      declaredWeightGrams: athlete.declaredWeightGrams,
+      declaredWeight: athlete.declaredWeight,
       academyId: athlete.academyId,
     });
 
@@ -34,7 +34,9 @@ export class AthleteRepository implements IAthleteRepository {
     });
 
     if (!updatedEntity) {
-      throw new NotFoundError(`Athlete with id ${athlete.id as number} not found`);
+      throw new NotFoundError(
+        `Athlete with id ${athlete.id as number} not found`,
+      );
     }
 
     return AthleteMapper.toDomain(updatedEntity);
@@ -44,7 +46,6 @@ export class AthleteRepository implements IAthleteRepository {
     const entity = await this.repository.findOneBy({ id });
     return entity ? AthleteMapper.toDomain(entity) : null;
   }
-
 
   async findByIds(ids: number[]): Promise<Athlete[]> {
     if (!ids.length) {
