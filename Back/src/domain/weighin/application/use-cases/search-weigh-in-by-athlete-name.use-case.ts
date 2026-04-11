@@ -63,7 +63,7 @@ export class SearchWeighInByAthleteNameUseCase {
         competitionId: athlete.competitionId,
         athleteId: athlete.id as number,
         athleteName: athlete.fullName,
-        declaredWeightGrams: athlete.declaredWeightGrams,
+        declaredWeightGrams: athlete.declaredWeight,
         measuredWeightGrams: weighIn?.measuredWeightGrams ?? null,
         status: weighIn?.status ?? WeighInStatus.PENDING,
         performedAt: weighIn?.performedAt ?? null,

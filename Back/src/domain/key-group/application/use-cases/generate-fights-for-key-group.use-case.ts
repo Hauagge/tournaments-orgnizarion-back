@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
+import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
 import { FightStatus } from '@/domain/fight/domain/value-objects/fight-status.enum';
@@ -8,6 +9,7 @@ import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { KeyGroupStatus } from '../../domain/value-objects/key-group-status.enum';
 import { IKeyGroupRepository } from '../../repository/IKeyGroupRepository.repository';
+import { KeyGroupAreaSelectionService } from '../services/key-group-area-selection.service';
 import { KeysFightGenerationInput } from '../strategies/keys-fight-generation.strategy';
 
 @Injectable()
@@ -20,6 +22,7 @@ export class GenerateFightsForKeyGroupUseCase {
     @Inject(IFightRepository)
     private readonly fightRepository: IFightRepository,
     private readonly strategyResolver: FightGenerationStrategyResolverService,
+    private readonly areaSelectionService: KeyGroupAreaSelectionService,
   ) {}
 
   async execute(keyGroupId: number) {
@@ -62,6 +65,8 @@ export class GenerateFightsForKeyGroupUseCase {
       competition.mode,
     ) as import('@/domain/fight/application/strategies/fight-generation.strategy').FightGenerationStrategy<KeysFightGenerationInput>;
 
+    const selectedArea = await this.areaSelectionService.select(group.competitionId);
+
     const generated = strategy.generate({
       competitionId: group.competitionId,
       keyGroupId,
@@ -69,10 +74,21 @@ export class GenerateFightsForKeyGroupUseCase {
       athleteIds: members.map((member) => member.athleteId),
     });
 
-    const fights = await this.fightRepository.createMany(generated.fights);
+    const fightsToCreate = generated.fights.map((fight) =>
+      FightEntity.restore({
+        ...fight.toJSON(),
+        areaId: selectedArea.id as number,
+        areaName: selectedArea.name,
+      }),
+    );
+
+    const fights = await this.fightRepository.createMany(fightsToCreate);
 
     return {
-      fights: fights.map((fight) => fight.toJSON()),
+      fights: fights.map((fight) => ({
+        ...fight.toJSON(),
+        areaName: selectedArea.name,
+      })),
       metadata: generated.metadata,
     };
   }

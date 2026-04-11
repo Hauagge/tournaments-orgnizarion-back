@@ -56,15 +56,17 @@ export class ConfirmWeighInUseCase {
 
     const status =
       input.measuredWeightGrams >
-      athlete.declaredWeightGrams + competition.weighInMarginGrams
+      athlete.declaredWeight + competition.weighInMarginGrams
         ? WeighInStatus.REJECTED
         : WeighInStatus.APPROVED;
 
-    const weighIn = (existingWeighIn ??
+    const weighIn = (
+      existingWeighIn ??
       WeighIn.createPending({
         competitionId: input.competitionId,
         athleteId: input.athleteId,
-      })).confirm({
+      })
+    ).confirm({
       measuredWeightGrams: input.measuredWeightGrams,
       status,
       performedBy: input.performedBy?.trim() || 'system',
