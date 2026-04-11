@@ -7,6 +7,7 @@ export type FightProps = {
   categoryId: number | null;
   keyGroupId: number | null;
   areaId: number | null;
+  areaName: string | null;
   status: FightStatus;
   athleteAId: number;
   athleteBId: number;
@@ -58,7 +59,9 @@ export class FightEntity {
     }
 
     if (this.props.areaId === null) {
-      throw new ValidationError('Fight must be assigned to an area before calling');
+      throw new ValidationError(
+        'Fight must be assigned to an area before calling',
+      );
     }
 
     return new FightEntity({
@@ -93,17 +96,47 @@ export class FightEntity {
     return { ...this.props };
   }
 
-  get id(): number | undefined { return this.props.id; }
-  get competitionId(): number { return this.props.competitionId; }
-  get categoryId(): number | null { return this.props.categoryId; }
-  get keyGroupId(): number | null { return this.props.keyGroupId; }
-  get areaId(): number | null { return this.props.areaId; }
-  get status(): FightStatus { return this.props.status; }
-  get athleteAId(): number { return this.props.athleteAId; }
-  get athleteBId(): number { return this.props.athleteBId; }
-  get winnerAthleteId(): number | null { return this.props.winnerAthleteId; }
-  get winType(): string | null { return this.props.winType; }
-  get startedAt(): Date | null { return this.props.startedAt; }
-  get finishedAt(): Date | null { return this.props.finishedAt; }
-  get orderIndex(): number { return this.props.orderIndex; }
+  get id(): number | undefined {
+    return this.props.id;
+  }
+  get competitionId(): number {
+    return this.props.competitionId;
+  }
+  get categoryId(): number | null {
+    return this.props.categoryId;
+  }
+  get keyGroupId(): number | null {
+    return this.props.keyGroupId;
+  }
+  get areaId(): number | null {
+    return this.props.areaId;
+  }
+  get status(): FightStatus {
+    return this.props.status;
+  }
+  get athleteAId(): number {
+    return this.props.athleteAId;
+  }
+  get athleteBId(): number {
+    return this.props.athleteBId;
+  }
+  get winnerAthleteId(): number | null {
+    return this.props.winnerAthleteId;
+  }
+  get winType(): string | null {
+    return this.props.winType;
+  }
+  get startedAt(): Date | null {
+    return this.props.startedAt;
+  }
+  get finishedAt(): Date | null {
+    return this.props.finishedAt;
+  }
+  get orderIndex(): number {
+    return this.props.orderIndex;
+  }
+
+  get areaName(): string | null {
+    return this.props.areaName;
+  }
 }
