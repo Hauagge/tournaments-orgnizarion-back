@@ -22,7 +22,9 @@ export class KeyGroupAreaSelectionService {
     const rankedAreas = await Promise.all(
       areas.map(async (area) => ({
         area,
-        queueCount: (await this.fightRepository.listQueueByAreaId(area.id as number)).length,
+        queueCount: (
+          await this.fightRepository.listQueueByAreaId(area.id as number)
+        ).length,
       })),
     );
 
