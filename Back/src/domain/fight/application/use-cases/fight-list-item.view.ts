@@ -6,12 +6,16 @@ export type FightListItemView = {
   categoryId: number | null;
   keyGroupId: number | null;
   areaId: number | null;
+  areaName: string | null;
   status: FightStatus;
   athleteAId: number;
   athleteAName: string | null;
+  academyAName: string | null;
   athleteBId: number;
   athleteBName: string | null;
+  academyBName: string | null;
   winnerAthleteId: number | null;
+  winnerAthleteName: string | null;
   winType: string | null;
   startedAt: Date | null;
   finishedAt: Date | null;
