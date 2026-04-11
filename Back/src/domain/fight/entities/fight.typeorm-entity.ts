@@ -1,5 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { FightStatus } from '../domain/value-objects/fight-status.enum';
+import { AreaTypeOrmEntity } from '@/domain/area/infra/persistence/entities/area.typeorm-entity';
 
 @Entity('fights')
 export class FightTypeOrmEntity {
@@ -41,4 +48,8 @@ export class FightTypeOrmEntity {
 
   @Column({ name: 'order_index', type: 'int' })
   orderIndex: number;
+
+  @ManyToOne(() => AreaTypeOrmEntity, (area) => area.fights)
+  @JoinColumn({ name: 'area_id' })
+  area: AreaTypeOrmEntity | null;
 }
