@@ -1,4 +1,11 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { FightTypeOrmEntity } from '@/domain/fight/entities/fight.typeorm-entity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('areas')
 export class AreaTypeOrmEntity {
@@ -16,4 +23,7 @@ export class AreaTypeOrmEntity {
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
+
+  @OneToMany(() => FightTypeOrmEntity, (fight) => fight.area)
+  fights: FightTypeOrmEntity[];
 }
