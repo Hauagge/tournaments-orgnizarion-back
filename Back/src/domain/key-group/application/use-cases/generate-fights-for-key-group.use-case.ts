@@ -1,4 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { AreaQueueItem } from '@/domain/area/domain/entities/area-queue-item.entity';
+import { IAreaQueueItemRepository } from '@/domain/area/repository/IAreaQueueItemRepository.repository';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
 import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
@@ -21,6 +23,8 @@ export class GenerateFightsForKeyGroupUseCase {
     private readonly keyGroupRepository: IKeyGroupRepository,
     @Inject(IFightRepository)
     private readonly fightRepository: IFightRepository,
+    @Inject(IAreaQueueItemRepository)
+    private readonly areaQueueItemRepository: IAreaQueueItemRepository,
     private readonly strategyResolver: FightGenerationStrategyResolverService,
     private readonly areaSelectionService: KeyGroupAreaSelectionService,
   ) {}
@@ -83,6 +87,30 @@ export class GenerateFightsForKeyGroupUseCase {
     );
 
     const fights = await this.fightRepository.createMany(fightsToCreate);
+
+    const existingQueue = await this.areaQueueItemRepository.listByAreaId(
+      selectedArea.id as number,
+    );
+    let nextPosition =
+      existingQueue.length > 0
+        ? Math.max(...existingQueue.map((item) => item.position)) + 1
+        : 1;
+
+    const queueItemsToCreate = fights
+      .slice()
+      .sort(
+        (left, right) =>
+          left.orderIndex - right.orderIndex || (left.id as number) - (right.id as number),
+      )
+      .map((fight) =>
+        AreaQueueItem.create({
+          areaId: selectedArea.id as number,
+          fightId: fight.id as number,
+          position: nextPosition++,
+        }),
+      );
+
+    await this.areaQueueItemRepository.createManyQueueItems(queueItemsToCreate);
 
     return {
       fights: fights.map((fight) => ({
