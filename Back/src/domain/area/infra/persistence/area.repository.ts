@@ -61,6 +61,20 @@ export class AreaRepository implements IAreaRepository, IAreaQueueItemRepository
     return saved.map(AreaMapper.queueItemToDomain);
   }
 
+  async createManyQueueItems(items: AreaQueueItem[]): Promise<AreaQueueItem[]> {
+    if (items.length === 0) {
+      return [];
+    }
+
+    const saved = await this.areaQueueItemRepository.save(
+      items.map((item) =>
+        this.areaQueueItemRepository.create(AreaMapper.queueItemToPersistence(item)),
+      ),
+    );
+
+    return saved.map(AreaMapper.queueItemToDomain);
+  }
+
   async listByAreaId(areaId: number): Promise<AreaQueueItem[]> {
     const entities = await this.areaQueueItemRepository.find({
       where: { areaId },
