@@ -3,6 +3,7 @@ import { IAcademyRepository } from '@/domain/academy/repository/IAcademyReposito
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { Athlete } from '../../domain/entities/athlete.entity';
+import { PaymentStatus } from '../../domain/value-objects/payment-status.enum';
 import { IAthleteRepository } from '../../repository/IAthleteRepository.repository';
 
 export type UpdateAthleteInput = {
@@ -11,6 +12,7 @@ export type UpdateAthleteInput = {
   birthDate?: Date;
   belt?: string;
   declaredWeightGrams?: number;
+  paymentStatus?: PaymentStatus;
   academyId?: number | null;
 };
 
@@ -49,6 +51,7 @@ export class UpdateAthleteUseCase {
       birthDate: input.birthDate,
       belt: input.belt,
       declaredWeight: input.declaredWeightGrams,
+      paymentStatus: input.paymentStatus,
       academyId: input.academyId,
     });
 

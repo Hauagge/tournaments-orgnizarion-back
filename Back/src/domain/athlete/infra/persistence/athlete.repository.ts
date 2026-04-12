@@ -27,6 +27,7 @@ export class AthleteRepository implements IAthleteRepository {
       birthDate: athlete.birthDate,
       belt: athlete.belt,
       declaredWeight: athlete.declaredWeight,
+      paymentStatus: athlete.paymentStatus,
       academyId: athlete.academyId,
     });
 

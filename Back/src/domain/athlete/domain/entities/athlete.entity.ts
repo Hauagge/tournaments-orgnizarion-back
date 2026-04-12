@@ -1,3 +1,5 @@
+import { PaymentStatus } from '../value-objects/payment-status.enum';
+
 export type AthleteProps = {
   id?: number;
   competitionId: number;
@@ -6,6 +8,7 @@ export type AthleteProps = {
   birthDate: Date;
   belt: string;
   declaredWeight: number;
+  paymentStatus: PaymentStatus;
   academyId: number | null;
   createdAt: Date;
 };
@@ -18,6 +21,7 @@ type UpdatableAthleteProps = Partial<
     | 'birthDate'
     | 'belt'
     | 'declaredWeight'
+    | 'paymentStatus'
     | 'academyId'
   >
 >;
@@ -25,22 +29,32 @@ type UpdatableAthleteProps = Partial<
 export class Athlete {
   private constructor(private readonly props: AthleteProps) {}
 
-  static create(props: Omit<AthleteProps, 'id' | 'createdAt'>): Athlete {
+  static create(
+    props: Omit<AthleteProps, 'id' | 'createdAt' | 'paymentStatus'> & {
+      paymentStatus?: PaymentStatus;
+    },
+  ): Athlete {
     return new Athlete({
       ...props,
       fullName: Athlete.normalizeFullName(props.fullName),
       documentNumber: Athlete.normalizeDocumentNumber(props.documentNumber),
       belt: props.belt.trim(),
+      paymentStatus: props.paymentStatus ?? PaymentStatus.PENDING,
       createdAt: new Date(),
     });
   }
 
-  static restore(props: AthleteProps): Athlete {
+  static restore(
+    props: Omit<AthleteProps, 'paymentStatus'> & {
+      paymentStatus?: PaymentStatus;
+    },
+  ): Athlete {
     return new Athlete({
       ...props,
       fullName: Athlete.normalizeFullName(props.fullName),
       documentNumber: Athlete.normalizeDocumentNumber(props.documentNumber),
       belt: props.belt.trim(),
+      paymentStatus: props.paymentStatus ?? PaymentStatus.PENDING,
     });
   }
 
@@ -58,6 +72,7 @@ export class Athlete {
       birthDate: input.birthDate ?? this.props.birthDate,
       belt: input.belt !== undefined ? input.belt.trim() : this.props.belt,
       declaredWeight: input.declaredWeight ?? this.props.declaredWeight,
+      paymentStatus: input.paymentStatus ?? this.props.paymentStatus,
       academyId:
         input.academyId !== undefined ? input.academyId : this.props.academyId,
     });
@@ -80,6 +95,7 @@ export class Athlete {
       birthDate: this.birthDate,
       belt: this.belt,
       declaredWeight: this.declaredWeight,
+      paymentStatus: this.paymentStatus,
       academyId: this.academyId,
       createdAt: this.createdAt,
     };
@@ -111,6 +127,10 @@ export class Athlete {
 
   get declaredWeight(): number {
     return this.props.declaredWeight;
+  }
+
+  get paymentStatus(): PaymentStatus {
+    return this.props.paymentStatus;
   }
 
   get academyId(): number | null {

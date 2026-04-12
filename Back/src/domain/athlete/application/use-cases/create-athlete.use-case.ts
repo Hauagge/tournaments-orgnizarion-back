@@ -3,6 +3,7 @@ import { IAcademyRepository } from '@/domain/academy/repository/IAcademyReposito
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { Athlete } from '../../domain/entities/athlete.entity';
+import { PaymentStatus } from '../../domain/value-objects/payment-status.enum';
 import { IAthleteRepository } from '../../repository/IAthleteRepository.repository';
 
 export type CreateAthleteInput = {
@@ -12,6 +13,7 @@ export type CreateAthleteInput = {
   birthDate: Date;
   belt: string;
   declaredWeight: number;
+  paymentStatus?: PaymentStatus;
   academyId: number | null;
 };
 

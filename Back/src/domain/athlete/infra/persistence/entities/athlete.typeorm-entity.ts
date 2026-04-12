@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { AcademyTypeOrmEntity } from '@/domain/academy/infra/persistence/entities/academy.typeorm-entity';
 import { WeighInTypeOrmEntity } from '@/domain/weighin/infra/persistence/entities/weigh-in.typeorm-entity';
+import { PaymentStatus } from '@/domain/athlete/domain/value-objects/payment-status.enum';
 
 @Entity('athletes')
 export class AthleteTypeOrmEntity {
@@ -32,6 +33,15 @@ export class AthleteTypeOrmEntity {
 
   @Column({ name: 'declared_weight_grams', type: 'int' })
   declaredWeight: number;
+
+  @Column({
+    name: 'payment_status',
+    type: 'enum',
+    enum: PaymentStatus,
+    enumName: 'athlete_payment_status_enum',
+    default: PaymentStatus.PENDING,
+  })
+  paymentStatus: PaymentStatus;
 
   @Column({ name: 'academy_id', type: 'int', nullable: true })
   academyId: number | null;
