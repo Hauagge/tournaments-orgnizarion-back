@@ -53,9 +53,9 @@ describe('CompetitionRepository', () => {
     repositoryMock.update.mockResolvedValue(undefined);
     repositoryMock.findOneBy.mockResolvedValue(null);
 
-    await expect(repository.update(makeCompetition({ id: 1 }))).rejects.toBeInstanceOf(
-      NotFoundError,
-    );
+    await expect(
+      repository.update(makeCompetition({ id: 1 })),
+    ).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it('should find by id', async () => {

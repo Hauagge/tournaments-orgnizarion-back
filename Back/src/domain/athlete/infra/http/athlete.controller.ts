@@ -1,4 +1,18 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { Public } from '@/core/auth/infra/decorators/public.decorator';
+import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
+import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
+import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
+import { AuthRole } from '@/domain/auth/auth-role.enum';
 import { ZodValidationPipe } from 'src/core/pipe/zod-validation.pipe';
 import { ApiResponse } from 'src/shared/result/api-response.type';
 import { AthleteListItemView } from '../../application/use-cases/athlete-list-item.view';
@@ -29,6 +43,8 @@ import {
 } from './dtos/update-athlete.dto';
 
 @Controller()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class AthleteController {
   constructor(
     private readonly createAthleteUseCase: CreateAthleteUseCase,
@@ -37,7 +53,8 @@ export class AthleteController {
   ) {}
 
   @Get('belts')
-  async listBelts(): Promise<ApiResponse<typeof BELTS[number][]>> {
+  @Public()
+  async listBelts(): Promise<ApiResponse<(typeof BELTS)[number][]>> {
     return {
       data: [...BELTS],
       error: null,

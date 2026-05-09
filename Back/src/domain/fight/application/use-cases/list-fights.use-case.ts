@@ -1,6 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { IAcademyRepository } from '@/domain/academy/repository/IAcademyRepository.repository';
 import { IAthleteRepository } from '@/domain/athlete/repository/IAthleteRepository.repository';
+import { IUserCompetitionRepository } from '@/domain/auth/repository/IUserCompetitionRepository.repository';
 import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { FightStatus } from '../../domain/value-objects/fight-status.enum';
@@ -12,6 +13,8 @@ export class ListFightsUseCase {
   constructor(
     @Inject(ICompetitionRepository)
     private readonly competitionRepository: ICompetitionRepository,
+    @Inject(IUserCompetitionRepository)
+    private readonly userCompetitionRepository: IUserCompetitionRepository,
     @Inject(IFightRepository)
     private readonly fightRepository: IFightRepository,
     @Inject(IAthleteRepository)
@@ -21,6 +24,7 @@ export class ListFightsUseCase {
   ) {}
 
   async execute(input: {
+    currentUserId: number;
     competitionId: number;
     status?: FightStatus;
   }): Promise<FightListItemView[]> {
@@ -31,6 +35,18 @@ export class ListFightsUseCase {
     if (!competition) {
       throw new NotFoundError(
         `Competition with id ${input.competitionId} not found`,
+      );
+    }
+
+    const access =
+      await this.userCompetitionRepository.findByUserIdAndCompetitionId({
+        userId: input.currentUserId,
+        competitionId: input.competitionId,
+      });
+
+    if (!access) {
+      throw new ForbiddenException(
+        'Usuario autenticado nao possui acesso a esta competicao',
       );
     }
 

@@ -66,6 +66,8 @@ describe('AuthService', () => {
       id: 1,
       username: 'staff',
       role: AuthRole.STAFF,
+      academyId: null,
+      competitionIds: [],
     });
     expect(result.accessToken).toBeDefined();
     expect(result.accessToken.split('.')).toHaveLength(3);

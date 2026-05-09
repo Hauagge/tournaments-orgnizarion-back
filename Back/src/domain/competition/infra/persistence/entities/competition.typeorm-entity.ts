@@ -9,23 +9,23 @@ import { CompetitionMode } from '../../../domain/value-objects/competition-mode.
 @Entity('competitions')
 export class CompetitionTypeOrmEntity {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ type: 'varchar' })
-  name: string;
+  name!: string;
 
   @Column({ type: 'varchar' })
-  mode: CompetitionMode;
+  mode!: CompetitionMode;
 
   @Column({ name: 'fight_duration_seconds', type: 'int' })
-  fightDurationSeconds: number;
+  fightDurationSeconds!: number;
 
   @Column({ name: 'weigh_in_margin_grams', type: 'int' })
-  weighInMarginGrams: number;
+  weighInMarginGrams!: number;
 
   @Column({ name: 'age_split_years', type: 'int' })
-  ageSplitYears: number;
+  ageSplitYears!: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-  createdAt: Date;
+  createdAt!: Date;
 }

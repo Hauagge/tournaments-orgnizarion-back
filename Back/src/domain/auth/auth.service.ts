@@ -14,14 +14,22 @@ export class AuthService {
   async login(data: LoginDto) {
     const user = await this.userRepository.findByUsername(data.username);
 
-    if (!user || !this.passwordHasher.compare(data.password, user.passwordHash)) {
+    if (
+      !user ||
+      !this.passwordHasher.compare(data.password, user.passwordHash)
+    ) {
       throw new UnauthorizedException('Usuário ou senha inválidos');
     }
+
+    const competitionIds = this.extractCompetitionIds(user);
+    const academyId = user.academyId ?? null;
 
     const token = this.signToken({
       sub: user.id,
       username: user.username,
       role: user.role,
+      academyId,
+      competitionIds,
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8, //  8 horas
     });
 
@@ -31,8 +39,19 @@ export class AuthService {
         id: user.id,
         username: user.username,
         role: user.role,
+        academyId,
+        competitionIds,
       },
     };
+  }
+
+  private extractCompetitionIds(user: {
+    competitionLinks?: Array<{ competitionId: number }>;
+  }): number[] {
+    const linkedCompetitionIds =
+      user.competitionLinks?.map((link) => link.competitionId) ?? [];
+
+    return Array.from(new Set(linkedCompetitionIds)).sort((a, b) => a - b);
   }
 
   private signToken(payload: Record<string, unknown>): string {

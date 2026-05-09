@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { UserCompetitionTypeOrmEntity } from '@/domain/auth/entities/user-competition.typeorm-entity';
 import { NotFoundError } from 'src/shared/errors/not-found.error';
 import { Competition } from '../../domain/entities/competition.entity';
 import { ICompetitionRepository } from '../../repository/ICompetitionRepository.repository';
@@ -50,16 +51,22 @@ export class CompetitionRepository implements ICompetitionRepository {
   }
 
   async list(input: {
+    currentUserId: number;
     page: number;
     pageSize: number;
   }): Promise<[Competition[], number]> {
-    const [entities, total] = await this.repository.findAndCount({
-      order: {
-        createdAt: 'DESC',
-      },
-      skip: (input.page - 1) * input.pageSize,
-      take: input.pageSize,
-    });
+    const [entities, total] = await this.repository
+      .createQueryBuilder('competition')
+      .innerJoin(
+        UserCompetitionTypeOrmEntity,
+        'userCompetition',
+        'userCompetition.competition_id = competition.id AND userCompetition.user_id = :currentUserId',
+        { currentUserId: input.currentUserId },
+      )
+      .orderBy('competition.createdAt', 'DESC')
+      .skip((input.page - 1) * input.pageSize)
+      .take(input.pageSize)
+      .getManyAndCount();
 
     return [entities.map(CompetitionMapper.toDomain), total];
   }

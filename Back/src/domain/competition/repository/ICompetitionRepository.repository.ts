@@ -5,6 +5,7 @@ export abstract class ICompetitionRepository {
   abstract update(competition: Competition): Promise<Competition>;
   abstract findById(id: number): Promise<Competition | null>;
   abstract list(input: {
+    currentUserId: number;
     page: number;
     pageSize: number;
   }): Promise<[Competition[], number]>;

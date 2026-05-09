@@ -4,6 +4,7 @@ import { ICompetitionRepository } from '../../repository/ICompetitionRepository.
 import { CompetitionTeamsHydratorService } from '../services/competition-teams-hydrator.service';
 
 export type ListCompetitionsInput = {
+  currentUserId: number;
   page: number;
   pageSize: number;
 };
@@ -28,7 +29,8 @@ export class ListCompetitionsUseCase {
     input: ListCompetitionsInput,
   ): Promise<ListCompetitionsOutput> {
     const [items, total] = await this.competitionRepository.list(input);
-    const hydratedItems = await this.competitionTeamsHydrator.attachTeamsToMany(items);
+    const hydratedItems =
+      await this.competitionTeamsHydrator.attachTeamsToMany(items);
 
     return {
       items: hydratedItems,

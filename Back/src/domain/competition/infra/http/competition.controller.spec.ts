@@ -1,11 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeAthlete, makeCompetition } from '../../../../../test/factories';
+import { AuthRole } from '@/domain/auth/auth-role.enum';
 import { CompetitionController } from './competition.controller';
+import { AddUserToCompetitionUseCase } from '../../application/use-cases/add-user-to-competition.use-case';
 import { CreateCompetitionUseCase } from '../../application/use-cases/create-competition.use-case';
 import { GetCompetitionUseCase } from '../../application/use-cases/get-competition.use-case';
 import { ImportAthletesUseCase } from '../../application/use-cases/import-athletes.use-case';
 import { ListCompetitionsUseCase } from '../../application/use-cases/list-competitions.use-case';
 import { PreviewAthleteImportUseCase } from '../../application/use-cases/preview-athlete-import.use-case';
+import { RemoveUserFromCompetitionUseCase } from '../../application/use-cases/remove-user-from-competition.use-case';
 import { UpdateCompetitionSettingsUseCase } from '../../application/use-cases/update-competition-settings.use-case';
 import { CompetitionMode } from '../../domain/value-objects/competition-mode.enum';
 
@@ -28,6 +31,12 @@ describe('CompetitionController', () => {
   const importAthletesUseCase = {
     execute: vi.fn(),
   } as unknown as ImportAthletesUseCase;
+  const addUserToCompetitionUseCase = {
+    execute: vi.fn(),
+  } as unknown as AddUserToCompetitionUseCase;
+  const removeUserFromCompetitionUseCase = {
+    execute: vi.fn(),
+  } as unknown as RemoveUserFromCompetitionUseCase;
 
   const controller = new CompetitionController(
     createCompetitionUseCase,
@@ -36,6 +45,8 @@ describe('CompetitionController', () => {
     listCompetitionsUseCase,
     previewAthleteImportUseCase,
     importAthletesUseCase,
+    addUserToCompetitionUseCase,
+    removeUserFromCompetitionUseCase,
   );
 
   beforeEach(() => {
@@ -47,16 +58,89 @@ describe('CompetitionController', () => {
       makeCompetition({ id: 1 }),
     );
 
-    const result = await controller.create({
+    const result = await controller.create(
+      {
+        sub: 99,
+        username: 'creator',
+        role: AuthRole.STAFF,
+        academyId: null,
+        competitionIds: [],
+        exp: 9999999999,
+      },
+      {
+        name: 'Summer Cup',
+        mode: CompetitionMode.TEAM,
+        fightDurationSeconds: 300,
+        weighInMarginGrams: 500,
+        ageSplitYears: 2,
+      },
+    );
+
+    expect(createCompetitionUseCase.execute).toHaveBeenCalledWith({
+      currentUserId: 99,
       name: 'Summer Cup',
       mode: CompetitionMode.TEAM,
       fightDurationSeconds: 300,
       weighInMarginGrams: 500,
       ageSplitYears: 2,
     });
-
     expect(result).toEqual({
       data: makeCompetition({ id: 1 }).toJSON(),
+      error: null,
+    });
+  });
+
+  it('should add user to competition', async () => {
+    vi.mocked(addUserToCompetitionUseCase.execute).mockResolvedValue(undefined);
+
+    const result = await controller.addUser(
+      {
+        sub: 99,
+        username: 'creator',
+        role: AuthRole.STAFF,
+        academyId: null,
+        competitionIds: [1],
+        exp: 9999999999,
+      },
+      { id: 1 },
+      { userId: 7 },
+    );
+
+    expect(addUserToCompetitionUseCase.execute).toHaveBeenCalledWith({
+      currentUserId: 99,
+      currentUserRole: AuthRole.STAFF,
+      competitionId: 1,
+      targetUserId: 7,
+    });
+    expect(result).toEqual({
+      data: true,
+      error: null,
+    });
+  });
+
+  it('should remove user from competition', async () => {
+    vi.mocked(removeUserFromCompetitionUseCase.execute).mockResolvedValue(undefined);
+
+    const result = await controller.removeUser(
+      {
+        sub: 99,
+        username: 'creator',
+        role: AuthRole.STAFF,
+        academyId: null,
+        competitionIds: [1],
+        exp: 9999999999,
+      },
+      { id: 1, userId: 7 },
+    );
+
+    expect(removeUserFromCompetitionUseCase.execute).toHaveBeenCalledWith({
+      currentUserId: 99,
+      currentUserRole: AuthRole.STAFF,
+      competitionId: 1,
+      targetUserId: 7,
+    });
+    expect(result).toEqual({
+      data: true,
       error: null,
     });
   });
@@ -70,7 +154,23 @@ describe('CompetitionController', () => {
       totalPages: 2,
     });
 
-    const result = await controller.list({
+    const result = await controller.list(
+      {
+        sub: 99,
+        username: 'creator',
+        role: AuthRole.STAFF,
+        academyId: null,
+        competitionIds: [1, 2],
+        exp: 9999999999,
+      },
+      {
+        page: 1,
+        pageSize: 2,
+      },
+    );
+
+    expect(listCompetitionsUseCase.execute).toHaveBeenCalledWith({
+      currentUserId: 99,
       page: 1,
       pageSize: 2,
     });

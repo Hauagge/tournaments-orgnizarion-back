@@ -120,7 +120,7 @@ export class AthleteImportCsvService {
 
   private buildHeaderMap(headers: string[]): HeaderMap {
     return buildHeaderAliasMap(headers, {
-      fullName: ['FULLNAME', 'NOME', 'NAME'],
+      fullName: ['FULLNAME', 'NOME', 'NAME', 'NOMECOMPLETO', 'NOME COMPLETO'],
       documentNumber: [
         'DOCUMENTNUMBER',
         'DOCUMENT_NUMBER',
@@ -137,7 +137,9 @@ export class AthleteImportCsvService {
         'DATA_DE_ANIVERSARIO',
         'DATADENASC',
         'DATA DE NASCIMENTO',
+        'DATADENASCIMENTO',
         'DATA  NASCIMENTO',
+        'Data de nascimento',
       ],
       belt: ['BELT', 'FAIXA'],
       declaredWeightKg: [

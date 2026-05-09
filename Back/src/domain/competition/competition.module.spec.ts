@@ -3,12 +3,16 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it } from 'vitest';
 import { AthleteTypeOrmEntity } from '../athlete/infra/persistence/entities/athlete.typeorm-entity';
 import { AcademyTypeOrmEntity } from '../academy/infra/persistence/entities/academy.typeorm-entity';
+import { UserCompetitionTypeOrmEntity } from '../auth/entities/user-competition.typeorm-entity';
+import { User } from '../auth/entities/user.typeorm-entity';
 import { CompetitionModule } from './competition.module';
+import { AddUserToCompetitionUseCase } from './application/use-cases/add-user-to-competition.use-case';
 import { CreateCompetitionUseCase } from './application/use-cases/create-competition.use-case';
 import { GetCompetitionUseCase } from './application/use-cases/get-competition.use-case';
 import { ImportAthletesUseCase } from './application/use-cases/import-athletes.use-case';
 import { ListCompetitionsUseCase } from './application/use-cases/list-competitions.use-case';
 import { PreviewAthleteImportUseCase } from './application/use-cases/preview-athlete-import.use-case';
+import { RemoveUserFromCompetitionUseCase } from './application/use-cases/remove-user-from-competition.use-case';
 import { UpdateCompetitionSettingsUseCase } from './application/use-cases/update-competition-settings.use-case';
 import { CompetitionRepository } from './infra/persistence/competition.repository';
 import { CompetitionTypeOrmEntity } from './infra/persistence/entities/competition.typeorm-entity';
@@ -41,6 +45,26 @@ describe('CompetitionModule', () => {
         save: async () => undefined,
         findOneBy: async () => null,
       })
+      .overrideProvider(getRepositoryToken(User))
+      .useValue({
+        findOne: async () => null,
+      })
+      .overrideProvider(getRepositoryToken(UserCompetitionTypeOrmEntity))
+      .useValue({
+        findOne: async () => null,
+        createQueryBuilder: () => ({
+          insert: () => ({
+            into: () => ({
+              values: () => ({
+                orUpdate: () => ({
+                  execute: async () => undefined,
+                }),
+              }),
+            }),
+          }),
+        }),
+        delete: async () => undefined,
+      })
       .compile();
 
     expect(moduleRef.get(CreateCompetitionUseCase)).toBeInstanceOf(
@@ -60,6 +84,12 @@ describe('CompetitionModule', () => {
     );
     expect(moduleRef.get(ImportAthletesUseCase)).toBeInstanceOf(
       ImportAthletesUseCase,
+    );
+    expect(moduleRef.get(AddUserToCompetitionUseCase)).toBeInstanceOf(
+      AddUserToCompetitionUseCase,
+    );
+    expect(moduleRef.get(RemoveUserFromCompetitionUseCase)).toBeInstanceOf(
+      RemoveUserFromCompetitionUseCase,
     );
     expect(moduleRef.get(ICompetitionRepository)).toBeInstanceOf(
       CompetitionRepository,

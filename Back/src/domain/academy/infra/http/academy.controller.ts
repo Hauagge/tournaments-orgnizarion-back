@@ -6,7 +6,12 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
+import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
+import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
+import { AuthRole } from '@/domain/auth/auth-role.enum';
 import { Athlete } from '@/domain/athlete/domain/entities/athlete.entity';
 import { ZodValidationPipe } from 'src/core/pipe/zod-validation.pipe';
 import { ApiResponse } from 'src/shared/result/api-response.type';
@@ -20,15 +25,26 @@ import {
   CompetitionAcademyParamDto,
   CompetitionAcademyParamSchema,
 } from './dtos/competition-academy-param.dto';
-import { CreateAcademyDto, CreateAcademySchema } from './dtos/create-academy.dto';
+import {
+  CreateAcademyDto,
+  CreateAcademySchema,
+} from './dtos/create-academy.dto';
 import {
   AcademyAthleteParamDto,
   AcademyAthleteParamSchema,
 } from './dtos/academy-athlete-param.dto';
-import { AcademyIdParamDto, AcademyIdParamSchema } from './dtos/academy-id-param.dto';
-import { UpdateAcademyDto, UpdateAcademySchema } from './dtos/update-academy.dto';
+import {
+  AcademyIdParamDto,
+  AcademyIdParamSchema,
+} from './dtos/academy-id-param.dto';
+import {
+  UpdateAcademyDto,
+  UpdateAcademySchema,
+} from './dtos/update-academy.dto';
 
 @Controller()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class AcademyController {
   constructor(
     private readonly createAcademyUseCase: CreateAcademyUseCase,

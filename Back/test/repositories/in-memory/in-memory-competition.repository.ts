@@ -8,6 +8,7 @@ export class InMemoryCompetitionRepository
 {
   private competitions: Competition[] = [];
   private nextId = 1;
+  private accessibleCompetitionIdsByUserId = new Map<number, number[]>();
 
   constructor(seed: Competition[] = []) {
     this.setCompetitions(seed);
@@ -20,6 +21,10 @@ export class InMemoryCompetitionRepository
         (max, competition) => Math.max(max, competition.id ?? 0),
         0,
       ) + 1;
+  }
+
+  setAccessibleCompetitions(userId: number, competitionIds: number[]) {
+    this.accessibleCompetitionIdsByUserId.set(userId, [...competitionIds]);
   }
 
   async create(competition: Competition): Promise<Competition> {
@@ -52,13 +57,25 @@ export class InMemoryCompetitionRepository
   }
 
   async list(input: {
+    currentUserId: number;
     page: number;
     pageSize: number;
   }): Promise<[Competition[], number]> {
-    const total = this.competitions.length;
+    const configuredCompetitionIds =
+      this.accessibleCompetitionIdsByUserId.get(input.currentUserId);
+    const accessibleCompetitionIds = new Set(
+      configuredCompetitionIds ??
+        this.competitions
+          .map((competition) => competition.id)
+          .filter((competitionId): competitionId is number => competitionId !== undefined),
+    );
+    const filteredCompetitions = this.competitions.filter((competition) =>
+      accessibleCompetitionIds.has(competition.id as number),
+    );
+    const total = filteredCompetitions.length;
     const start = (input.page - 1) * input.pageSize;
     const end = start + input.pageSize;
-    const items = [...this.competitions]
+    const items = [...filteredCompetitions]
       .sort(
         (left, right) => right.createdAt.getTime() - left.createdAt.getTime(),
       )

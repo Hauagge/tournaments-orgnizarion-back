@@ -1,5 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { AuthRole } from '../auth-role.enum';
+import { UserCompetitionTypeOrmEntity } from './user-competition.typeorm-entity';
 
 @Entity('users')
 export class User {
@@ -14,4 +20,13 @@ export class User {
 
   @Column({ type: 'varchar' })
   role: AuthRole;
+
+  @Column({ name: 'academy_id', type: 'int', nullable: true })
+  academyId: number | null;
+
+  @OneToMany(
+    () => UserCompetitionTypeOrmEntity,
+    (userCompetition) => userCompetition.user,
+  )
+  competitionLinks?: UserCompetitionTypeOrmEntity[];
 }

@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { EventBusModule } from '@/core/events/event-bus.module';
+import { AuthModule } from '../auth/auth.module';
 import { AreaProviderModule } from '../area/area-provider.module';
 import { ScoreboardEventRelayService } from './application/services/scoreboard-event-relay.service';
 import { ScoreboardGateway } from './scoreboard.gateway';
 
 @Module({
-  imports: [EventBusModule, AreaProviderModule],
+  imports: [EventBusModule, AuthModule, AreaProviderModule],
   providers: [ScoreboardGateway, ScoreboardEventRelayService],
   exports: [ScoreboardGateway],
 })

@@ -1,10 +1,13 @@
 export function parseDateFromText(value: string): Date | null {
   if (!value) {
+    console.log(`[0] No value provided for date parsing`); // Log the error for debugging
     return null;
   }
 
   const normalized = value.trim();
-  const dayMonthYearFormat = normalized.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const dayMonthYearFormat = normalized.match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/,
+  );
 
   if (dayMonthYearFormat) {
     const [, day, month, year] = dayMonthYearFormat;
@@ -25,12 +28,13 @@ export function parseDateFromText(value: string): Date | null {
     ) {
       return parsed;
     }
-
+    console.log(`[1] Failed to parse date from value: ${value}`); // Log the error for debugging
     return null;
   }
 
   const isoDate = new Date(normalized);
   if (Number.isNaN(isoDate.getTime())) {
+    console.log(`[2] Failed to parse date from value: ${value}`); // Log the error for debugging
     return null;
   }
 

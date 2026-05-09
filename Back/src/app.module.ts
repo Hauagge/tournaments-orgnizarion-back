@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { CoreAuthModule } from './core/auth/core-auth.module';
 import { LoggerMiddleware } from './core/middlewares';
 import { DatabaseModule } from './database/database.module';
 import { AcademyModule } from './domain/academy/academy.module';
@@ -17,6 +18,7 @@ import { WeighInModule } from './domain/weighin/weighin.module';
 
 @Module({
   imports: [
+    CoreAuthModule,
     DatabaseModule,
     AuthModule,
     CompetitionModule,
