@@ -1,6 +1,5 @@
 export function parseDateFromText(value: string): Date | null {
   if (!value) {
-    console.log(`[0] No value provided for date parsing`); // Log the error for debugging
     return null;
   }
 
@@ -11,38 +10,43 @@ export function parseDateFromText(value: string): Date | null {
 
   if (dayMonthYearFormat) {
     const [, day, month, year] = dayMonthYearFormat;
-    const normalizedDay = day.padStart(2, '0');
-    const normalizedMonth = month.padStart(2, '0');
-    const parsed = new Date(
-      Date.UTC(
-        Number(year),
-        Number(normalizedMonth) - 1,
-        Number(normalizedDay),
-      ),
+    return buildLocalDate(
+      Number(year),
+      Number(month),
+      Number(day),
     );
-
-    if (
-      parsed.getUTCFullYear() === Number(year) &&
-      parsed.getUTCMonth() === Number(normalizedMonth) - 1 &&
-      parsed.getUTCDate() === Number(normalizedDay)
-    ) {
-      return parsed;
-    }
-    console.log(`[1] Failed to parse date from value: ${value}`); // Log the error for debugging
-    return null;
   }
 
-  const isoDate = new Date(normalized);
-  if (Number.isNaN(isoDate.getTime())) {
-    console.log(`[2] Failed to parse date from value: ${value}`); // Log the error for debugging
-    return null;
-  }
-
-  return new Date(
-    Date.UTC(
-      isoDate.getUTCFullYear(),
-      isoDate.getUTCMonth(),
-      isoDate.getUTCDate(),
-    ),
+  const isoYearMonthDayFormat = normalized.match(
+    /^(\d{4})-(\d{2})-(\d{2})$/,
   );
+
+  if (isoYearMonthDayFormat) {
+    const [, year, month, day] = isoYearMonthDayFormat;
+    return buildLocalDate(
+      Number(year),
+      Number(month),
+      Number(day),
+    );
+  }
+
+  return null;
+}
+
+function buildLocalDate(
+  year: number,
+  month: number,
+  day: number,
+): Date | null {
+  const parsed = new Date(year, month - 1, day);
+
+  if (
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return parsed;
 }
