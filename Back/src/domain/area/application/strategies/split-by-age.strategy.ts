@@ -19,49 +19,51 @@ export class SplitByAgeStrategy implements AreaDistributionStrategy {
     }
 
     const groups = this.buildGroups(context.fights);
+    const distributions = context.areas
+      .slice()
+      .sort((left, right) => left.order - right.order)
+      .map((area) => ({
+        areaId: area.id,
+        groups: [] as FightQueueGroup[],
+      }));
+
     if (groups.length === 0) {
-      return context.areas.map((area) => ({ areaId: area.id, groups: [] }));
+      return distributions;
     }
 
-    if (context.areas.length === 1) {
-      return [{ areaId: context.areas[0].id, groups }];
-    }
+    const sortedGroups = groups
+      .slice()
+      .sort((left, right) => {
+        const leftBand = this.calculateAgeBand(left, context);
+        const rightBand = this.calculateAgeBand(right, context);
 
-    const youngerArea = context.areas[0];
-    const olderArea = context.areas[1];
-    const youngerGroups: FightQueueGroup[] = [];
-    const olderGroups: FightQueueGroup[] = [];
+        return (
+          leftBand - rightBand ||
+          this.maxAge(left, context) - this.maxAge(right, context) ||
+          left.representativeFight.orderIndex - right.representativeFight.orderIndex ||
+          (left.representativeFight.id ?? 0) - (right.representativeFight.id ?? 0)
+        );
+      });
 
-    for (const group of groups) {
+    let cursor = 0;
+
+    for (const group of sortedGroups) {
       if (group.preferredAreaId) {
-        const targetArea = context.areas.find((area) => area.id === group.preferredAreaId);
-        if (targetArea) {
-          const bucket = targetArea.id === youngerArea.id ? youngerGroups : olderGroups;
-          bucket.push(group);
+        const preferred = distributions.find(
+          (distribution) => distribution.areaId === group.preferredAreaId,
+        );
+
+        if (preferred) {
+          preferred.groups.push(group);
           continue;
         }
       }
 
-      const maxAge = Math.max(
-        ...group.athleteIds.map((athleteId) =>
-          this.calculateAge(
-            context.athleteBirthDatesById.get(athleteId),
-          ),
-        ),
-      );
-
-      if (maxAge <= context.ageSplitYears) {
-        youngerGroups.push(group);
-      } else {
-        olderGroups.push(group);
-      }
+      distributions[cursor].groups.push(group);
+      cursor = (cursor + 1) % distributions.length;
     }
 
-    return [
-      { areaId: youngerArea.id, groups: youngerGroups },
-      { areaId: olderArea.id, groups: olderGroups },
-      ...context.areas.slice(2).map((area) => ({ areaId: area.id, groups: [] })),
-    ];
+    return distributions;
   }
 
   private buildGroups(fights: FightEntity[]): FightQueueGroup[] {
@@ -101,5 +103,29 @@ export class SplitByAgeStrategy implements AreaDistributionStrategy {
     }
 
     return age;
+  }
+
+  private maxAge(
+    group: FightQueueGroup,
+    context: AreaDistributionContext,
+  ): number {
+    return Math.max(
+      ...group.athleteIds.map((athleteId) =>
+        this.calculateAge(context.athleteBirthDatesById.get(athleteId)),
+      ),
+    );
+  }
+
+  private calculateAgeBand(
+    group: FightQueueGroup,
+    context: AreaDistributionContext,
+  ): number {
+    const maxAge = this.maxAge(group, context);
+
+    if (!Number.isFinite(maxAge)) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+
+    return Math.floor(maxAge / Math.max(context.ageSplitYears, 1));
   }
 }
