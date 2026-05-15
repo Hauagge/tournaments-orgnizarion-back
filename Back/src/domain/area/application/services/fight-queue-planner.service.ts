@@ -5,6 +5,7 @@ import { AreaDistributionStrategyResolverService } from './area-distribution-str
 import { RestPolicyService } from './rest-policy.service';
 import { FightQueuePlan } from '../types/fight-queue-plan.type';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
+import { DistributionMode } from '../value-objects/distribution-mode.enum';
 
 @Injectable()
 export class FightQueuePlannerService {
@@ -16,12 +17,14 @@ export class FightQueuePlannerService {
   plan(input: {
     competitionId: number;
     competitionMode: CompetitionMode;
+    distributionMode: DistributionMode;
     ageSplitYears: number;
     restGapFights: number;
     areas: Array<{ id: number; order: number }>;
     distributableFights: FightEntity[];
     recentFinishedFights: FightEntity[];
     athleteBirthDatesById: Map<number, Date>;
+    existingQueueItemsByArea?: Map<number, AreaQueueItem[]>;
   }): FightQueuePlan {
     const areaDistributionStrategy = this.areaDistributionStrategyResolver.resolve(
       input.competitionMode,
@@ -40,13 +43,20 @@ export class FightQueuePlannerService {
     const areas: FightQueuePlan['areas'] = [];
 
     for (const areaDistribution of distributed) {
+      const existingItems =
+        input.distributionMode === DistributionMode.INCREMENTAL
+          ? (input.existingQueueItemsByArea?.get(areaDistribution.areaId) ?? [])
+          : [];
       const orderedGroups = this.restPolicyService.apply({
         groups: areaDistribution.groups,
         recentFinishedFights: input.recentFinishedFights,
         restGapFights: input.restGapFights,
       });
 
-      let position = 1;
+      let position =
+        existingItems.length > 0
+          ? Math.max(...existingItems.map((item) => item.position)) + 1
+          : 1;
       for (const group of orderedGroups) {
         for (const fight of group.fights.sort((a, b) => a.orderIndex - b.orderIndex)) {
           queueItems.push(
@@ -65,7 +75,9 @@ export class FightQueuePlannerService {
 
       areas.push({
         areaId: areaDistribution.areaId,
-        queuedFights: position - 1,
+        queuedFights: existingItems.length + queueItems.filter(
+          (item) => item.areaId === areaDistribution.areaId,
+        ).length,
       });
     }
 

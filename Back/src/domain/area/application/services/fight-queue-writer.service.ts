@@ -23,4 +23,10 @@ export class FightQueueWriterService {
       items: input.plan.queueItems,
     });
   }
+
+  async applyIncremental(plan: FightQueuePlan) {
+    await this.fightRepository.assignAreas(plan.assignments);
+
+    return this.areaQueueItemRepository.createManyQueueItems(plan.queueItems);
+  }
 }

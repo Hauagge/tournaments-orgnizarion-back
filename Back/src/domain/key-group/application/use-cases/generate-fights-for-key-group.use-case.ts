@@ -1,8 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { AreaQueueItem } from '@/domain/area/domain/entities/area-queue-item.entity';
-import { IAreaQueueItemRepository } from '@/domain/area/repository/IAreaQueueItemRepository.repository';
+import { DistributeAreaFightsUseCase } from '@/domain/area/application/use-cases/distribute-area-fights.use-case';
+import { DistributionMode } from '@/domain/area/application/value-objects/distribution-mode.enum';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
-import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
 import { FightStatus } from '@/domain/fight/domain/value-objects/fight-status.enum';
@@ -11,7 +10,6 @@ import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { KeyGroupStatus } from '../../domain/value-objects/key-group-status.enum';
 import { IKeyGroupRepository } from '../../repository/IKeyGroupRepository.repository';
-import { KeyGroupAreaSelectionService } from '../services/key-group-area-selection.service';
 import { KeysFightGenerationInput } from '../strategies/keys-fight-generation.strategy';
 
 @Injectable()
@@ -23,10 +21,8 @@ export class GenerateFightsForKeyGroupUseCase {
     private readonly keyGroupRepository: IKeyGroupRepository,
     @Inject(IFightRepository)
     private readonly fightRepository: IFightRepository,
-    @Inject(IAreaQueueItemRepository)
-    private readonly areaQueueItemRepository: IAreaQueueItemRepository,
     private readonly strategyResolver: FightGenerationStrategyResolverService,
-    private readonly areaSelectionService: KeyGroupAreaSelectionService,
+    private readonly distributeAreaFightsUseCase: DistributeAreaFightsUseCase,
   ) {}
 
   async execute(keyGroupId: number) {
@@ -69,8 +65,6 @@ export class GenerateFightsForKeyGroupUseCase {
       competition.mode,
     ) as import('@/domain/fight/application/strategies/fight-generation.strategy').FightGenerationStrategy<KeysFightGenerationInput>;
 
-    const selectedArea = await this.areaSelectionService.select(group.competitionId);
-
     const generated = strategy.generate({
       competitionId: group.competitionId,
       keyGroupId,
@@ -78,45 +72,19 @@ export class GenerateFightsForKeyGroupUseCase {
       athleteIds: members.map((member) => member.athleteId),
     });
 
-    const fightsToCreate = generated.fights.map((fight) =>
-      FightEntity.restore({
-        ...fight.toJSON(),
-        areaId: selectedArea.id as number,
-        areaName: selectedArea.name,
-      }),
-    );
+    const fights = await this.fightRepository.createMany(generated.fights);
 
-    const fights = await this.fightRepository.createMany(fightsToCreate);
-
-    const existingQueue = await this.areaQueueItemRepository.listByAreaId(
-      selectedArea.id as number,
-    );
-    let nextPosition =
-      existingQueue.length > 0
-        ? Math.max(...existingQueue.map((item) => item.position)) + 1
-        : 1;
-
-    const queueItemsToCreate = fights
-      .slice()
-      .sort(
-        (left, right) =>
-          left.orderIndex - right.orderIndex || (left.id as number) - (right.id as number),
-      )
-      .map((fight) =>
-        AreaQueueItem.create({
-          areaId: selectedArea.id as number,
-          fightId: fight.id as number,
-          position: nextPosition++,
-        }),
-      );
-
-    await this.areaQueueItemRepository.createManyQueueItems(queueItemsToCreate);
+    if (fights.length > 0) {
+      await this.distributeAreaFightsUseCase.execute({
+        competitionId: group.competitionId,
+        mode: DistributionMode.INCREMENTAL,
+        restGapFights: 2,
+        fightIds: fights.map((fight) => fight.id as number),
+      });
+    }
 
     return {
-      fights: fights.map((fight) => ({
-        ...fight.toJSON(),
-        areaName: selectedArea.name,
-      })),
+      fights: fights.map((fight) => fight.toJSON()),
       metadata: generated.metadata,
     };
   }

@@ -69,8 +69,10 @@ export class AreaController {
   ) {
     const result = await this.distributeAreaFightsUseCase.execute({
       competitionId: params.id,
+      mode: body.mode,
       ageSplitYears: body.ageSplitYears,
       restGapFights: body.restGapFights,
+      fightIds: body.fightIds,
     });
 
     return {
