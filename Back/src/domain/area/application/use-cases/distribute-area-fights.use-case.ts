@@ -6,11 +6,9 @@ import { FightStatus } from '@/domain/fight/domain/value-objects/fight-status.en
 import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
-import { AreaQueueItem } from '../../domain/entities/area-queue-item.entity';
 import { IAreaRepository } from '../../repository/IAreaRepository.repository';
-import { IAreaQueueItemRepository } from '../../repository/IAreaQueueItemRepository.repository';
-import { AreaDistributionStrategyResolverService } from '../services/area-distribution-strategy-resolver.service';
-import { RestPolicyService } from '../services/rest-policy.service';
+import { FightQueuePlannerService } from '../services/fight-queue-planner.service';
+import { FightQueueWriterService } from '../services/fight-queue-writer.service';
 
 export type DistributeAreaFightsInput = {
   competitionId: number;
@@ -25,14 +23,12 @@ export class DistributeAreaFightsUseCase {
     private readonly competitionRepository: ICompetitionRepository,
     @Inject(IAreaRepository)
     private readonly areaRepository: IAreaRepository,
-    @Inject(IAreaQueueItemRepository)
-    private readonly areaQueueItemRepository: IAreaQueueItemRepository,
     @Inject(IFightRepository)
     private readonly fightRepository: IFightRepository,
     @Inject(IAthleteRepository)
     private readonly athleteRepository: IAthleteRepository,
-    private readonly areaDistributionStrategyResolver: AreaDistributionStrategyResolverService,
-    private readonly restPolicyService: RestPolicyService,
+    private readonly fightQueuePlannerService: FightQueuePlannerService,
+    private readonly fightQueueWriterService: FightQueueWriterService,
     @Inject(EventBus)
     private readonly eventBus: EventBus,
   ) {}
@@ -64,53 +60,20 @@ export class DistributeAreaFightsUseCase {
       athletes.map((athlete) => [athlete.id as number, athlete.birthDate]),
     );
 
-    const areaDistributionStrategy = this.areaDistributionStrategyResolver.resolve(
-      competition.mode,
-    );
-
-    const distributed = areaDistributionStrategy.distribute({
+    const plan = this.fightQueuePlannerService.plan({
       competitionId: input.competitionId,
+      competitionMode: competition.mode,
       ageSplitYears: input.ageSplitYears ?? competition.ageSplitYears,
       areas: areas.map((area) => ({ id: area.id as number, order: area.order })),
-      fights: distributableFights,
+      distributableFights,
+      recentFinishedFights: fights.filter((fight) => fight.status === FightStatus.FINISHED),
+      restGapFights: input.restGapFights,
       athleteBirthDatesById,
     });
 
-    const recentFinishedFights = fights.filter((fight) => fight.status === FightStatus.FINISHED);
-    const queueItems: AreaQueueItem[] = [];
-    const fightAssignments: Array<{ fightId: number; areaId: number }> = [];
-
-    for (const areaDistribution of distributed) {
-      const orderedGroups = this.restPolicyService.apply({
-        groups: areaDistribution.groups,
-        recentFinishedFights,
-        restGapFights: input.restGapFights,
-      });
-
-      let position = 1;
-      for (const group of orderedGroups) {
-        for (const fight of group.fights.sort((a, b) => a.orderIndex - b.orderIndex)) {
-          queueItems.push(
-            AreaQueueItem.create({
-              areaId: areaDistribution.areaId,
-              fightId: fight.id as number,
-              position: position++,
-            }),
-          );
-          fightAssignments.push({
-            fightId: fight.id as number,
-            areaId: areaDistribution.areaId,
-          });
-        }
-      }
-    }
-
-    await this.fightRepository.assignAreas(
-      fightAssignments.map((assignment) => ({ ...assignment, areaId: assignment.areaId })),
-    );
-    const savedQueueItems = await this.areaQueueItemRepository.replaceForCompetition({
+    const savedQueueItems = await this.fightQueueWriterService.applyFull({
       competitionId: input.competitionId,
-      items: queueItems,
+      plan,
     });
 
     await this.eventBus.publish({
@@ -125,14 +88,13 @@ export class DistributeAreaFightsUseCase {
 
     return {
       totalDistributed: savedQueueItems.length,
-      areas: await Promise.all(
-        areas.map(async (area) => ({
-          id: area.id as number,
-          name: area.name,
-          order: area.order,
-          queuedFights: (await this.areaQueueItemRepository.listByAreaId(area.id as number)).length,
-        })),
-      ),
+      areas: areas.map((area) => ({
+        id: area.id as number,
+        name: area.name,
+        order: area.order,
+        queuedFights:
+          plan.areas.find((item) => item.areaId === (area.id as number))?.queuedFights ?? 0,
+      })),
     };
   }
 }
