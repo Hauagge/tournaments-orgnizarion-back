@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { makeAthlete, makeTeam } from '../../../../../test/factories';
+import { makeAcademy, makeAthlete } from '../../../../../test/factories';
 import {
   InMemoryAthleteRepository,
   InMemoryAcademyRepository,
@@ -25,20 +25,58 @@ describe('Athlete use cases', () => {
   });
 
   it('should create athlete with normalized name', async () => {
-    const useCase = new CreateAthleteUseCase(repository);
+    const useCase = new CreateAthleteUseCase(
+      repository,
+      teamRepository,
+      weighInRepository,
+    );
 
     const result = await useCase.execute({
       competitionId: 1,
       fullName: '  Ana   Maria  Silva ',
+      documentNumber: null,
       birthDate: new Date('2010-05-10T00:00:00.000Z'),
       belt: ' white ',
-      declaredWeightGrams: 50000,
+      declaredWeight: 50000,
       academyId: null,
     });
 
     expect(result.id).toBe(1);
     expect(result.fullName).toBe('Ana Maria Silva');
     expect(result.belt).toBe('white');
+  });
+
+  it('should create approved weigh-in when athlete is created with approved weighInStatus', async () => {
+    const useCase = new CreateAthleteUseCase(
+      repository,
+      teamRepository,
+      weighInRepository,
+    );
+
+    const result = await useCase.execute({
+      competitionId: 1,
+      fullName: 'Ana Silva',
+      documentNumber: null,
+      birthDate: new Date('2010-05-10T00:00:00.000Z'),
+      belt: 'white',
+      declaredWeight: 50000,
+      weighInStatus: WeighInStatus.APPROVED,
+      academyId: null,
+    });
+
+    const weighIn = await weighInRepository.findByCompetitionIdAndAthleteId(
+      1,
+      result.id as number,
+    );
+
+    expect(weighIn?.toJSON()).toMatchObject({
+      competitionId: 1,
+      athleteId: result.id,
+      measuredWeightGrams: 50000,
+      status: WeighInStatus.APPROVED,
+      performedBy: 'system',
+    });
+    expect(weighIn?.performedAt).toBeInstanceOf(Date);
   });
 
   it('should get athlete by id', async () => {
@@ -59,7 +97,7 @@ describe('Athlete use cases', () => {
   it('should update athlete fields', async () => {
     repository.setAthletes([makeAthlete({ id: 5 })]);
 
-    const useCase = new UpdateAthleteUseCase(repository);
+    const useCase = new UpdateAthleteUseCase(repository, teamRepository);
     const result = await useCase.execute({
       id: 5,
       fullName: '  Julia   Costa ',
@@ -70,15 +108,18 @@ describe('Athlete use cases', () => {
     expect(result.toJSON()).toMatchObject({
       id: 5,
       fullName: 'Julia Costa',
-      declaredWeightGrams: 47000,
+      declaredWeight: 47000,
       academyId: null,
     });
   });
 
   it('should preserve untouched fields on update', async () => {
     repository.setAthletes([makeAthlete({ id: 6, belt: 'yellow' })]);
+    teamRepository = new InMemoryAcademyRepository([
+      makeAcademy({ id: 10, competitionId: 1, name: 'Academy 10' }),
+    ]);
 
-    const useCase = new UpdateAthleteUseCase(repository);
+    const useCase = new UpdateAthleteUseCase(repository, teamRepository);
     const result = await useCase.execute({
       id: 6,
       academyId: 10,
@@ -92,7 +133,7 @@ describe('Athlete use cases', () => {
   });
 
   it('should throw NotFoundError when updating missing athlete', async () => {
-    const useCase = new UpdateAthleteUseCase(repository);
+    const useCase = new UpdateAthleteUseCase(repository, teamRepository);
 
     await expect(useCase.execute({ id: 88, belt: 'orange' })).rejects.toBeInstanceOf(
       NotFoundError,
@@ -107,8 +148,8 @@ describe('Athlete use cases', () => {
       makeAthlete({ id: 4, competitionId: 11, fullName: 'Ana Silva', academyId: 3 }),
     ]);
     teamRepository = new InMemoryAcademyRepository([
-      makeTeam({ id: 3, competitionId: 10, name: 'Equipe A' }),
-      makeTeam({ id: 4, competitionId: 10, name: 'Equipe B' }),
+      makeAcademy({ id: 3, competitionId: 10, name: 'Equipe A' }),
+      makeAcademy({ id: 4, competitionId: 10, name: 'Equipe B' }),
     ]);
     weighInRepository.setWeighIns([
       WeighIn.restore({

@@ -61,4 +61,10 @@ export class InMemoryWeighInRepository implements IWeighInRepository {
         athleteIds.includes(weighIn.athleteId),
     );
   }
+
+  async hasAnyForCompetition(competitionId: number): Promise<boolean> {
+    return this.weighIns.some(
+      (weighIn) => weighIn.competitionId === competitionId,
+    );
+  }
 }

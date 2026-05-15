@@ -1,3 +1,4 @@
+import { WeighInStatus } from '@/domain/weighin/domain/value-objects/weigh-in-status.enum';
 import { describe, expect, it } from 'vitest';
 import { AthleteIdParamSchema } from './athlete-id-param.dto';
 import { CompetitionAthleteParamSchema } from './competition-athlete-param.dto';
@@ -11,14 +12,18 @@ describe('Athlete DTO schemas', () => {
       fullName: '  Ana   Silva ',
       birthDate: '2010-05-10',
       belt: 'white',
-      declaredWeightGrams: '50000',
+      declaredWeight: '50000',
+      weighInStatus: WeighInStatus.APPROVED,
     });
 
     expect(result).toEqual({
       fullName: '  Ana   Silva ',
+      documentNumber: null,
       birthDate: new Date('2010-05-10T00:00:00.000Z'),
       belt: 'white',
-      declaredWeightGrams: 50000,
+      declaredWeight: 50000,
+      paymentStatus: 'PENDING',
+      weighInStatus: WeighInStatus.APPROVED,
       academyId: null,
     });
   });

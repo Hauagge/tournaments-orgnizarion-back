@@ -1,5 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { IAcademyRepository } from '@/domain/academy/repository/IAcademyRepository.repository';
+import { WeighIn } from '@/domain/weighin/domain/entities/weigh-in.entity';
+import { WeighInStatus } from '@/domain/weighin/domain/value-objects/weigh-in-status.enum';
+import { IWeighInRepository } from '@/domain/weighin/repository/IWeighInRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { Athlete } from '../../domain/entities/athlete.entity';
@@ -14,6 +17,7 @@ export type CreateAthleteInput = {
   belt: string;
   declaredWeight: number;
   paymentStatus?: PaymentStatus;
+  weighInStatus?: WeighInStatus.PENDING | WeighInStatus.APPROVED;
   academyId: number | null;
 };
 
@@ -24,6 +28,8 @@ export class CreateAthleteUseCase {
     private readonly athleteRepository: IAthleteRepository,
     @Inject(IAcademyRepository)
     private readonly academyRepository: IAcademyRepository,
+    @Inject(IWeighInRepository)
+    private readonly weighInRepository: IWeighInRepository,
   ) {}
 
   async execute(input: CreateAthleteInput): Promise<Athlete> {
@@ -42,6 +48,21 @@ export class CreateAthleteUseCase {
     }
 
     const athlete = Athlete.create(input);
-    return this.athleteRepository.create(athlete);
+    const createdAthlete = await this.athleteRepository.create(athlete);
+
+    if (input.weighInStatus === WeighInStatus.APPROVED) {
+      const weighIn = WeighIn.createPending({
+        competitionId: createdAthlete.competitionId,
+        athleteId: createdAthlete.id as number,
+      }).confirm({
+        measuredWeightGrams: createdAthlete.declaredWeight,
+        status: WeighInStatus.APPROVED,
+        performedBy: 'system',
+      });
+
+      await this.weighInRepository.save(weighIn);
+    }
+
+    return createdAthlete;
   }
 }

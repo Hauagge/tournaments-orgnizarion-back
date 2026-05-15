@@ -1,3 +1,5 @@
+import { PaymentStatus } from '../../domain/value-objects/payment-status.enum';
+import { WeighInStatus } from '@/domain/weighin/domain/value-objects/weigh-in-status.enum';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeAthlete } from '../../../../../test/factories';
 import { CreateAthleteUseCase } from '../../application/use-cases/create-athlete.use-case';
@@ -37,7 +39,10 @@ describe('AthleteController', () => {
         fullName: 'Ana Silva',
         birthDate: new Date('2010-05-10T00:00:00.000Z'),
         belt: 'white',
-        declaredWeightGrams: 50000,
+        declaredWeight: 50000,
+        documentNumber: null,
+        paymentStatus: PaymentStatus.PENDING,
+        weighInStatus: WeighInStatus.APPROVED,
         academyId: null,
       },
     );
@@ -50,8 +55,16 @@ describe('AthleteController', () => {
 
   it('should search and return wrapped response', async () => {
     vi.mocked(searchAthletesUseCase.execute).mockResolvedValue([
-      makeAthlete({ id: 1 }),
-      makeAthlete({ id: 2 }),
+      {
+        ...makeAthlete({ id: 1 }).toJSON(),
+        academyName: 'Academy A',
+        weighInStatus: WeighInStatus.PENDING,
+      },
+      {
+        ...makeAthlete({ id: 2 }).toJSON(),
+        academyName: 'Academy B',
+        weighInStatus: WeighInStatus.APPROVED,
+      },
     ]);
 
     const result = await controller.search(
@@ -60,7 +73,18 @@ describe('AthleteController', () => {
     );
 
     expect(result).toEqual({
-      data: [makeAthlete({ id: 1 }).toJSON(), makeAthlete({ id: 2 }).toJSON()],
+      data: [
+        {
+          ...makeAthlete({ id: 1 }).toJSON(),
+          academyName: 'Academy A',
+          weighInStatus: WeighInStatus.PENDING,
+        },
+        {
+          ...makeAthlete({ id: 2 }).toJSON(),
+          academyName: 'Academy B',
+          weighInStatus: WeighInStatus.APPROVED,
+        },
+      ],
       error: null,
     });
   });

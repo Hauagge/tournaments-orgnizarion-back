@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PaymentStatus } from '../../../domain/value-objects/payment-status.enum';
+import { WeighInStatus } from '@/domain/weighin/domain/value-objects/weigh-in-status.enum';
 
 export const CreateAthleteSchema = z.object({
   fullName: z.string().min(1),
@@ -11,6 +12,10 @@ export const CreateAthleteSchema = z.object({
     .nativeEnum(PaymentStatus)
     .optional()
     .default(PaymentStatus.PENDING),
+  weighInStatus: z
+    .enum([WeighInStatus.PENDING, WeighInStatus.APPROVED])
+    .optional()
+    .default(WeighInStatus.PENDING),
   academyId: z.coerce
     .number()
     .int()
