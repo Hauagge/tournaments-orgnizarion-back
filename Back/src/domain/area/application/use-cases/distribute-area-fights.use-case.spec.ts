@@ -1,0 +1,398 @@
+import { EventBus } from '@/core/events/event-bus.interface';
+import { Area } from '@/domain/area/domain/entities/area.entity';
+import { AreaQueueItem } from '@/domain/area/domain/entities/area-queue-item.entity';
+import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-queue-item-status.enum';
+import { AreaQueueFightDetails } from '@/domain/area/repository/area-queue-fight-details.type';
+import { IAreaQueueItemRepository } from '@/domain/area/repository/IAreaQueueItemRepository.repository';
+import { IAreaRepository } from '@/domain/area/repository/IAreaRepository.repository';
+import { Athlete } from '@/domain/athlete/domain/entities/athlete.entity';
+import { IAthleteRepository } from '@/domain/athlete/repository/IAthleteRepository.repository';
+import { Competition } from '@/domain/competition/domain/entities/competition.entity';
+import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
+import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
+import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
+import { FightStatus } from '@/domain/fight/domain/value-objects/fight-status.enum';
+import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
+import { makeAthlete, makeCompetition } from '../../../../../test/factories';
+import { ValidationError } from '@/shared/errors/validation.error';
+import { AreaDistributionStrategyResolverService } from '../services/area-distribution-strategy-resolver.service';
+import { FightQueuePlannerService } from '../services/fight-queue-planner.service';
+import { FightQueueWriterService } from '../services/fight-queue-writer.service';
+import { RestPolicyService } from '../services/rest-policy.service';
+import { KeysAreaDistributionStrategy } from '../strategies/keys-area-distribution.strategy';
+import { SplitByAgeStrategy } from '../strategies/split-by-age.strategy';
+import { DistributionMode } from '../value-objects/distribution-mode.enum';
+import { DistributeAreaFightsUseCase } from './distribute-area-fights.use-case';
+
+class InMemoryAreaRepository
+  implements IAreaRepository, IAreaQueueItemRepository
+{
+  constructor(
+    private areas: Area[] = [],
+    private queueItems: AreaQueueItem[] = [],
+  ) {}
+
+  async createMany(areas: Area[]): Promise<Area[]> {
+    this.areas = [...this.areas, ...areas];
+    return areas;
+  }
+
+  async findById(id: number): Promise<Area | null> {
+    return this.areas.find((area) => area.id === id) ?? null;
+  }
+
+  async listByCompetitionId(competitionId: number): Promise<Area[]> {
+    return this.areas.filter((area) => area.competitionId === competitionId);
+  }
+
+  async createManyQueueItems(items: AreaQueueItem[]): Promise<AreaQueueItem[]> {
+    this.queueItems = [...this.queueItems, ...items];
+    return items;
+  }
+
+  async replaceForCompetition(input: {
+    competitionId: number;
+    items: AreaQueueItem[];
+  }): Promise<AreaQueueItem[]> {
+    const areaIds = new Set(
+      this.areas
+        .filter((area) => area.competitionId === input.competitionId)
+        .map((area) => area.id as number),
+    );
+
+    this.queueItems = this.queueItems.filter((item) => !areaIds.has(item.areaId));
+    this.queueItems.push(...input.items);
+
+    return input.items;
+  }
+
+  async listByAreaId(areaId: number): Promise<AreaQueueItem[]> {
+    return this.queueItems
+      .filter((item) => item.areaId === areaId)
+      .sort((left, right) => left.position - right.position);
+  }
+
+  async listFightDetailsByAreaId(_areaId: number): Promise<AreaQueueFightDetails[]> {
+    return [];
+  }
+
+  async findByFightId(fightId: number): Promise<AreaQueueItem | null> {
+    return this.queueItems.find((item) => item.fightId === fightId) ?? null;
+  }
+
+  async update(item: AreaQueueItem): Promise<AreaQueueItem> {
+    this.queueItems = this.queueItems.map((current) =>
+      current.id === item.id ? item : current,
+    );
+    return item;
+  }
+}
+
+class InMemoryFightRepository implements IFightRepository {
+  constructor(private fights: FightEntity[] = []) {}
+
+  async createMany(fights: FightEntity[]): Promise<FightEntity[]> {
+    this.fights = [...this.fights, ...fights];
+    return fights;
+  }
+
+  async update(fight: FightEntity): Promise<FightEntity> {
+    this.fights = this.fights.map((current) =>
+      current.id === fight.id ? fight : current,
+    );
+    return fight;
+  }
+
+  async findById(id: number): Promise<FightEntity | null> {
+    return this.fights.find((fight) => fight.id === id) ?? null;
+  }
+
+  async listByCompetitionId(input: {
+    competitionId: number;
+    status?: FightStatus;
+  }): Promise<FightEntity[]> {
+    return this.fights.filter(
+      (fight) =>
+        fight.competitionId === input.competitionId &&
+        (input.status ? fight.status === input.status : true),
+    );
+  }
+
+  async listByKeyGroupId(keyGroupId: number): Promise<FightEntity[]> {
+    return this.fights.filter((fight) => fight.keyGroupId === keyGroupId);
+  }
+
+  async listQueueByAreaId(areaId: number): Promise<FightEntity[]> {
+    return this.fights.filter((fight) => fight.areaId === areaId);
+  }
+
+  async assignAreas(
+    assignments: Array<{ fightId: number; areaId: number | null }>,
+  ): Promise<void> {
+    const areaByFightId = new Map(
+      assignments.map((assignment) => [assignment.fightId, assignment.areaId]),
+    );
+
+    this.fights = this.fights.map((fight) =>
+      areaByFightId.has(fight.id as number)
+        ? fight.assignArea(areaByFightId.get(fight.id as number) ?? null)
+        : fight,
+    );
+  }
+
+  async countByCompetitionId(competitionId: number): Promise<number> {
+    return this.fights.filter((fight) => fight.competitionId === competitionId).length;
+  }
+}
+
+class InMemoryCompetitionRepository implements ICompetitionRepository {
+  constructor(private readonly competitions: Competition[]) {}
+
+  async create(competition: Competition): Promise<Competition> {
+    return competition;
+  }
+
+  async update(competition: Competition): Promise<Competition> {
+    return competition;
+  }
+
+  async findById(id: number): Promise<Competition | null> {
+    return this.competitions.find((competition) => competition.id === id) ?? null;
+  }
+
+  async list(): Promise<[Competition[], number]> {
+    return [this.competitions, this.competitions.length];
+  }
+}
+
+class InMemoryAthleteRepository implements IAthleteRepository {
+  constructor(private readonly athletes: Athlete[]) {}
+
+  async create(athlete: Athlete): Promise<Athlete> {
+    return athlete;
+  }
+
+  async update(athlete: Athlete): Promise<Athlete> {
+    return athlete;
+  }
+
+  async findById(id: number): Promise<Athlete | null> {
+    return this.athletes.find((athlete) => athlete.id === id) ?? null;
+  }
+
+  async findByIds(ids: number[]): Promise<Athlete[]> {
+    const allowedIds = new Set(ids);
+    return this.athletes.filter((athlete) => allowedIds.has(athlete.id as number));
+  }
+
+  async search(): Promise<Athlete[]> {
+    return this.athletes;
+  }
+}
+
+class InMemoryEventBus implements EventBus {
+  async publish(): Promise<void> {
+    return;
+  }
+
+  subscribe(): () => void {
+    return () => undefined;
+  }
+}
+
+function makeArea(id: number, competitionId = 1, order = 1) {
+  return Area.restore({
+    id,
+    competitionId,
+    name: `Area ${id}`,
+    order,
+    createdAt: new Date('2026-01-10T00:00:00.000Z'),
+  });
+}
+
+function makeFight(input: {
+  id: number;
+  competitionId?: number;
+  keyGroupId?: number | null;
+  areaId?: number | null;
+  status?: FightStatus;
+  athleteAId?: number;
+  athleteBId?: number;
+  orderIndex?: number;
+}) {
+  return FightEntity.restore({
+    id: input.id,
+    competitionId: input.competitionId ?? 1,
+    categoryId: 1,
+    keyGroupId: input.keyGroupId ?? 10,
+    areaId: input.areaId ?? null,
+    areaName: input.areaId ? `Area ${input.areaId}` : null,
+    status: input.status ?? FightStatus.WAITING,
+    athleteAId: input.athleteAId ?? 1,
+    athleteBId: input.athleteBId ?? 2,
+    winnerAthleteId: null,
+    winType: null,
+    startedAt: input.status === FightStatus.IN_PROGRESS ? new Date('2026-05-15T10:00:00.000Z') : null,
+    finishedAt: null,
+    orderIndex: input.orderIndex ?? 1,
+  });
+}
+
+describe('DistributeAreaFightsUseCase', () => {
+  function makeSut(input: {
+    fights: FightEntity[];
+    queueItems?: AreaQueueItem[];
+    areas?: Area[];
+    athletes?: Athlete[];
+    competition?: Competition;
+  }) {
+    const competitionRepository = new InMemoryCompetitionRepository([
+      input.competition ??
+        makeCompetition({
+          id: 1,
+          mode: CompetitionMode.KEYS,
+          ageSplitYears: 2,
+        }),
+    ]);
+    const areaRepository = new InMemoryAreaRepository(
+      input.areas ?? [makeArea(1, 1, 1)],
+      input.queueItems ?? [],
+    );
+    const fightRepository = new InMemoryFightRepository(input.fights);
+    const athleteRepository = new InMemoryAthleteRepository(
+      input.athletes ??
+        [
+          makeAthlete({ id: 1, competitionId: 1, fullName: 'A1' }),
+          makeAthlete({ id: 2, competitionId: 1, fullName: 'A2' }),
+        ],
+    );
+    const planner = new FightQueuePlannerService(
+      new AreaDistributionStrategyResolverService(
+        new SplitByAgeStrategy(),
+        new KeysAreaDistributionStrategy(),
+      ),
+      new RestPolicyService(),
+    );
+    const writer = new FightQueueWriterService(fightRepository, areaRepository);
+
+    const useCase = new DistributeAreaFightsUseCase(
+      competitionRepository,
+      areaRepository,
+      areaRepository,
+      fightRepository,
+      athleteRepository,
+      planner,
+      writer,
+      new InMemoryEventBus(),
+    );
+
+    return { useCase, areaRepository, fightRepository };
+  }
+
+  it('should reject FULL distribution when there is a CALLED fight', async () => {
+    const { useCase } = makeSut({
+      fights: [makeFight({ id: 1, status: FightStatus.CALLED, areaId: 1 })],
+    });
+
+    await expect(
+      useCase.execute({
+        competitionId: 1,
+        mode: DistributionMode.FULL,
+        restGapFights: 2,
+      }),
+    ).rejects.toThrow(
+      new ValidationError(
+        'Full distribution is blocked while there are called or in-progress fights',
+      ),
+    );
+  });
+
+  it('should reject FULL distribution when there is an IN_PROGRESS fight', async () => {
+    const { useCase } = makeSut({
+      fights: [makeFight({ id: 1, status: FightStatus.IN_PROGRESS, areaId: 1 })],
+    });
+
+    await expect(
+      useCase.execute({
+        competitionId: 1,
+        mode: DistributionMode.FULL,
+        restGapFights: 2,
+      }),
+    ).rejects.toThrow(
+      new ValidationError(
+        'Full distribution is blocked while there are called or in-progress fights',
+      ),
+    );
+  });
+
+  it('should reject INCREMENTAL distribution when targeted fight is CALLED or IN_PROGRESS', async () => {
+    const { useCase } = makeSut({
+      fights: [
+        makeFight({ id: 1, status: FightStatus.CALLED, areaId: 1 }),
+        makeFight({ id: 2, status: FightStatus.WAITING }),
+      ],
+    });
+
+    await expect(
+      useCase.execute({
+        competitionId: 1,
+        mode: DistributionMode.INCREMENTAL,
+        restGapFights: 2,
+        fightIds: [1],
+      }),
+    ).rejects.toThrow(
+      new ValidationError(
+        'Incremental distribution cannot target called or in-progress fights',
+      ),
+    );
+  });
+
+  it('should accept INCREMENTAL distribution for WAITING fight without queue item', async () => {
+    const existingQueuedFight = makeFight({
+      id: 1,
+      status: FightStatus.WAITING,
+      areaId: 1,
+      athleteAId: 1,
+      athleteBId: 2,
+      orderIndex: 1,
+    });
+    const newFight = makeFight({
+      id: 2,
+      status: FightStatus.WAITING,
+      areaId: null,
+      athleteAId: 3,
+      athleteBId: 4,
+      orderIndex: 2,
+    });
+    const { useCase, areaRepository, fightRepository } = makeSut({
+      fights: [existingQueuedFight, newFight],
+      queueItems: [
+        AreaQueueItem.restore({
+          id: 100,
+          areaId: 1,
+          fightId: 1,
+          position: 1,
+          status: AreaQueueItemStatus.QUEUED,
+        }),
+      ],
+      athletes: [
+        makeAthlete({ id: 1, competitionId: 1, fullName: 'A1' }),
+        makeAthlete({ id: 2, competitionId: 1, fullName: 'A2' }),
+        makeAthlete({ id: 3, competitionId: 1, fullName: 'A3' }),
+        makeAthlete({ id: 4, competitionId: 1, fullName: 'A4' }),
+      ],
+    });
+
+    const result = await useCase.execute({
+      competitionId: 1,
+      mode: DistributionMode.INCREMENTAL,
+      restGapFights: 2,
+      fightIds: [2],
+    });
+
+    expect(result.totalDistributed).toBe(1);
+    expect((await areaRepository.listByAreaId(1)).map((item) => item.fightId)).toEqual([1, 2]);
+    expect((await areaRepository.listByAreaId(1)).map((item) => item.position)).toEqual([1, 2]);
+    expect((await fightRepository.findById(2))?.areaId).toBe(1);
+  });
+});
