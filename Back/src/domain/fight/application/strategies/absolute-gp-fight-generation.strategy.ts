@@ -31,84 +31,36 @@ export class AbsoluteGpFightGenerationStrategy
       };
     }
 
-    if (athleteIds.length === 2) {
-      const [athleteAId, athleteBId] = athleteIds;
+    const bracketSize = 2 ** Math.ceil(Math.log2(Math.max(2, athleteIds.length)));
+    const rounds = Math.log2(bracketSize);
+    const seededAthletes = [...athleteIds];
 
-      return {
-        fights: [1, 2, 3].map((orderIndex) =>
-          FightEntity.create({
-            competitionId: input.competitionId,
-            categoryId: input.categoryId,
-            keyGroupId: null,
-            areaId: null,
-            areaName: null,
-            athleteAId,
-            athleteBId,
-            orderIndex,
-          }),
-        ),
-        metadata: [
-          {
-            categoryId: input.categoryId,
-            format: 'BEST_OF_THREE',
-          },
-        ],
-      };
-    }
-
-    if (athleteIds.length === 3) {
-      const pairs: Array<[number, number]> = [
-        [athleteIds[0], athleteIds[1]],
-        [athleteIds[0], athleteIds[2]],
-        [athleteIds[1], athleteIds[2]],
-      ];
-
-      return {
-        fights: pairs.map(([athleteAId, athleteBId], index) =>
-          FightEntity.create({
-            competitionId: input.competitionId,
-            categoryId: input.categoryId,
-            keyGroupId: null,
-            areaId: null,
-            areaName: null,
-
-            athleteAId,
-            athleteBId,
-            orderIndex: index + 1,
-          }),
-        ),
-        metadata: [
-          {
-            categoryId: input.categoryId,
-            format: 'ROUND_ROBIN',
-            notes: ['Use tiebreak metadata when athletes finish tied on wins'],
-          },
-        ],
-      };
+    while (seededAthletes.length < bracketSize) {
+      seededAthletes.push(null as never);
     }
 
     const fights: FightEntity[] = [];
-    let orderIndex = 1;
-    for (let index = 0; index < athleteIds.length - 1; index += 2) {
-      const athleteAId = athleteIds[index];
-      const athleteBId = athleteIds[index + 1];
+    let order = 1;
 
-      if (athleteBId === undefined) {
-        break;
+    for (let round = 1; round <= rounds; round += 1) {
+      const fightsInRound = bracketSize / 2 ** round;
+
+      for (let index = 0; index < fightsInRound; index += 1) {
+        fights.push(
+          FightEntity.create({
+            competitionId: input.competitionId,
+            categoryId: input.categoryId,
+            keyGroupId: null,
+            round,
+            order: order++,
+            areaId: null,
+            areaName: null,
+            athleteAId: round === 1 ? seededAthletes[index * 2] ?? null : null,
+            athleteBId:
+              round === 1 ? seededAthletes[index * 2 + 1] ?? null : null,
+          }),
+        );
       }
-
-      fights.push(
-        FightEntity.create({
-          competitionId: input.competitionId,
-          categoryId: input.categoryId,
-          keyGroupId: null,
-          areaId: null,
-          areaName: null,
-          athleteAId,
-          athleteBId,
-          orderIndex: orderIndex++,
-        }),
-      );
     }
 
     return {
@@ -117,7 +69,7 @@ export class AbsoluteGpFightGenerationStrategy
         {
           categoryId: input.categoryId,
           format: 'OLYMPIC_BRACKET',
-          notes: ['Initial round generated for olympic bracket progression'],
+          notes: ['Single elimination bracket generated with future fights pre-created'],
         },
       ],
     };
