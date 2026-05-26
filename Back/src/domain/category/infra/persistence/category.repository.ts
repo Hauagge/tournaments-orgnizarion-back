@@ -86,6 +86,31 @@ export class CategoryRepository implements ICategoryRepository {
     return entity ? CategoryMapper.toDomain(entity) : null;
   }
 
+  async update(category: Category): Promise<Category> {
+    await this.categoryRepository.update(category.id as number, {
+      name: category.name,
+      belt: category.belt,
+      allowMerge: category.allowMerge,
+      mergeWithBelt: category.mergeWithBelt,
+      ageMin: category.ageMin,
+      ageMax: category.ageMax,
+      weightMinGrams: category.weightMinGrams,
+      weightMaxGrams: category.weightMaxGrams,
+      totalAthletes: category.totalAthletes,
+      championAthleteId: category.championAthleteId,
+    });
+
+    const entity = await this.categoryRepository.findOneBy({
+      id: category.id as number,
+    });
+
+    if (!entity) {
+      return category;
+    }
+
+    return CategoryMapper.toDomain(entity);
+  }
+
   async listAthleteIdsByCategoryId(categoryId: number): Promise<number[]> {
     const entities = await this.categoryAthleteRepository.find({
       where: { categoryId },
