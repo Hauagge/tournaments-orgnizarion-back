@@ -60,7 +60,9 @@ class InMemoryAreaRepository
         .map((area) => area.id as number),
     );
 
-    this.queueItems = this.queueItems.filter((item) => !areaIds.has(item.areaId));
+    this.queueItems = this.queueItems.filter(
+      (item) => !areaIds.has(item.areaId),
+    );
     this.queueItems.push(...input.items);
 
     return input.items;
@@ -72,7 +74,9 @@ class InMemoryAreaRepository
       .sort((left, right) => left.position - right.position);
   }
 
-  async listFightDetailsByAreaId(_areaId: number): Promise<AreaQueueFightDetails[]> {
+  async listFightDetailsByAreaId(
+    _areaId: number,
+  ): Promise<AreaQueueFightDetails[]> {
     return [];
   }
 
@@ -90,6 +94,18 @@ class InMemoryAreaRepository
 
 class InMemoryFightRepository implements IFightRepository {
   constructor(private fights: FightEntity[] = []) {}
+  create(fight: FightEntity): Promise<FightEntity> {
+    throw new Error('Method not implemented.');
+  }
+  updateMany(fights: FightEntity[]): Promise<FightEntity[]> {
+    throw new Error('Method not implemented.');
+  }
+  listByCategoryId(input: { competitionId: number; categoryId: number; }): Promise<FightEntity[]> {
+    throw new Error('Method not implemented.');
+  }
+  delete(id: number): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
 
   async createMany(fights: FightEntity[]): Promise<FightEntity[]> {
     this.fights = [...this.fights, ...fights];
@@ -140,8 +156,26 @@ class InMemoryFightRepository implements IFightRepository {
     );
   }
 
+  async updateOrder(
+    items: Array<{ fightId: number; orderIndex: number }>,
+  ): Promise<void> {
+    const orderByFightId = new Map(
+      items.map((item) => [item.fightId, item.orderIndex]),
+    );
+
+    this.fights = this.fights.map((fight) =>
+      orderByFightId.has(fight.id as number)
+        ? FightEntity.restore({
+            ...fight.toJSON(),
+            orderIndex: orderByFightId.get(fight.id as number) as number,
+          })
+        : fight,
+    );
+  }
+
   async countByCompetitionId(competitionId: number): Promise<number> {
-    return this.fights.filter((fight) => fight.competitionId === competitionId).length;
+    return this.fights.filter((fight) => fight.competitionId === competitionId)
+      .length;
   }
 }
 
@@ -157,7 +191,9 @@ class InMemoryCompetitionRepository implements ICompetitionRepository {
   }
 
   async findById(id: number): Promise<Competition | null> {
-    return this.competitions.find((competition) => competition.id === id) ?? null;
+    return (
+      this.competitions.find((competition) => competition.id === id) ?? null
+    );
   }
 
   async list(): Promise<[Competition[], number]> {
@@ -182,7 +218,9 @@ class InMemoryAthleteRepository implements IAthleteRepository {
 
   async findByIds(ids: number[]): Promise<Athlete[]> {
     const allowedIds = new Set(ids);
-    return this.athletes.filter((athlete) => allowedIds.has(athlete.id as number));
+    return this.athletes.filter((athlete) =>
+      allowedIds.has(athlete.id as number),
+    );
   }
 
   async search(): Promise<Athlete[]> {
@@ -213,6 +251,7 @@ function makeArea(id: number, competitionId = 1, order = 1) {
 function makeFight(input: {
   id: number;
   competitionId?: number;
+  categoryId?: number | null;
   keyGroupId?: number | null;
   areaId?: number | null;
   status?: FightStatus;
@@ -223,7 +262,7 @@ function makeFight(input: {
   return FightEntity.restore({
     id: input.id,
     competitionId: input.competitionId ?? 1,
-    categoryId: 1,
+    categoryId: input.categoryId ?? 1,
     keyGroupId: input.keyGroupId ?? 10,
     areaId: input.areaId ?? null,
     areaName: input.areaId ? `Area ${input.areaId}` : null,
@@ -232,7 +271,10 @@ function makeFight(input: {
     athleteBId: input.athleteBId ?? 2,
     winnerAthleteId: null,
     winType: null,
-    startedAt: input.status === FightStatus.IN_PROGRESS ? new Date('2026-05-15T10:00:00.000Z') : null,
+    startedAt:
+      input.status === FightStatus.IN_PROGRESS
+        ? new Date('2026-05-15T10:00:00.000Z')
+        : null,
     finishedAt: null,
     orderIndex: input.orderIndex ?? 1,
   });
@@ -260,11 +302,10 @@ describe('DistributeAreaFightsUseCase', () => {
     );
     const fightRepository = new InMemoryFightRepository(input.fights);
     const athleteRepository = new InMemoryAthleteRepository(
-      input.athletes ??
-        [
-          makeAthlete({ id: 1, competitionId: 1, fullName: 'A1' }),
-          makeAthlete({ id: 2, competitionId: 1, fullName: 'A2' }),
-        ],
+      input.athletes ?? [
+        makeAthlete({ id: 1, competitionId: 1, fullName: 'A1' }),
+        makeAthlete({ id: 2, competitionId: 1, fullName: 'A2' }),
+      ],
     );
     const planner = new FightQueuePlannerService(
       new AreaDistributionStrategyResolverService(
@@ -309,7 +350,9 @@ describe('DistributeAreaFightsUseCase', () => {
 
   it('should reject FULL distribution when there is an IN_PROGRESS fight', async () => {
     const { useCase } = makeSut({
-      fights: [makeFight({ id: 1, status: FightStatus.IN_PROGRESS, areaId: 1 })],
+      fights: [
+        makeFight({ id: 1, status: FightStatus.IN_PROGRESS, areaId: 1 }),
+      ],
     });
 
     await expect(
@@ -391,8 +434,12 @@ describe('DistributeAreaFightsUseCase', () => {
     });
 
     expect(result.totalDistributed).toBe(1);
-    expect((await areaRepository.listByAreaId(1)).map((item) => item.fightId)).toEqual([1, 2]);
-    expect((await areaRepository.listByAreaId(1)).map((item) => item.position)).toEqual([1, 2]);
+    expect(
+      (await areaRepository.listByAreaId(1)).map((item) => item.fightId),
+    ).toEqual([1, 2]);
+    expect(
+      (await areaRepository.listByAreaId(1)).map((item) => item.position),
+    ).toEqual([1, 2]);
     expect((await fightRepository.findById(2))?.areaId).toBe(1);
   });
 
@@ -569,7 +616,9 @@ describe('DistributeAreaFightsUseCase', () => {
 
     expect((await fightRepository.findById(2))?.areaId).toBe(2);
     expect((await fightRepository.findById(3))?.areaId).toBe(2);
-    expect((await areaRepository.listByAreaId(2)).map((item) => item.fightId)).toEqual([2, 3]);
+    expect(
+      (await areaRepository.listByAreaId(2)).map((item) => item.fightId),
+    ).toEqual([2, 3]);
   });
 
   it('should rebuild the full queue when FULL distribution runs without locked fights', async () => {
@@ -619,10 +668,170 @@ describe('DistributeAreaFightsUseCase', () => {
     const queueArea2 = await areaRepository.listByAreaId(2);
 
     expect(result.totalDistributed).toBe(2);
-    expect([...queueArea1, ...queueArea2].map((item) => item.fightId).sort((a, b) => a - b)).toEqual([
-      1, 2,
-    ]);
-    expect([...queueArea1, ...queueArea2].some((item) => item.fightId === 999)).toBe(false);
+    expect(
+      [...queueArea1, ...queueArea2]
+        .map((item) => item.fightId)
+        .sort((a, b) => a - b),
+    ).toEqual([1, 2]);
+    expect(
+      [...queueArea1, ...queueArea2].some((item) => item.fightId === 999),
+    ).toBe(false);
+  });
+
+  it('should keep all fights from the same category in the same area in ABSOLUTE_GP mode', async () => {
+    const categoryOneFightA = makeFight({
+      id: 1,
+      categoryId: 100,
+      keyGroupId: null,
+      athleteAId: 1,
+      athleteBId: 2,
+      orderIndex: 1,
+    });
+    const categoryOneFightB = makeFight({
+      id: 2,
+      categoryId: 100,
+      keyGroupId: null,
+      athleteAId: 3,
+      athleteBId: 4,
+      orderIndex: 2,
+    });
+    const categoryOneFightC = makeFight({
+      id: 3,
+      categoryId: 100,
+      keyGroupId: null,
+      athleteAId: 5,
+      athleteBId: 6,
+      orderIndex: 3,
+    });
+    const categoryTwoFight = makeFight({
+      id: 4,
+      categoryId: 200,
+      keyGroupId: null,
+      athleteAId: 7,
+      athleteBId: 8,
+      orderIndex: 1,
+    });
+    const { useCase, fightRepository } = makeSut({
+      competition: makeCompetition({
+        id: 1,
+        mode: CompetitionMode.ABSOLUTE_GP,
+      }),
+      fights: [
+        categoryOneFightA,
+        categoryOneFightB,
+        categoryOneFightC,
+        categoryTwoFight,
+      ],
+      areas: [makeArea(1, 1, 1), makeArea(2, 1, 2)],
+      athletes: [
+        makeAthlete({ id: 1, competitionId: 1, fullName: 'A1' }),
+        makeAthlete({ id: 2, competitionId: 1, fullName: 'A2' }),
+        makeAthlete({ id: 3, competitionId: 1, fullName: 'A3' }),
+        makeAthlete({ id: 4, competitionId: 1, fullName: 'A4' }),
+        makeAthlete({ id: 5, competitionId: 1, fullName: 'A5' }),
+        makeAthlete({ id: 6, competitionId: 1, fullName: 'A6' }),
+        makeAthlete({ id: 7, competitionId: 1, fullName: 'A7' }),
+        makeAthlete({ id: 8, competitionId: 1, fullName: 'A8' }),
+      ],
+    });
+
+    await useCase.execute({
+      competitionId: 1,
+      mode: DistributionMode.FULL,
+      restGapFights: 2,
+    });
+
+    const firstArea = (await fightRepository.findById(1))?.areaId;
+    const secondArea = (await fightRepository.findById(2))?.areaId;
+    const thirdArea = (await fightRepository.findById(3))?.areaId;
+    const otherCategoryArea = (await fightRepository.findById(4))?.areaId;
+
+    expect(firstArea).not.toBeNull();
+    expect(firstArea).toBe(secondArea);
+    expect(firstArea).toBe(thirdArea);
+    expect(otherCategoryArea).not.toBeNull();
+  });
+
+  it('should balance ABSOLUTE_GP categories by total fight count without splitting categories', async () => {
+    const fights = [
+      makeFight({
+        id: 1,
+        categoryId: 100,
+        keyGroupId: null,
+        athleteAId: 1,
+        athleteBId: 2,
+        orderIndex: 1,
+      }),
+      makeFight({
+        id: 2,
+        categoryId: 100,
+        keyGroupId: null,
+        athleteAId: 3,
+        athleteBId: 4,
+        orderIndex: 2,
+      }),
+      makeFight({
+        id: 3,
+        categoryId: 100,
+        keyGroupId: null,
+        athleteAId: 5,
+        athleteBId: 6,
+        orderIndex: 3,
+      }),
+      makeFight({
+        id: 4,
+        categoryId: 200,
+        keyGroupId: null,
+        athleteAId: 7,
+        athleteBId: 8,
+        orderIndex: 1,
+      }),
+      makeFight({
+        id: 5,
+        categoryId: 200,
+        keyGroupId: null,
+        athleteAId: 9,
+        athleteBId: 10,
+        orderIndex: 2,
+      }),
+      makeFight({
+        id: 6,
+        categoryId: 300,
+        keyGroupId: null,
+        athleteAId: 11,
+        athleteBId: 12,
+        orderIndex: 1,
+      }),
+    ];
+    const { useCase, areaRepository } = makeSut({
+      competition: makeCompetition({
+        id: 1,
+        mode: CompetitionMode.ABSOLUTE_GP,
+      }),
+      fights,
+      areas: [makeArea(1, 1, 1), makeArea(2, 1, 2)],
+      athletes: Array.from({ length: 12 }, (_, index) =>
+        makeAthlete({
+          id: index + 1,
+          competitionId: 1,
+          fullName: `A${index + 1}`,
+        }),
+      ),
+    });
+
+    await useCase.execute({
+      competitionId: 1,
+      mode: DistributionMode.FULL,
+      restGapFights: 2,
+    });
+
+    const queueArea1 = await areaRepository.listByAreaId(1);
+    const queueArea2 = await areaRepository.listByAreaId(2);
+
+    expect(queueArea1).toHaveLength(3);
+    expect(queueArea2).toHaveLength(3);
+    expect(queueArea1.map((item) => item.fightId)).toEqual([1, 2, 3]);
+    expect(queueArea2.map((item) => item.fightId)).toEqual([4, 5, 6]);
   });
 
   it('should rebalance FULL distribution even when all waiting fights were previously assigned to the same area', async () => {
