@@ -1,7 +1,12 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { CompetitionIdParamDto, CompetitionIdParamSchema } from '@/domain/competition/infra/http/dtos/competition-id-param.dto';
+import {
+  CompetitionIdParamDto,
+  CompetitionIdParamSchema,
+} from '@/domain/competition/infra/http/dtos/competition-id-param.dto';
 import { ZodValidationPipe } from 'src/core/pipe/zod-validation.pipe';
 import { ApiResponse } from 'src/shared/result/api-response.type';
+import { AddAthleteToCategoryUseCase } from '../../application/use-cases/add-athlete-to-category.use-case';
+import { AddAthleteToCategoryView } from '../../application/use-cases/add-athlete-to-category.view';
 import { CreateCategoryUseCase } from '../../application/use-cases/create-category.use-case';
 import { DistributeAthletesUseCase } from '../../application/use-cases/distribute-athletes.use-case';
 import { DistributeAthletesView } from '../../application/use-cases/distribute-athletes.view';
@@ -10,18 +15,51 @@ import { GetCategoryUseCase } from '../../application/use-cases/get-category.use
 import { ListCategoriesUseCase } from '../../application/use-cases/list-categories.use-case';
 import { CategoryDetailView } from '../../application/use-cases/category-detail.view';
 import { Category } from '../../domain/entities/category.entity';
-import { CategoryIdParamDto, CategoryIdParamSchema } from './dtos/category-id-param.dto';
-import { CreateCategoryDto, CreateCategorySchema } from './dtos/create-category.dto';
+import {
+  AddAthleteToCategoryDto,
+  AddAthleteToCategorySchema,
+} from './dtos/add-athlete-to-category.dto';
+import {
+  AddAthleteToCategoryParamDto,
+  AddAthleteToCategoryParamSchema,
+} from './dtos/add-athlete-to-category-param.dto';
+import {
+  CategoryIdParamDto,
+  CategoryIdParamSchema,
+} from './dtos/category-id-param.dto';
+import {
+  CreateCategoryDto,
+  CreateCategorySchema,
+} from './dtos/create-category.dto';
 
 @Controller()
 export class CategoryController {
   constructor(
+    private readonly addAthleteToCategoryUseCase: AddAthleteToCategoryUseCase,
     private readonly createCategoryUseCase: CreateCategoryUseCase,
     private readonly generateCategoriesUseCase: GenerateCategoriesUseCase,
     private readonly distributeAthletesUseCase: DistributeAthletesUseCase,
     private readonly listCategoriesUseCase: ListCategoriesUseCase,
     private readonly getCategoryUseCase: GetCategoryUseCase,
   ) {}
+
+  @Post('competitions/:competitionId/categories/:categoryId/athletes')
+  async addAthlete(
+    @Param(new ZodValidationPipe(AddAthleteToCategoryParamSchema))
+    params: AddAthleteToCategoryParamDto,
+    @Body(new ZodValidationPipe(AddAthleteToCategorySchema))
+    body: AddAthleteToCategoryDto,
+  ): Promise<ApiResponse<AddAthleteToCategoryView>> {
+    const result = await this.addAthleteToCategoryUseCase.execute({
+      ...params,
+      athleteId: body.athleteId,
+    });
+
+    return {
+      data: result,
+      error: null,
+    };
+  }
 
   @Post('competitions/:id/categories')
   async create(

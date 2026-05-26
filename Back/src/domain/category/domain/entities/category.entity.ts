@@ -3,25 +3,35 @@ export type CategoryProps = {
   competitionId: number;
   name: string;
   belt: string;
+  allowMerge: boolean;
+  mergeWithBelt: string | null;
   ageMin: number | null;
   ageMax: number | null;
   weightMinGrams: number | null;
   weightMaxGrams: number | null;
   totalAthletes: number;
   createdAt: Date;
+  updatedAt: Date;
+  championAthleteId: number | null;
 };
 
 export class Category {
   private constructor(private readonly props: CategoryProps) {}
 
   static create(
-    props: Omit<CategoryProps, 'id' | 'createdAt'>,
+    props: Omit<
+      CategoryProps,
+      'id' | 'createdAt' | 'updatedAt' | 'championAthleteId'
+    >,
   ): Category {
     return new Category({
       ...props,
       name: Category.normalizeName(props.name),
       belt: props.belt.trim(),
+      mergeWithBelt: props.mergeWithBelt?.trim() || null,
       createdAt: new Date(),
+      updatedAt: new Date(),
+      championAthleteId: null,
     });
   }
 
@@ -30,6 +40,7 @@ export class Category {
       ...props,
       name: Category.normalizeName(props.name),
       belt: props.belt.trim(),
+      mergeWithBelt: props.mergeWithBelt?.trim() || null,
     });
   }
 
@@ -43,12 +54,16 @@ export class Category {
       competitionId: this.competitionId,
       name: this.name,
       belt: this.belt,
+      allowMerge: this.allowMerge,
+      mergeWithBelt: this.mergeWithBelt,
       ageMin: this.ageMin,
       ageMax: this.ageMax,
       weightMinGrams: this.weightMinGrams,
       weightMaxGrams: this.weightMaxGrams,
       totalAthletes: this.totalAthletes,
       createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      championAthleteId: this.championAthleteId,
     };
   }
 
@@ -66,6 +81,14 @@ export class Category {
 
   get belt(): string {
     return this.props.belt;
+  }
+
+  get allowMerge(): boolean {
+    return this.props.allowMerge;
+  }
+
+  get mergeWithBelt(): string | null {
+    return this.props.mergeWithBelt;
   }
 
   get ageMin(): number | null {
@@ -90,5 +113,31 @@ export class Category {
 
   get createdAt(): Date {
     return this.props.createdAt;
+  }
+
+  get updatedAt(): Date {
+    return this.props.updatedAt;
+  }
+
+  get championAthleteId(): number | null {
+    return this.props.championAthleteId;
+  }
+
+  setChampion(athleteId: number | null): Category {
+    return new Category({
+      ...this.props,
+      championAthleteId: athleteId,
+      updatedAt: new Date(),
+    });
+  }
+
+  allowsBelt(belt: string): boolean {
+    const normalizedBelt = belt.trim();
+
+    if (this.belt === normalizedBelt) {
+      return true;
+    }
+
+    return this.allowMerge && this.mergeWithBelt === normalizedBelt;
   }
 }

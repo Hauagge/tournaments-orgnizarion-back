@@ -9,6 +9,8 @@ export type CreateCategoryInput = {
   competitionId: number;
   name: string;
   belt: string;
+  allowMerge?: boolean;
+  mergeWithBelt?: string | null;
   ageMin?: number | null;
   ageMax?: number | null;
   weightMinGrams?: number | null;
@@ -61,6 +63,8 @@ export class CreateCategoryUseCase {
       competitionId: input.competitionId,
       name: input.name,
       belt: input.belt,
+      allowMerge: input.allowMerge ?? false,
+      mergeWithBelt: input.allowMerge ? (input.mergeWithBelt ?? null) : null,
       ageMin: input.ageMin ?? null,
       ageMax: input.ageMax ?? null,
       weightMinGrams: input.weightMinGrams ?? null,
