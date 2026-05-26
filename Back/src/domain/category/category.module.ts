@@ -3,7 +3,9 @@ import { AcademyProviderModule } from '../academy/academy-provider.module';
 import { AthleteProviderModule } from '../athlete/athlete-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
 import { WeighInProviderModule } from '../weighin/weighin-provider.module';
+import { AddAthleteToCategoryUseCase } from './application/use-cases/add-athlete-to-category.use-case';
 import { CreateCategoryUseCase } from './application/use-cases/create-category.use-case';
+import { CategoryEligibilityService } from './application/services/category-eligibility.service';
 import { DistributeAthletesUseCase } from './application/use-cases/distribute-athletes.use-case';
 import { GetCategoryUseCase } from './application/use-cases/get-category.use-case';
 import { GenerateCategoriesUseCase } from './application/use-cases/generate-categories.use-case';
@@ -23,12 +25,14 @@ import { CategoryProviderModule } from './category-provider.module';
   ],
   controllers: [CategoryController],
   providers: [
+    AddAthleteToCategoryUseCase,
     CreateCategoryUseCase,
     GenerateCategoriesUseCase,
     DistributeAthletesUseCase,
     ListCategoriesUseCase,
     GetCategoryUseCase,
     CategoryGenerationService,
+    CategoryEligibilityService,
     CategoryDistributionService,
   ],
   exports: [
