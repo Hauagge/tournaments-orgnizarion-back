@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('categories')
 export class CategoryTypeOrmEntity {
@@ -13,6 +19,12 @@ export class CategoryTypeOrmEntity {
 
   @Column({ type: 'varchar' })
   belt: string;
+
+  @Column({ name: 'allow_merge', type: 'boolean', default: false })
+  allowMerge: boolean;
+
+  @Column({ name: 'merge_with_belt', type: 'varchar', nullable: true })
+  mergeWithBelt: string | null;
 
   @Column({ name: 'age_min', type: 'int', nullable: true })
   ageMin: number | null;
@@ -29,6 +41,12 @@ export class CategoryTypeOrmEntity {
   @Column({ name: 'total_athletes', type: 'int' })
   totalAthletes: number;
 
+  @Column({ name: 'champion_athlete_id', type: 'int', nullable: true })
+  championAthleteId: number | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+  updatedAt: Date;
 }
