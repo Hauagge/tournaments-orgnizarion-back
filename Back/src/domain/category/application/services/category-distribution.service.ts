@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Athlete } from '@/domain/athlete/domain/entities/athlete.entity';
 import { WeighIn } from '@/domain/weighin/domain/entities/weigh-in.entity';
-import { WeighInStatus } from '@/domain/weighin/domain/value-objects/weigh-in-status.enum';
 import { Category } from '../../domain/entities/category.entity';
+import {
+  CategoryEligibilityReason,
+  CategoryEligibilityService,
+} from './category-eligibility.service';
 
 export enum DistributionRejectionReason {
   ALREADY_ASSIGNED = 'ALREADY_ASSIGNED',
@@ -39,6 +42,10 @@ export type CategoryDistributionResult = {
 
 @Injectable()
 export class CategoryDistributionService {
+  constructor(
+    private readonly categoryEligibilityService: CategoryEligibilityService,
+  ) {}
+
   distribute(input: CategoryDistributionInput): CategoryDistributionResult {
     const referenceDate = input.referenceDate ?? new Date();
     const allocated: AllocatedAthlete[] = [];
@@ -62,21 +69,8 @@ export class CategoryDistributionService {
 
       const weighIn = input.weighInsByAthleteId.get(athleteId);
 
-      if (!weighIn || weighIn.status !== WeighInStatus.APPROVED) {
-        rejected.push({
-          athleteId,
-          reason: DistributionRejectionReason.WEIGH_IN_NOT_APPROVED,
-          detail: 'Pesagem não aprovada para o atleta',
-        });
-        continue;
-      }
-
-      const weightGrams =
-        weighIn.measuredWeightGrams ?? athlete.declaredWeight;
-      const age = this.calculateAge(athlete.birthDate, referenceDate);
-
-      const beltMatches = input.categories.filter(
-        (category) => category.belt === athlete.belt,
+      const beltMatches = input.categories.filter((category) =>
+        category.allowsBelt(athlete.belt),
       );
 
       if (beltMatches.length === 0) {
@@ -88,11 +82,27 @@ export class CategoryDistributionService {
         continue;
       }
 
-      const ageMatches = beltMatches.filter((category) =>
-        this.matchesAge(category, age),
+      const ageMatches = beltMatches.filter(
+        (category) =>
+          !this.categoryEligibilityService
+            .evaluateForCategory({
+              athlete,
+              category,
+              weighIn,
+              referenceDate,
+            })
+            .some(
+              (issue) =>
+                issue.reason === CategoryEligibilityReason.AGE_BELOW_MIN ||
+                issue.reason === CategoryEligibilityReason.AGE_ABOVE_MAX,
+            ),
       );
 
       if (ageMatches.length === 0) {
+        const age = this.categoryEligibilityService.calculateAge(
+          athlete.birthDate,
+          referenceDate,
+        );
         rejected.push({
           athleteId,
           reason: DistributionRejectionReason.AGE_OUT_OF_RANGE,
@@ -101,11 +111,25 @@ export class CategoryDistributionService {
         continue;
       }
 
-      const weightMatches = ageMatches.filter((category) =>
-        this.matchesWeight(category, weightGrams),
+      const weightMatches = ageMatches.filter(
+        (category) =>
+          !this.categoryEligibilityService
+            .evaluateForCategory({
+              athlete,
+              category,
+              weighIn,
+              referenceDate,
+            })
+            .some(
+              (issue) =>
+                issue.reason === CategoryEligibilityReason.WEIGHT_BELOW_MIN ||
+                issue.reason === CategoryEligibilityReason.WEIGHT_ABOVE_MAX,
+            ),
       );
 
       if (weightMatches.length === 0) {
+        const weightGrams =
+          weighIn?.measuredWeightGrams ?? athlete.declaredWeight;
         rejected.push({
           athleteId,
           reason: DistributionRejectionReason.WEIGHT_OUT_OF_RANGE,
@@ -114,7 +138,26 @@ export class CategoryDistributionService {
         continue;
       }
 
-      const winner = this.pickBestCategory(weightMatches);
+      const fullyEligible = weightMatches.filter(
+        (category) =>
+          this.categoryEligibilityService.evaluateForCategory({
+            athlete,
+            category,
+            weighIn,
+            referenceDate,
+          }).length === 0,
+      );
+
+      if (fullyEligible.length === 0) {
+        rejected.push({
+          athleteId,
+          reason: DistributionRejectionReason.WEIGH_IN_NOT_APPROVED,
+          detail: 'Pesagem não aprovada para o atleta',
+        });
+        continue;
+      }
+
+      const winner = this.pickBestCategory(fullyEligible);
 
       if (!winner || winner.id === undefined) {
         rejected.push({
@@ -131,42 +174,16 @@ export class CategoryDistributionService {
     return { allocated, rejected };
   }
 
-  private matchesAge(category: Category, age: number): boolean {
-    if (category.ageMin !== null && age < category.ageMin) {
-      return false;
-    }
-    if (category.ageMax !== null && age > category.ageMax) {
-      return false;
-    }
-    return true;
-  }
-
-  private matchesWeight(category: Category, weightGrams: number): boolean {
-    if (
-      category.weightMinGrams !== null &&
-      weightGrams < category.weightMinGrams
-    ) {
-      return false;
-    }
-    if (
-      category.weightMaxGrams !== null &&
-      weightGrams > category.weightMaxGrams
-    ) {
-      return false;
-    }
-    return true;
-  }
-
   private pickBestCategory(candidates: Category[]): Category | null {
     if (candidates.length === 0) {
       return null;
     }
 
     return [...candidates].sort((left, right) => {
-      const weightSpanDiff =
-        this.weightSpan(left) - this.weightSpan(right);
-      if (weightSpanDiff !== 0) {
-        return weightSpanDiff;
+      const ageSpecificityDiff =
+        this.ageSpecificityRank(left) - this.ageSpecificityRank(right);
+      if (ageSpecificityDiff !== 0) {
+        return ageSpecificityDiff;
       }
 
       const ageSpanDiff = this.ageSpan(left) - this.ageSpan(right);
@@ -174,8 +191,17 @@ export class CategoryDistributionService {
         return ageSpanDiff;
       }
 
+      const weightSpanDiff = this.weightSpan(left) - this.weightSpan(right);
+      if (weightSpanDiff !== 0) {
+        return weightSpanDiff;
+      }
+
       return (left.id ?? 0) - (right.id ?? 0);
     })[0];
+  }
+
+  private ageSpecificityRank(category: Category): number {
+    return category.ageMin !== null || category.ageMax !== null ? 0 : 1;
   }
 
   private weightSpan(category: Category): number {
@@ -202,9 +228,5 @@ export class CategoryDistributionService {
       return Number.MAX_SAFE_INTEGER;
     }
     return max - min;
-  }
-
-  private calculateAge(birthDate: Date, referenceDate: Date): number {
-    return referenceDate.getFullYear() - birthDate.getFullYear();
   }
 }
