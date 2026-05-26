@@ -36,7 +36,11 @@ export class FinishFightUseCase {
 
     const finishedFight = await this.fightRepository.update(
       fight.finish({
-        winnerAthleteId: input.winnerAthleteId,
+        winnerId: input.winnerAthleteId,
+        loserId:
+          fight.athleteAId === input.winnerAthleteId
+            ? fight.athleteBId
+            : fight.athleteAId,
         winType: input.winType,
         finishedAt: new Date(),
       }),
