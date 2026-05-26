@@ -18,6 +18,7 @@ export abstract class ICategoryRepository {
   }): Promise<Category[]>;
   abstract listByCompetitionId(competitionId: number): Promise<Category[]>;
   abstract findById(id: number): Promise<Category | null>;
+  abstract update(category: Category): Promise<Category>;
   abstract listAthleteIdsByCategoryId(categoryId: number): Promise<number[]>;
   abstract listAthleteIdsByCompetitionId(
     competitionId: number,
