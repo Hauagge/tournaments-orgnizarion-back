@@ -75,10 +75,111 @@ export class GenerateFightsUseCase {
     }
 
     const createdFights = await this.fightRepository.createMany(fightsToCreate);
+    const linkedFights = await this.fightRepository.updateMany(
+      this.linkBracketFights(createdFights),
+    );
+    const walkoverResolved = await this.fightRepository.updateMany(
+      this.resolveInitialWalkovers(linkedFights),
+    );
 
     return {
-      fights: createdFights.map((fight) => fight.toJSON()),
+      fights: walkoverResolved.map((fight) => fight.toJSON()),
       metadata,
     };
+  }
+
+  private linkBracketFights(fights: FightEntity[]): FightEntity[] {
+    const byGroup = new Map<string, FightEntity[]>();
+
+    for (const fight of fights) {
+      const key = `${fight.categoryId ?? 'null'}:${fight.keyGroupId ?? 'null'}`;
+      byGroup.set(key, [...(byGroup.get(key) ?? []), fight]);
+    }
+
+    return Array.from(byGroup.values()).flatMap((groupFights) => {
+      const byRound = new Map<number, FightEntity[]>();
+
+      for (const fight of groupFights) {
+        byRound.set(fight.round, [...(byRound.get(fight.round) ?? []), fight]);
+      }
+
+      const rounds = Array.from(byRound.keys()).sort((a, b) => a - b);
+      const updated = new Map<number, FightEntity>();
+
+      for (let index = 0; index < rounds.length - 1; index += 1) {
+        const currentRound = (byRound.get(rounds[index]) ?? []).sort(
+          (left, right) => left.order - right.order,
+        );
+        const nextRound = (byRound.get(rounds[index + 1]) ?? []).sort(
+          (left, right) => left.order - right.order,
+        );
+
+        currentRound.forEach((fight, currentIndex) => {
+          const targetFight = nextRound[Math.floor(currentIndex / 2)];
+          if (!targetFight) {
+            return;
+          }
+
+          updated.set(
+            fight.id as number,
+            fight.updateDetails({
+              nextFightId: targetFight.id as number,
+              nextFightSlot: currentIndex % 2 === 0 ? 'A' : 'B',
+            }),
+          );
+        });
+      }
+
+      return groupFights.map((fight) => updated.get(fight.id as number) ?? fight);
+    });
+  }
+
+  private resolveInitialWalkovers(fights: FightEntity[]): FightEntity[] {
+    const byId = new Map(fights.map((fight) => [fight.id as number, fight]));
+
+    const firstRoundFights = fights
+      .filter((fight) => fight.round === 1)
+      .sort((left, right) => left.order - right.order);
+
+    for (const fight of firstRoundFights) {
+      const athleteIds = [fight.athleteAId, fight.athleteBId].filter(
+        (athleteId): athleteId is number => athleteId !== null,
+      );
+
+      if (athleteIds.length !== 1) {
+        continue;
+      }
+
+      const winnerId = athleteIds[0];
+      const finishedFight = fight.finish({
+        winnerId,
+        loserId: null,
+        winType: 'WO',
+        finishedAt: new Date(),
+        isWo: true,
+      });
+      byId.set(fight.id as number, finishedFight);
+
+      if (!fight.nextFightId || !fight.nextFightSlot) {
+        continue;
+      }
+
+      const nextFight = byId.get(fight.nextFightId);
+      if (!nextFight) {
+        continue;
+      }
+
+      byId.set(
+        fight.nextFightId,
+        nextFight.updateDetails({
+          athleteAId:
+            fight.nextFightSlot === 'A' ? winnerId : nextFight.athleteAId,
+          athleteBId:
+            fight.nextFightSlot === 'B' ? winnerId : nextFight.athleteBId,
+        }),
+      );
+    }
+
+    return fights.map((fight) => byId.get(fight.id as number) ?? fight);
   }
 }
