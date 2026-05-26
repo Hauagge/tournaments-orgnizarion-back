@@ -8,12 +8,16 @@ export class CategoryMapper {
       competitionId: entity.competitionId,
       name: entity.name,
       belt: entity.belt,
+      allowMerge: entity.allowMerge,
+      mergeWithBelt: entity.mergeWithBelt,
       ageMin: entity.ageMin,
       ageMax: entity.ageMax,
       weightMinGrams: entity.weightMinGrams,
       weightMaxGrams: entity.weightMaxGrams,
       totalAthletes: entity.totalAthletes,
       createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+      championAthleteId: entity.championAthleteId,
     });
   }
 
@@ -23,12 +27,16 @@ export class CategoryMapper {
     entity.competitionId = category.competitionId;
     entity.name = category.name;
     entity.belt = category.belt;
+    entity.allowMerge = category.allowMerge;
+    entity.mergeWithBelt = category.mergeWithBelt;
     entity.ageMin = category.ageMin;
     entity.ageMax = category.ageMax;
     entity.weightMinGrams = category.weightMinGrams;
     entity.weightMaxGrams = category.weightMaxGrams;
     entity.totalAthletes = category.totalAthletes;
+    entity.championAthleteId = category.championAthleteId;
     entity.createdAt = category.createdAt;
+    entity.updatedAt = category.updatedAt;
     return entity;
   }
 }
