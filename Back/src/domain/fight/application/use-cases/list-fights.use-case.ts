@@ -27,6 +27,10 @@ export class ListFightsUseCase {
     currentUserId: number;
     competitionId: number;
     status?: FightStatus;
+    categoryId?: number;
+    round?: number;
+    areaId?: number;
+    athleteName?: string;
   }): Promise<FightListItemView[]> {
     const competition = await this.competitionRepository.findById(
       input.competitionId,
@@ -52,7 +56,13 @@ export class ListFightsUseCase {
 
     const fights = await this.fightRepository.listByCompetitionId(input);
     const athleteIds = Array.from(
-      new Set(fights.flatMap((fight) => [fight.athleteAId, fight.athleteBId])),
+      new Set(
+        fights.flatMap((fight) =>
+          [fight.athleteAId, fight.athleteBId, fight.winnerId].filter(
+            (athleteId): athleteId is number => athleteId !== null,
+          ),
+        ),
+      ),
     );
     const athletes = await this.athleteRepository.findByIds(athleteIds);
     const academyIds = Array.from(
@@ -88,21 +98,40 @@ export class ListFightsUseCase {
       areaId: fight.areaId,
       areaName: fight.areaName,
       status: fight.status,
+      round: fight.round,
+      order: fight.order,
       athleteAId: fight.athleteAId,
-      athleteAName: athleteNamesById.get(fight.athleteAId) ?? null,
-      academyAName: athleteAcademyNamesById.get(fight.athleteAId) ?? null,
-      athleteBId: fight.athleteBId,
-      athleteBName: athleteNamesById.get(fight.athleteBId) ?? null,
-      academyBName: athleteAcademyNamesById.get(fight.athleteBId) ?? null,
-      winnerAthleteId: fight.winnerAthleteId,
-      winnerAthleteName:
-        fight.winnerAthleteId !== null
-          ? (athleteNamesById.get(fight.winnerAthleteId) ?? null)
+      athleteAName:
+        fight.athleteAId !== null
+          ? (athleteNamesById.get(fight.athleteAId) ?? null)
           : null,
+      academyAName:
+        fight.athleteAId !== null
+          ? (athleteAcademyNamesById.get(fight.athleteAId) ?? null)
+          : null,
+      athleteBId: fight.athleteBId,
+      athleteBName:
+        fight.athleteBId !== null
+          ? (athleteNamesById.get(fight.athleteBId) ?? null)
+          : null,
+      academyBName:
+        fight.athleteBId !== null
+          ? (athleteAcademyNamesById.get(fight.athleteBId) ?? null)
+          : null,
+      winnerId: fight.winnerId,
+      winnerName:
+        fight.winnerId !== null
+          ? (athleteNamesById.get(fight.winnerId) ?? null)
+          : null,
+      loserId: fight.loserId,
+      nextFightId: fight.nextFightId,
+      nextFightSlot: fight.nextFightSlot,
+      createdManually: fight.createdManually,
+      isWo: fight.isWo,
       winType: fight.winType,
       startedAt: fight.startedAt,
       finishedAt: fight.finishedAt,
-      orderIndex: fight.orderIndex,
+      orderIndex: fight.order,
     }));
   }
 }
