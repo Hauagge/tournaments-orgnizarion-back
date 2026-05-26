@@ -5,6 +5,11 @@ export type CategoryAssignment = {
   athleteIds: number[];
 };
 
+export type CategoryAthleteAddition = {
+  categoryId: number;
+  athleteIds: number[];
+};
+
 export abstract class ICategoryRepository {
   abstract create(category: Category): Promise<Category>;
   abstract replaceCompetitionCategories(input: {
@@ -14,4 +19,10 @@ export abstract class ICategoryRepository {
   abstract listByCompetitionId(competitionId: number): Promise<Category[]>;
   abstract findById(id: number): Promise<Category | null>;
   abstract listAthleteIdsByCategoryId(categoryId: number): Promise<number[]>;
+  abstract listAthleteIdsByCompetitionId(
+    competitionId: number,
+  ): Promise<number[]>;
+  abstract addAthletesToCategories(
+    additions: CategoryAthleteAddition[],
+  ): Promise<void>;
 }

@@ -4,9 +4,11 @@ import { AthleteProviderModule } from '../athlete/athlete-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
 import { WeighInProviderModule } from '../weighin/weighin-provider.module';
 import { CreateCategoryUseCase } from './application/use-cases/create-category.use-case';
+import { DistributeAthletesUseCase } from './application/use-cases/distribute-athletes.use-case';
 import { GetCategoryUseCase } from './application/use-cases/get-category.use-case';
 import { GenerateCategoriesUseCase } from './application/use-cases/generate-categories.use-case';
 import { ListCategoriesUseCase } from './application/use-cases/list-categories.use-case';
+import { CategoryDistributionService } from './application/services/category-distribution.service';
 import { CategoryGenerationService } from './application/services/category-generation.service';
 import { CategoryController } from './infra/http/category.controller';
 import { CategoryProviderModule } from './category-provider.module';
@@ -23,12 +25,15 @@ import { CategoryProviderModule } from './category-provider.module';
   providers: [
     CreateCategoryUseCase,
     GenerateCategoriesUseCase,
+    DistributeAthletesUseCase,
     ListCategoriesUseCase,
     GetCategoryUseCase,
     CategoryGenerationService,
+    CategoryDistributionService,
   ],
   exports: [
     GenerateCategoriesUseCase,
+    DistributeAthletesUseCase,
     ListCategoriesUseCase,
     GetCategoryUseCase,
     CategoryProviderModule,

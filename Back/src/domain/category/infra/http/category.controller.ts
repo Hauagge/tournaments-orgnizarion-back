@@ -3,6 +3,8 @@ import { CompetitionIdParamDto, CompetitionIdParamSchema } from '@/domain/compet
 import { ZodValidationPipe } from 'src/core/pipe/zod-validation.pipe';
 import { ApiResponse } from 'src/shared/result/api-response.type';
 import { CreateCategoryUseCase } from '../../application/use-cases/create-category.use-case';
+import { DistributeAthletesUseCase } from '../../application/use-cases/distribute-athletes.use-case';
+import { DistributeAthletesView } from '../../application/use-cases/distribute-athletes.view';
 import { GenerateCategoriesUseCase } from '../../application/use-cases/generate-categories.use-case';
 import { GetCategoryUseCase } from '../../application/use-cases/get-category.use-case';
 import { ListCategoriesUseCase } from '../../application/use-cases/list-categories.use-case';
@@ -16,6 +18,7 @@ export class CategoryController {
   constructor(
     private readonly createCategoryUseCase: CreateCategoryUseCase,
     private readonly generateCategoriesUseCase: GenerateCategoriesUseCase,
+    private readonly distributeAthletesUseCase: DistributeAthletesUseCase,
     private readonly listCategoriesUseCase: ListCategoriesUseCase,
     private readonly getCategoryUseCase: GetCategoryUseCase,
   ) {}
@@ -51,6 +54,21 @@ export class CategoryController {
       data: {
         items: categories.map((category) => category.toJSON()),
       },
+      error: null,
+    };
+  }
+
+  @Post('competitions/:id/categories/distribute-athletes')
+  async distributeAthletes(
+    @Param(new ZodValidationPipe(CompetitionIdParamSchema))
+    params: CompetitionIdParamDto,
+  ): Promise<ApiResponse<DistributeAthletesView>> {
+    const result = await this.distributeAthletesUseCase.execute({
+      competitionId: params.id,
+    });
+
+    return {
+      data: result,
       error: null,
     };
   }

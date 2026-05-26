@@ -8,7 +8,7 @@ export const CreateCategorySchema = z.object({
   weightMinGrams: z.coerce.number().int().nonnegative().nullable().optional(),
   weightMaxGrams: z.coerce.number().int().nonnegative().nullable().optional(),
   allowMerge: z.coerce.boolean().optional().default(false),
-  mergeWithBelt: z.string().trim().min(1).max(50).optional(),
+  mergeWithBelt: z.string().trim().min(1).max(50).optional().nullable(),
 });
 
 export type CreateCategoryDto = z.infer<typeof CreateCategorySchema>;

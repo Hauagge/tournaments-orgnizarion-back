@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AreaQueueItemStatus } from '../../domain/value-objects/area-queue-item-status.enum';
 import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { AreaQueueItem } from '../../domain/entities/area-queue-item.entity';
 import { AreaDistributionStrategyResolverService } from './area-distribution-strategy-resolver.service';
@@ -6,6 +7,7 @@ import { RestPolicyService } from './rest-policy.service';
 import { FightQueuePlan } from '../types/fight-queue-plan.type';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
 import { DistributionMode } from '../value-objects/distribution-mode.enum';
+import { FightQueueGroup } from '../strategies/area-distribution.strategy';
 
 @Injectable()
 export class FightQueuePlannerService {
@@ -29,20 +31,32 @@ export class FightQueuePlannerService {
     const areaDistributionStrategy = this.areaDistributionStrategyResolver.resolve(
       input.competitionMode,
     );
+    const fightsForDistribution =
+      input.distributionMode === DistributionMode.FULL
+        ? input.distributableFights.map((fight) => fight.assignArea(null))
+        : input.distributableFights;
 
     const distributed = areaDistributionStrategy.distribute({
       competitionId: input.competitionId,
       ageSplitYears: input.ageSplitYears,
       areas: input.areas,
-      fights: input.distributableFights,
+      fights: fightsForDistribution,
       athleteBirthDatesById: input.athleteBirthDatesById,
     });
+    const plannedDistributions =
+      input.distributionMode === DistributionMode.INCREMENTAL
+        ? this.redistributeIncrementalGroups(
+            distributed,
+            input.areas,
+            input.existingQueueItemsByArea,
+          )
+        : distributed;
 
     const queueItems: AreaQueueItem[] = [];
     const assignments: FightQueuePlan['assignments'] = [];
     const areas: FightQueuePlan['areas'] = [];
 
-    for (const areaDistribution of distributed) {
+    for (const areaDistribution of plannedDistributions) {
       const existingItems =
         input.distributionMode === DistributionMode.INCREMENTAL
           ? (input.existingQueueItemsByArea?.get(areaDistribution.areaId) ?? [])
@@ -86,5 +100,57 @@ export class FightQueuePlannerService {
       queueItems,
       areas,
     };
+  }
+
+  private redistributeIncrementalGroups(
+    distributions: Array<{ areaId: number; groups: FightQueueGroup[] }>,
+    areas: Array<{ id: number; order: number }>,
+    existingQueueItemsByArea?: Map<number, AreaQueueItem[]>,
+  ): Array<{ areaId: number; groups: FightQueueGroup[] }> {
+    const loads = new Map<number, number>(
+      areas.map((area) => [
+        area.id,
+        (existingQueueItemsByArea?.get(area.id) ?? []).filter(
+          (item) => item.status !== AreaQueueItemStatus.DONE,
+        ).length,
+      ]),
+    );
+    const reassigned = new Map<number, FightQueueGroup[]>(
+      areas.map((area) => [area.id, []]),
+    );
+    const flattenedGroups = distributions.flatMap((distribution) => distribution.groups);
+
+    for (const group of flattenedGroups) {
+      const preferredAreaId = group.preferredAreaId ?? null;
+      const selectedArea =
+        preferredAreaId !== null && reassigned.has(preferredAreaId)
+          ? areas.find((area) => area.id === preferredAreaId) ?? null
+          : areas
+              .slice()
+              .sort((left, right) => {
+                const leftLoad = loads.get(left.id) ?? 0;
+                const rightLoad = loads.get(right.id) ?? 0;
+
+                return leftLoad - rightLoad || left.order - right.order || left.id - right.id;
+              })[0];
+
+      if (!selectedArea) {
+        continue;
+      }
+
+      reassigned.get(selectedArea.id)?.push(group);
+      loads.set(
+        selectedArea.id,
+        (loads.get(selectedArea.id) ?? 0) + group.fights.length,
+      );
+    }
+
+    return areas
+      .slice()
+      .sort((left, right) => left.order - right.order || left.id - right.id)
+      .map((area) => ({
+        areaId: area.id,
+        groups: reassigned.get(area.id) ?? [],
+      }));
   }
 }

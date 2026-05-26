@@ -395,4 +395,277 @@ describe('DistributeAreaFightsUseCase', () => {
     expect((await areaRepository.listByAreaId(1)).map((item) => item.position)).toEqual([1, 2]);
     expect((await fightRepository.findById(2))?.areaId).toBe(1);
   });
+
+  it('should keep all fights from the same keyGroupId in the same area during FULL distribution', async () => {
+    const groupFightA = makeFight({
+      id: 1,
+      keyGroupId: 77,
+      athleteAId: 1,
+      athleteBId: 2,
+      orderIndex: 1,
+    });
+    const groupFightB = makeFight({
+      id: 2,
+      keyGroupId: 77,
+      athleteAId: 3,
+      athleteBId: 4,
+      orderIndex: 2,
+    });
+    const otherGroupFight = makeFight({
+      id: 3,
+      keyGroupId: 88,
+      athleteAId: 5,
+      athleteBId: 6,
+      orderIndex: 1,
+    });
+    const { useCase, fightRepository } = makeSut({
+      fights: [groupFightA, groupFightB, otherGroupFight],
+      areas: [makeArea(1, 1, 1), makeArea(2, 1, 2)],
+      athletes: [
+        makeAthlete({ id: 1, competitionId: 1, fullName: 'A1' }),
+        makeAthlete({ id: 2, competitionId: 1, fullName: 'A2' }),
+        makeAthlete({ id: 3, competitionId: 1, fullName: 'A3' }),
+        makeAthlete({ id: 4, competitionId: 1, fullName: 'A4' }),
+        makeAthlete({ id: 5, competitionId: 1, fullName: 'A5' }),
+        makeAthlete({ id: 6, competitionId: 1, fullName: 'A6' }),
+      ],
+    });
+
+    await useCase.execute({
+      competitionId: 1,
+      mode: DistributionMode.FULL,
+      restGapFights: 2,
+    });
+
+    const persistedFightA = await fightRepository.findById(1);
+    const persistedFightB = await fightRepository.findById(2);
+
+    expect(persistedFightA?.areaId).not.toBeNull();
+    expect(persistedFightA?.areaId).toBe(persistedFightB?.areaId);
+  });
+
+  it('should append incremental fights after the existing queue tail', async () => {
+    const queuedFightA = makeFight({
+      id: 1,
+      status: FightStatus.WAITING,
+      areaId: 1,
+      athleteAId: 1,
+      athleteBId: 2,
+      orderIndex: 1,
+    });
+    const queuedFightB = makeFight({
+      id: 2,
+      status: FightStatus.WAITING,
+      areaId: 1,
+      athleteAId: 3,
+      athleteBId: 4,
+      orderIndex: 2,
+    });
+    const newFight = makeFight({
+      id: 3,
+      status: FightStatus.WAITING,
+      areaId: null,
+      athleteAId: 5,
+      athleteBId: 6,
+      orderIndex: 3,
+    });
+    const { useCase, areaRepository } = makeSut({
+      fights: [queuedFightA, queuedFightB, newFight],
+      queueItems: [
+        AreaQueueItem.restore({
+          id: 100,
+          areaId: 1,
+          fightId: 1,
+          position: 1,
+          status: AreaQueueItemStatus.QUEUED,
+        }),
+        AreaQueueItem.restore({
+          id: 101,
+          areaId: 1,
+          fightId: 2,
+          position: 2,
+          status: AreaQueueItemStatus.QUEUED,
+        }),
+      ],
+      athletes: [
+        makeAthlete({ id: 1, competitionId: 1, fullName: 'A1' }),
+        makeAthlete({ id: 2, competitionId: 1, fullName: 'A2' }),
+        makeAthlete({ id: 3, competitionId: 1, fullName: 'A3' }),
+        makeAthlete({ id: 4, competitionId: 1, fullName: 'A4' }),
+        makeAthlete({ id: 5, competitionId: 1, fullName: 'A5' }),
+        makeAthlete({ id: 6, competitionId: 1, fullName: 'A6' }),
+      ],
+    });
+
+    await useCase.execute({
+      competitionId: 1,
+      mode: DistributionMode.INCREMENTAL,
+      restGapFights: 2,
+      fightIds: [3],
+    });
+
+    const queue = await areaRepository.listByAreaId(1);
+
+    expect(queue.map((item) => item.fightId)).toEqual([1, 2, 3]);
+    expect(queue.map((item) => item.position)).toEqual([1, 2, 3]);
+  });
+
+  it('should assign incremental key-group fights to the least loaded area when multiple areas exist', async () => {
+    const existingFightOnArea1 = makeFight({
+      id: 1,
+      status: FightStatus.WAITING,
+      areaId: 1,
+      keyGroupId: 10,
+      athleteAId: 1,
+      athleteBId: 2,
+      orderIndex: 1,
+    });
+    const newGroupFightA = makeFight({
+      id: 2,
+      status: FightStatus.WAITING,
+      areaId: null,
+      keyGroupId: 200,
+      athleteAId: 3,
+      athleteBId: 4,
+      orderIndex: 1,
+    });
+    const newGroupFightB = makeFight({
+      id: 3,
+      status: FightStatus.WAITING,
+      areaId: null,
+      keyGroupId: 200,
+      athleteAId: 5,
+      athleteBId: 6,
+      orderIndex: 2,
+    });
+    const { useCase, areaRepository, fightRepository } = makeSut({
+      fights: [existingFightOnArea1, newGroupFightA, newGroupFightB],
+      areas: [makeArea(1, 1, 1), makeArea(2, 1, 2)],
+      queueItems: [
+        AreaQueueItem.restore({
+          id: 100,
+          areaId: 1,
+          fightId: 1,
+          position: 1,
+          status: AreaQueueItemStatus.QUEUED,
+        }),
+      ],
+      athletes: [
+        makeAthlete({ id: 1, competitionId: 1, fullName: 'A1' }),
+        makeAthlete({ id: 2, competitionId: 1, fullName: 'A2' }),
+        makeAthlete({ id: 3, competitionId: 1, fullName: 'A3' }),
+        makeAthlete({ id: 4, competitionId: 1, fullName: 'A4' }),
+        makeAthlete({ id: 5, competitionId: 1, fullName: 'A5' }),
+        makeAthlete({ id: 6, competitionId: 1, fullName: 'A6' }),
+      ],
+    });
+
+    await useCase.execute({
+      competitionId: 1,
+      mode: DistributionMode.INCREMENTAL,
+      restGapFights: 2,
+      fightIds: [2, 3],
+    });
+
+    expect((await fightRepository.findById(2))?.areaId).toBe(2);
+    expect((await fightRepository.findById(3))?.areaId).toBe(2);
+    expect((await areaRepository.listByAreaId(2)).map((item) => item.fightId)).toEqual([2, 3]);
+  });
+
+  it('should rebuild the full queue when FULL distribution runs without locked fights', async () => {
+    const firstFight = makeFight({
+      id: 1,
+      status: FightStatus.WAITING,
+      areaId: 2,
+      athleteAId: 1,
+      athleteBId: 2,
+      orderIndex: 1,
+    });
+    const secondFight = makeFight({
+      id: 2,
+      status: FightStatus.WAITING,
+      areaId: null,
+      athleteAId: 3,
+      athleteBId: 4,
+      orderIndex: 2,
+    });
+    const { useCase, areaRepository } = makeSut({
+      fights: [firstFight, secondFight],
+      areas: [makeArea(1, 1, 1), makeArea(2, 1, 2)],
+      queueItems: [
+        AreaQueueItem.restore({
+          id: 900,
+          areaId: 1,
+          fightId: 999,
+          position: 1,
+          status: AreaQueueItemStatus.QUEUED,
+        }),
+      ],
+      athletes: [
+        makeAthlete({ id: 1, competitionId: 1, fullName: 'A1' }),
+        makeAthlete({ id: 2, competitionId: 1, fullName: 'A2' }),
+        makeAthlete({ id: 3, competitionId: 1, fullName: 'A3' }),
+        makeAthlete({ id: 4, competitionId: 1, fullName: 'A4' }),
+      ],
+    });
+
+    const result = await useCase.execute({
+      competitionId: 1,
+      mode: DistributionMode.FULL,
+      restGapFights: 2,
+    });
+
+    const queueArea1 = await areaRepository.listByAreaId(1);
+    const queueArea2 = await areaRepository.listByAreaId(2);
+
+    expect(result.totalDistributed).toBe(2);
+    expect([...queueArea1, ...queueArea2].map((item) => item.fightId).sort((a, b) => a - b)).toEqual([
+      1, 2,
+    ]);
+    expect([...queueArea1, ...queueArea2].some((item) => item.fightId === 999)).toBe(false);
+  });
+
+  it('should rebalance FULL distribution even when all waiting fights were previously assigned to the same area', async () => {
+    const firstGroupFight = makeFight({
+      id: 1,
+      status: FightStatus.WAITING,
+      areaId: 1,
+      keyGroupId: 10,
+      athleteAId: 1,
+      athleteBId: 2,
+      orderIndex: 1,
+    });
+    const secondGroupFight = makeFight({
+      id: 2,
+      status: FightStatus.WAITING,
+      areaId: 1,
+      keyGroupId: 20,
+      athleteAId: 3,
+      athleteBId: 4,
+      orderIndex: 1,
+    });
+    const { useCase, fightRepository } = makeSut({
+      fights: [firstGroupFight, secondGroupFight],
+      areas: [makeArea(1, 1, 1), makeArea(2, 1, 2)],
+      athletes: [
+        makeAthlete({ id: 1, competitionId: 1, fullName: 'A1' }),
+        makeAthlete({ id: 2, competitionId: 1, fullName: 'A2' }),
+        makeAthlete({ id: 3, competitionId: 1, fullName: 'A3' }),
+        makeAthlete({ id: 4, competitionId: 1, fullName: 'A4' }),
+      ],
+    });
+
+    await useCase.execute({
+      competitionId: 1,
+      mode: DistributionMode.FULL,
+      restGapFights: 2,
+    });
+
+    const fight1 = await fightRepository.findById(1);
+    const fight2 = await fightRepository.findById(2);
+
+    expect(fight1?.areaId).not.toBeNull();
+    expect(fight2?.areaId).not.toBeNull();
+    expect(new Set([fight1?.areaId, fight2?.areaId]).size).toBe(2);
+  });
 });

@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Category } from '../../domain/entities/category.entity';
 import {
   CategoryAssignment,
+  CategoryAthleteAddition,
   ICategoryRepository,
 } from '../../repository/ICategoryRepository.repository';
 import { CategoryAthleteTypeOrmEntity } from './entities/category-athlete.typeorm-entity';
@@ -92,5 +93,83 @@ export class CategoryRepository implements ICategoryRepository {
     });
 
     return entities.map((entity) => entity.athleteId);
+  }
+
+  async listAthleteIdsByCompetitionId(
+    competitionId: number,
+  ): Promise<number[]> {
+    const rows = await this.categoryAthleteRepository
+      .createQueryBuilder('ca')
+      .innerJoin(
+        CategoryTypeOrmEntity,
+        'c',
+        'c.id = ca.category_id',
+      )
+      .where('c.competition_id = :competitionId', { competitionId })
+      .select('ca.athlete_id', 'athleteId')
+      .getRawMany<{ athleteId: number }>();
+
+    return rows.map((row) => Number(row.athleteId));
+  }
+
+  async addAthletesToCategories(
+    additions: CategoryAthleteAddition[],
+  ): Promise<void> {
+    const filtered = additions.filter(
+      (addition) => addition.athleteIds.length > 0,
+    );
+
+    if (filtered.length === 0) {
+      return;
+    }
+
+    await this.categoryRepository.manager.transaction(async (manager) => {
+      const categoryIds = filtered.map((addition) => addition.categoryId);
+      const existing = await manager.find(CategoryAthleteTypeOrmEntity, {
+        where: { categoryId: In(categoryIds) },
+      });
+      const existingKeys = new Set(
+        existing.map((entity) => `${entity.categoryId}:${entity.athleteId}`),
+      );
+
+      const rowsToInsert: { categoryId: number; athleteId: number }[] = [];
+      const additionCountByCategory = new Map<number, number>();
+
+      for (const addition of filtered) {
+        let added = 0;
+
+        for (const athleteId of addition.athleteIds) {
+          const key = `${addition.categoryId}:${athleteId}`;
+          if (existingKeys.has(key)) {
+            continue;
+          }
+          existingKeys.add(key);
+          rowsToInsert.push({ categoryId: addition.categoryId, athleteId });
+          added += 1;
+        }
+
+        if (added > 0) {
+          additionCountByCategory.set(addition.categoryId, added);
+        }
+      }
+
+      if (rowsToInsert.length === 0) {
+        return;
+      }
+
+      await manager.insert(CategoryAthleteTypeOrmEntity, rowsToInsert);
+
+      await Promise.all(
+        Array.from(additionCountByCategory.entries()).map(
+          ([categoryId, count]) =>
+            manager.increment(
+              CategoryTypeOrmEntity,
+              { id: categoryId },
+              'totalAthletes',
+              count,
+            ),
+        ),
+      );
+    });
   }
 }

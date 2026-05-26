@@ -3,4 +3,5 @@ export * from './competition.factory';
 export * from './championship.factory';
 export * from './fight.factory';
 export * from './academy.factory';
+export * from './category.factory';
 export * from './user.factory';
