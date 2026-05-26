@@ -7,9 +7,14 @@ import { AthleteProviderModule } from '../athlete/athlete-provider.module';
 import { CategoryProviderModule } from '../category/category-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
 import { FinishFightUseCase } from './application/use-cases/finish-fight.use-case';
+import { CreateManualFightUseCase } from './application/use-cases/create-manual-fight.use-case';
+import { DeleteFightUseCase } from './application/use-cases/delete-fight.use-case';
 import { GenerateFightsUseCase } from './application/use-cases/generate-fights.use-case';
 import { ListFightsUseCase } from './application/use-cases/list-fights.use-case';
+import { MarkFightWinnerUseCase } from './application/use-cases/mark-fight-winner.use-case';
 import { StartFightUseCase } from './application/use-cases/start-fight.use-case';
+import { UpdateFightUseCase } from './application/use-cases/update-fight.use-case';
+import { UpdateFightOrderUseCase } from './application/use-cases/update-fight-order.use-case';
 import { FightController } from './infra/http/fight.controller';
 import { FightGenerationStrategyModule } from './fight-generation-strategy.module';
 import { FightProviderModule } from './fight-provider.module';
@@ -32,7 +37,22 @@ import { FightProviderModule } from './fight-provider.module';
     StartFightUseCase,
     FinishFightUseCase,
     ListFightsUseCase,
+    UpdateFightOrderUseCase,
+    CreateManualFightUseCase,
+    MarkFightWinnerUseCase,
+    UpdateFightUseCase,
+    DeleteFightUseCase,
   ],
-  exports: [GenerateFightsUseCase, StartFightUseCase, FinishFightUseCase, ListFightsUseCase],
+  exports: [
+    GenerateFightsUseCase,
+    StartFightUseCase,
+    FinishFightUseCase,
+    ListFightsUseCase,
+    UpdateFightOrderUseCase,
+    CreateManualFightUseCase,
+    MarkFightWinnerUseCase,
+    UpdateFightUseCase,
+    DeleteFightUseCase,
+  ],
 })
 export class FightModule {}
