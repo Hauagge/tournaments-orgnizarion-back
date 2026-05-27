@@ -57,6 +57,8 @@ export class KeysFightGenerationStrategy
             competitionId: input.competitionId,
             categoryId: input.categoryId,
             keyGroupId: input.keyGroupId,
+            round: 1,
+            order: orderIndex,
             areaName: null,
             areaId: null,
             athleteAId: athleteIds[index],

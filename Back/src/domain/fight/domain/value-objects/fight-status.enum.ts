@@ -1,5 +1,6 @@
 export enum FightStatus {
-  WAITING = 'WAITING',
+  PENDING = 'PENDING',
+  WAITING = 'PENDING',
   CALLED = 'CALLED',
   IN_PROGRESS = 'IN_PROGRESS',
   FINISHED = 'FINISHED',

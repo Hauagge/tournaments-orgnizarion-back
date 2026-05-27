@@ -4,6 +4,7 @@ import { DistributionMode } from '@/domain/area/application/value-objects/distri
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
 import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
+import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { FightStatus } from '@/domain/fight/domain/value-objects/fight-status.enum';
 import { FightGenerationStrategyResolverService } from '@/domain/fight/application/services/fight-generation-strategy-resolver.service';
 import { NotFoundError } from '@/shared/errors/not-found.error';
@@ -73,19 +74,59 @@ export class GenerateFightsForKeyGroupUseCase {
     });
 
     const fights = await this.fightRepository.createMany(generated.fights);
+    const linkedFights = await this.fightRepository.updateMany(
+      this.linkBracketFights(fights),
+    );
 
-    if (fights.length > 0) {
+    if (linkedFights.length > 0) {
       await this.distributeAreaFightsUseCase.execute({
         competitionId: group.competitionId,
         mode: DistributionMode.INCREMENTAL,
         restGapFights: 2,
-        fightIds: fights.map((fight) => fight.id as number),
+        fightIds: linkedFights.map((fight) => fight.id as number),
       });
     }
 
     return {
-      fights: fights.map((fight) => fight.toJSON()),
+      fights: linkedFights.map((fight) => fight.toJSON()),
       metadata: generated.metadata,
     };
+  }
+
+  private linkBracketFights(fights: FightEntity[]): FightEntity[] {
+    const byRound = new Map<number, FightEntity[]>();
+
+    for (const fight of fights) {
+      byRound.set(fight.round, [...(byRound.get(fight.round) ?? []), fight]);
+    }
+
+    const rounds = Array.from(byRound.keys()).sort((a, b) => a - b);
+    const updated = new Map<number, FightEntity>();
+
+    for (let index = 0; index < rounds.length - 1; index += 1) {
+      const currentRound = (byRound.get(rounds[index]) ?? []).sort(
+        (left, right) => left.order - right.order,
+      );
+      const nextRound = (byRound.get(rounds[index + 1]) ?? []).sort(
+        (left, right) => left.order - right.order,
+      );
+
+      currentRound.forEach((fight, currentIndex) => {
+        const targetFight = nextRound[Math.floor(currentIndex / 2)];
+        if (!targetFight) {
+          return;
+        }
+
+        updated.set(
+          fight.id as number,
+          fight.updateDetails({
+            nextFightId: targetFight.id as number,
+            nextFightSlot: currentIndex % 2 === 0 ? 'A' : 'B',
+          }),
+        );
+      });
+    }
+
+    return fights.map((fight) => updated.get(fight.id as number) ?? fight);
   }
 }

@@ -8,6 +8,7 @@ import { FightGenerationStrategyModule } from '../fight/fight-generation-strateg
 import { FightProviderModule } from '../fight/fight-provider.module';
 import { WeighInProviderModule } from '../weighin/weighin-provider.module';
 import { AddMemberToKeyGroupUseCase } from './application/use-cases/add-member-to-key-group.use-case';
+import { CreateFightForKeyGroupUseCase } from './application/use-cases/create-fight-for-key-group.use-case';
 import { CreateKeyGroupUseCase } from './application/use-cases/create-key-group.use-case';
 import { ExportCompetitionBracketsPdfUseCase } from './application/use-cases/export-competition-brackets-pdf.use-case';
 import { GenerateFightsForKeyGroupUseCase } from './application/use-cases/generate-fights-for-key-group.use-case';
@@ -38,6 +39,7 @@ import { KeyGroupProviderModule } from './key-group-provider.module';
   controllers: [KeyGroupController],
   providers: [
     CreateKeyGroupUseCase,
+    CreateFightForKeyGroupUseCase,
     AddMemberToKeyGroupUseCase,
     RemoveMemberFromKeyGroupUseCase,
     ListKeyGroupsUseCase,
@@ -53,6 +55,7 @@ import { KeyGroupProviderModule } from './key-group-provider.module';
   ],
   exports: [
     CreateKeyGroupUseCase,
+    CreateFightForKeyGroupUseCase,
     ListKeyGroupsUseCase,
     GetKeyGroupDetailsUseCase,
     KeyGroupProviderModule,

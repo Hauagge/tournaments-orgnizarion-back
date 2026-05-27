@@ -8,16 +8,24 @@ export class FightMapper {
       competitionId: entity.competitionId,
       categoryId: entity.categoryId,
       keyGroupId: entity.keyGroupId,
+      round: entity.round,
+      order: entity.order,
       areaId: entity.areaId,
       areaName: entity?.area?.name || null,
       status: entity.status,
       athleteAId: entity.athleteAId,
       athleteBId: entity.athleteBId,
-      winnerAthleteId: entity.winnerAthleteId,
+      winnerId: entity.winnerId,
+      loserId: entity.loserId,
+      nextFightId: entity.nextFightId,
+      nextFightSlot: entity.nextFightSlot,
+      createdManually: entity.createdManually,
+      isWo: entity.isWo,
       winType: entity.winType,
       startedAt: entity.startedAt,
       finishedAt: entity.finishedAt,
-      orderIndex: entity.orderIndex,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
     });
   }
 
@@ -27,15 +35,23 @@ export class FightMapper {
     entity.competitionId = fight.competitionId;
     entity.categoryId = fight.categoryId;
     entity.keyGroupId = fight.keyGroupId;
+    entity.round = fight.round;
+    entity.order = fight.order;
     entity.areaId = fight.areaId;
     entity.status = fight.status;
     entity.athleteAId = fight.athleteAId;
     entity.athleteBId = fight.athleteBId;
-    entity.winnerAthleteId = fight.winnerAthleteId;
+    entity.winnerId = fight.winnerId;
+    entity.loserId = fight.loserId;
+    entity.nextFightId = fight.nextFightId;
+    entity.nextFightSlot = fight.nextFightSlot;
+    entity.createdManually = fight.createdManually;
+    entity.isWo = fight.isWo;
     entity.winType = fight.winType;
     entity.startedAt = fight.startedAt;
     entity.finishedAt = fight.finishedAt;
-    entity.orderIndex = fight.orderIndex;
+    entity.createdAt = fight.createdAt;
+    entity.updatedAt = fight.updatedAt;
     return entity;
   }
 }

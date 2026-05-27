@@ -9,11 +9,13 @@ import {
   ExportBracketsReportQueryDto,
   ExportBracketsReportQuerySchema,
 } from './dtos/export-brackets-report.query.dto';
+import { ExportFightsByAreaPdfUseCase } from '../../application/use-cases/export-fights-by-area-pdf.use-case';
 
 @Controller()
 export class ReportsPdfController {
   constructor(
     private readonly exportBracketsReportPdfUseCase: ExportBracketsReportPdfUseCase,
+    private readonly exportFightsByAreaPdfUseCase: ExportFightsByAreaPdfUseCase,
   ) {}
 
   @Get('competitions/:id/reports/pdf/brackets')
@@ -33,6 +35,19 @@ export class ReportsPdfController {
     return new StreamableFile(pdf.buffer, {
       type: 'application/pdf',
       disposition: `attachment; filename="${pdf.fileName}"`,
+    });
+  }
+
+  @Get('competitions/:id/reports/pdf/fights-by-area')
+  async exportFightsByArea(
+    @Param(new ZodValidationPipe(CompetitionIdParamSchema))
+    params: CompetitionIdParamDto,
+  ) {
+    const pdf = await this.exportFightsByAreaPdfUseCase.execute(params.id);
+
+    return new StreamableFile(pdf.buffer, {
+      type: 'application/pdf',
+      disposition: `inline; filename="${pdf.fileName}"`,
     });
   }
 }

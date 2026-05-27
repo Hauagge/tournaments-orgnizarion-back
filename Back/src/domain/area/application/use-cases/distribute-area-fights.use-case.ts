@@ -40,15 +40,21 @@ export class DistributeAreaFightsUseCase {
   ) {}
 
   async execute(input: DistributeAreaFightsInput) {
-    const competition = await this.competitionRepository.findById(input.competitionId);
+    const competition = await this.competitionRepository.findById(
+      input.competitionId,
+    );
 
     if (!competition) {
-      throw new NotFoundError(`Competition with id ${input.competitionId} not found`);
+      throw new NotFoundError(
+        `Competition with id ${input.competitionId} not found`,
+      );
     }
 
     const [areas, fights] = await Promise.all([
       this.areaRepository.listByCompetitionId(input.competitionId),
-      this.fightRepository.listByCompetitionId({ competitionId: input.competitionId }),
+      this.fightRepository.listByCompetitionId({
+        competitionId: input.competitionId,
+      }),
     ]);
 
     if (areas.length === 0) {
@@ -56,7 +62,11 @@ export class DistributeAreaFightsUseCase {
     }
 
     this.assertFullDistributionSafety(input.mode, fights);
-    this.assertIncrementalDistributionSafety(input.mode, fights, input.fightIds);
+    this.assertIncrementalDistributionSafety(
+      input.mode,
+      fights,
+      input.fightIds,
+    );
 
     const candidateFights = fights.filter(
       (fight) => fight.status === FightStatus.WAITING,
@@ -69,7 +79,10 @@ export class DistributeAreaFightsUseCase {
             fightIds: input.fightIds,
           });
 
-    if (input.mode === DistributionMode.INCREMENTAL && distributableFights.length === 0) {
+    if (
+      input.mode === DistributionMode.INCREMENTAL &&
+      distributableFights.length === 0
+    ) {
       return {
         totalDistributed: 0,
         areas: await Promise.all(
@@ -77,15 +90,22 @@ export class DistributeAreaFightsUseCase {
             id: area.id as number,
             name: area.name,
             order: area.order,
-            queuedFights: (await this.areaQueueItemRepository.listByAreaId(area.id as number)).length,
+            queuedFights: (
+              await this.areaQueueItemRepository.listByAreaId(area.id as number)
+            ).length,
           })),
         ),
       };
     }
 
     const athleteIds = Array.from(
-      new Set(distributableFights.flatMap((fight) => [fight.athleteAId, fight.athleteBId])),
-    );
+      new Set(
+        distributableFights.flatMap((fight) => [
+          fight.athleteAId,
+          fight.athleteBId,
+        ]),
+      ),
+    ).filter((id): id is number => id !== null);
     const athletes = await this.athleteRepository.findByIds(athleteIds);
     const athleteBirthDatesById = new Map(
       athletes.map((athlete) => [athlete.id as number, athlete.birthDate]),
@@ -96,19 +116,29 @@ export class DistributeAreaFightsUseCase {
       competitionMode: competition.mode,
       distributionMode: input.mode,
       ageSplitYears: input.ageSplitYears ?? competition.ageSplitYears,
-      areas: areas.map((area) => ({ id: area.id as number, order: area.order })),
+      areas: areas.map((area) => ({
+        id: area.id as number,
+        order: area.order,
+      })),
       distributableFights,
-      recentFinishedFights: fights.filter((fight) => fight.status === FightStatus.FINISHED),
+      recentFinishedFights: fights.filter(
+        (fight) => fight.status === FightStatus.FINISHED,
+      ),
       restGapFights: input.restGapFights,
       athleteBirthDatesById,
       existingQueueItemsByArea:
         input.mode === DistributionMode.INCREMENTAL
           ? new Map(
               await Promise.all(
-                areas.map(async (area) => [
-                  area.id as number,
-                  await this.areaQueueItemRepository.listByAreaId(area.id as number),
-                ] as const),
+                areas.map(
+                  async (area) =>
+                    [
+                      area.id as number,
+                      await this.areaQueueItemRepository.listByAreaId(
+                        area.id as number,
+                      ),
+                    ] as const,
+                ),
               ),
             )
           : undefined,
@@ -139,13 +169,16 @@ export class DistributeAreaFightsUseCase {
         name: area.name,
         order: area.order,
         queuedFights:
-          plan.areas.find((item) => item.areaId === (area.id as number))?.queuedFights ?? 0,
+          plan.areas.find((item) => item.areaId === (area.id as number))
+            ?.queuedFights ?? 0,
       })),
     };
   }
 
   private async resolveIncrementalFights(input: {
-    candidateFights: Awaited<ReturnType<IFightRepository['listByCompetitionId']>>;
+    candidateFights: Awaited<
+      ReturnType<IFightRepository['listByCompetitionId']>
+    >;
     fightIds?: number[];
   }) {
     const targetedFightIds = input.fightIds?.length
@@ -153,18 +186,24 @@ export class DistributeAreaFightsUseCase {
       : null;
 
     const fights = targetedFightIds
-      ? input.candidateFights.filter((fight) => targetedFightIds.has(fight.id as number))
+      ? input.candidateFights.filter((fight) =>
+          targetedFightIds.has(fight.id as number),
+        )
       : input.candidateFights;
 
     const queueChecks = await Promise.all(
       fights.map(async (fight) => ({
         fight,
-        queueItem: await this.areaQueueItemRepository.findByFightId(fight.id as number),
+        queueItem: await this.areaQueueItemRepository.findByFightId(
+          fight.id as number,
+        ),
       })),
     );
 
     return queueChecks
-      .filter(({ fight, queueItem }) => queueItem === null || fight.areaId === null)
+      .filter(
+        ({ fight, queueItem }) => queueItem === null || fight.areaId === null,
+      )
       .map(({ fight }) => fight);
   }
 

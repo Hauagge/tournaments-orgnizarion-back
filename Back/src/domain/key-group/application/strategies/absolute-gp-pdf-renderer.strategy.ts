@@ -25,23 +25,31 @@ export class AbsoluteGpPdfRendererStrategy implements PdfRendererStrategy {
   ) {}
 
   async render(competitionId: number): Promise<Buffer> {
-    const competition = await this.competitionRepository.findById(competitionId);
+    const competition =
+      await this.competitionRepository.findById(competitionId);
 
     if (!competition) {
       throw new NotFoundError(`Competition with id ${competitionId} not found`);
     }
 
-    const categories = await this.categoryRepository.listByCompetitionId(competitionId);
-    const fights = await this.fightRepository.listByCompetitionId({ competitionId });
+    const categories =
+      await this.categoryRepository.listByCompetitionId(competitionId);
+    const fights = await this.fightRepository.listByCompetitionId({
+      competitionId,
+    });
     const athleteIds = Array.from(
       new Set(fights.flatMap((fight) => [fight.athleteAId, fight.athleteBId])),
-    );
+    ).filter((id): id is number => id !== null);
     const athletes = await this.athleteRepository.findByIds(athleteIds);
-    const athleteNames = new Map(athletes.map((athlete) => [athlete.id as number, athlete.fullName]));
+    const athleteNames = new Map(
+      athletes.map((athlete) => [athlete.id as number, athlete.fullName]),
+    );
 
     return this.pdfBuilder.build(
       categories.map((category) => {
-        const categoryFights = fights.filter((fight) => fight.categoryId === category.id);
+        const categoryFights = fights.filter(
+          (fight) => fight.categoryId === category.id,
+        );
 
         return {
           title: category.name,
@@ -53,8 +61,20 @@ export class AbsoluteGpPdfRendererStrategy implements PdfRendererStrategy {
             '',
             'Confrontos:',
             ...categoryFights.map(
-              (fight) =>
-                `${fight.orderIndex}. ${athleteNames.get(fight.athleteAId) ?? `#${fight.athleteAId}`} vs ${athleteNames.get(fight.athleteBId) ?? `#${fight.athleteBId}`} (${fight.status})`,
+              (fight) => {
+                const athleteALabel =
+                  fight.athleteAId !== null
+                    ? athleteNames.get(fight.athleteAId) ??
+                      `#${fight.athleteAId}`
+                    : 'A definir';
+                const athleteBLabel =
+                  fight.athleteBId !== null
+                    ? athleteNames.get(fight.athleteBId) ??
+                      `#${fight.athleteBId}`
+                    : 'A definir';
+
+                return `${fight.orderIndex}. ${athleteALabel} vs ${athleteBLabel} (${fight.status})`;
+              },
             ),
           ],
         };

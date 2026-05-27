@@ -91,6 +91,13 @@ export class InMemoryCategoryRepository implements ICategoryRepository {
     return this.categories.find((category) => category.id === id) ?? null;
   }
 
+  async update(category: Category): Promise<Category> {
+    this.categories = this.categories.map((item) =>
+      item.id === category.id ? category : item,
+    );
+    return category;
+  }
+
   async listAthleteIdsByCategoryId(categoryId: number): Promise<number[]> {
     return this.categoryAthletes
       .filter((link) => link.categoryId === categoryId)

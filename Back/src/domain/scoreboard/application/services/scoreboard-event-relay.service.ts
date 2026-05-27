@@ -8,6 +8,7 @@ export class ScoreboardEventRelayService implements OnModuleInit, OnModuleDestro
   private readonly relayedEvents = [
     'fight.started',
     'fight.finished',
+    'fights.order.updated',
     'queue.updated',
     'nextfight.updated',
   ] as const;

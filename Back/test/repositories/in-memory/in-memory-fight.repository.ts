@@ -1,21 +1,21 @@
-import { Fight } from '../../../src/domain/fight/entities/fight.typeorm-entity';
+import { FightTypeOrmEntity } from '../../../src/domain/fight/entities/fight.typeorm-entity';
 import { makeFight } from '../../factories';
 
 export class InMemoryFightRepository {
-  private fights: Fight[] = [];
+  private fights: FightTypeOrmEntity[] = [];
   private nextId = 1;
 
-  constructor(seed: Fight[] = []) {
+  constructor(seed: FightTypeOrmEntity[] = []) {
     this.fights = [...seed];
     this.nextId = seed.reduce((max, item) => Math.max(max, item.id), 0) + 1;
   }
 
-  setFights(fights: Fight[]) {
+  setFights(fights: FightTypeOrmEntity[]) {
     this.fights = [...fights];
     this.nextId = fights.reduce((max, item) => Math.max(max, item.id), 0) + 1;
   }
 
-  async create(data: Partial<Fight>): Promise<Fight> {
+  async create(data: Partial<FightTypeOrmEntity>): Promise<FightTypeOrmEntity> {
     const fight = makeFight({
       id: this.nextId++,
       ...data,
@@ -25,11 +25,11 @@ export class InMemoryFightRepository {
     return fight;
   }
 
-  async findById(id: number): Promise<Fight | null> {
+  async findById(id: number): Promise<FightTypeOrmEntity | null> {
     return this.fights.find((fight) => fight.id === id) ?? null;
   }
 
-  async list(): Promise<Fight[]> {
+  async list(): Promise<FightTypeOrmEntity[]> {
     return [...this.fights];
   }
 }

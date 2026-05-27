@@ -1,18 +1,31 @@
-import { Fight } from '../../src/domain/fight/entities/fight.typeorm-entity';
+import { FightTypeOrmEntity } from '../../src/domain/fight/entities/fight.typeorm-entity';
 
-export function makeFight(overrides: Partial<Fight> = {}): Fight {
+export function makeFight(
+  overrides: Partial<FightTypeOrmEntity> = {},
+): FightTypeOrmEntity {
   return {
     id: 1,
-    athlete1Id: 1,
-    athlete2Id: 2,
-    bracketId: 1,
+    competitionId: 1,
+    categoryId: 1,
+    keyGroupId: null,
+    round: 1,
+    order: 1,
+    areaId: null,
+    status: 'PENDING' as any,
+    athleteAId: 1,
+    athleteBId: 2,
     winnerId: null,
-    athlete1Score: 0,
-    athlete2Score: 0,
-    athlete1Penalty: 0,
-    athlete2Penalty: 0,
-    isSubmission: false,
-    orderIndex: null,
+    loserId: null,
+    nextFightId: null,
+    nextFightSlot: null,
+    createdManually: false,
+    isWo: false,
+    winType: null,
+    startedAt: null,
+    finishedAt: null,
+    area: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
     ...overrides,
   };
 }

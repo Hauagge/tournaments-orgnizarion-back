@@ -1,0 +1,151 @@
+<html lang='pt-BR'>
+
+<head>
+  <meta charset='UTF-8' />
+  <title>Relatório de Lutas por Área</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    @page {
+      size: A4;
+      margin: 16mm 12mm 16mm;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #111;
+      font-size: 11px;
+      background: #fff;
+    }
+
+    .header {
+      margin-bottom: 18px;
+      border-bottom: 1px solid #d8d8d8;
+      padding-bottom: 10px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+
+    .subtitle,
+    .meta {
+      color: #555;
+      font-size: 11px;
+    }
+
+    .section {
+      margin-bottom: 20px;
+      page-break-inside: avoid;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: 1px solid #dcdcdc;
+      padding: 6px 7px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f3f3f3;
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .empty {
+      border: 1px dashed #bdbdbd;
+      padding: 14px;
+      color: #666;
+    }
+
+    .footer {
+      margin-top: 10px;
+      color: #666;
+      font-size: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <header class='header'>
+    <h1 class='title'>Relatório de Lutas por Área</h1>
+    <div class='subtitle'>{{competitionName}}</div>
+    <div class='meta'>Gerado em {{exportedAt}}</div>
+  </header>
+
+  {{#if hasAreas}}
+  {{#each sections}}
+  <section class='section'>
+    <h2 class='section-title'>{{areaName}}</h2>
+    {{#if fights.length}}
+    <table>
+      <thead>
+        <tr>
+          <th>Categoria</th>
+          <th>Atleta 1</th>
+          <th>Atleta 2</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each fights}}
+        <tr>
+          <td>{{categoryName}}</td>
+          <td>{{athleteAName}}</td>
+          <td>{{athleteBName}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    {{else}}
+    <div class='empty'>Nenhuma luta atribuída a esta área.</div>
+    {{/if}}
+  </section>
+  {{/each}}
+  {{/if}}
+
+  {{#if unassignedSection}}
+  <section class='section'>
+    <h2 class='section-title'>{{unassignedSection.areaName}}</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Categoria</th>
+          <th>Atleta 1</th>
+          <th>Atleta 2</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each unassignedSection.fights}}
+        <tr>
+          <td>{{categoryName}}</td>
+          <td>{{athleteAName}}</td>
+          <td>{{athleteBName}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </section>
+  {{/if}}
+
+  <div class='footer'>Documento gerado automaticamente para operação do
+    evento.</div>
+</body>
+
+</html>

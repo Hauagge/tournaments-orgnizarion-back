@@ -4,6 +4,7 @@ import { CompetitionIdParamDto, CompetitionIdParamSchema } from '@/domain/compet
 import { ApiResponse } from '@/shared/result/api-response.type';
 import { KeyGroup } from '../../domain/entities/key-group.entity';
 import { CreateKeyGroupUseCase } from '../../application/use-cases/create-key-group.use-case';
+import { CreateFightForKeyGroupUseCase } from '../../application/use-cases/create-fight-for-key-group.use-case';
 import { AddMemberToKeyGroupUseCase } from '../../application/use-cases/add-member-to-key-group.use-case';
 import { RemoveMemberFromKeyGroupUseCase } from '../../application/use-cases/remove-member-from-key-group.use-case';
 import { ListKeyGroupsUseCase } from '../../application/use-cases/list-key-groups.use-case';
@@ -14,6 +15,10 @@ import { ExportCompetitionBracketsPdfUseCase } from '../../application/use-cases
 import { UpdateKeyGroupUseCase } from '../../application/use-cases/update-key-group.use-case';
 import { KeyGroupDetailsView, KeyGroupListItemView } from '../../repository/IKeyGroupRepository.repository';
 import { CreateKeyGroupDto, CreateKeyGroupSchema } from './dtos/create-key-group.dto';
+import {
+  CreateKeyGroupFightDto,
+  CreateKeyGroupFightSchema,
+} from './dtos/create-key-group-fight.dto';
 import { KeyGroupIdParamDto, KeyGroupIdParamSchema } from './dtos/key-group-id-param.dto';
 import { KeyGroupMemberParamDto, KeyGroupMemberParamSchema } from './dtos/key-group-member-param.dto';
 import { ListKeyGroupsDto, ListKeyGroupsSchema } from './dtos/list-key-groups.dto';
@@ -34,6 +39,7 @@ type CreateKeyGroupResponse = {
 export class KeyGroupController {
   constructor(
     private readonly createKeyGroupUseCase: CreateKeyGroupUseCase,
+    private readonly createFightForKeyGroupUseCase: CreateFightForKeyGroupUseCase,
     private readonly addMemberToKeyGroupUseCase: AddMemberToKeyGroupUseCase,
     private readonly removeMemberFromKeyGroupUseCase: RemoveMemberFromKeyGroupUseCase,
     private readonly listKeyGroupsUseCase: ListKeyGroupsUseCase,
@@ -161,6 +167,24 @@ export class KeyGroupController {
 
     return {
       data: result,
+      error: null,
+    };
+  }
+
+  @Post('key-groups/:id/fights')
+  async createFight(
+    @Param(new ZodValidationPipe(KeyGroupIdParamSchema))
+    params: KeyGroupIdParamDto,
+    @Body(new ZodValidationPipe(CreateKeyGroupFightSchema))
+    body: CreateKeyGroupFightDto,
+  ) {
+    const fight = await this.createFightForKeyGroupUseCase.execute({
+      keyGroupId: params.id,
+      ...body,
+    });
+
+    return {
+      data: fight.toJSON(),
       error: null,
     };
   }
