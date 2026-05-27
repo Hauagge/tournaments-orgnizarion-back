@@ -24,9 +24,15 @@ export class RestPolicyService {
 
     for (const fight of history.slice(0, 2)) {
       for (const athleteId of [fight.athleteAId, fight.athleteBId]) {
+        if (!athleteId) {
+          continue;
+        }
         recentAthleteWindows.set(
           athleteId,
-          Math.max(recentAthleteWindows.get(athleteId) ?? 0, input.restGapFights),
+          Math.max(
+            recentAthleteWindows.get(athleteId) ?? 0,
+            input.restGapFights,
+          ),
         );
       }
     }
@@ -36,13 +42,20 @@ export class RestPolicyService {
 
     while (pending.length > 0) {
       const candidateIndex = pending.findIndex((group) =>
-        group.athleteIds.every((athleteId) => (recentAthleteWindows.get(athleteId) ?? 0) === 0),
+        group.athleteIds.every(
+          (athleteId) => (recentAthleteWindows.get(athleteId) ?? 0) === 0,
+        ),
       );
 
-      const [nextGroup] = pending.splice(candidateIndex >= 0 ? candidateIndex : 0, 1);
+      const [nextGroup] = pending.splice(
+        candidateIndex >= 0 ? candidateIndex : 0,
+        1,
+      );
       scheduled.push(nextGroup);
 
-      for (const [athleteId, remaining] of Array.from(recentAthleteWindows.entries())) {
+      for (const [athleteId, remaining] of Array.from(
+        recentAthleteWindows.entries(),
+      )) {
         if (remaining <= 1) {
           recentAthleteWindows.delete(athleteId);
         } else {
