@@ -101,7 +101,9 @@ export class SplitByAgeStrategy implements AreaDistributionStrategy {
         fights: items,
         athleteIds: Array.from(
           new Set(
-            items.flatMap((fight) => [fight.athleteAId, fight.athleteBId]),
+            items
+              .flatMap((fight) => [fight.athleteAId, fight.athleteBId])
+              .filter((id): id is number => id !== null),
           ),
         ),
         representativeFight: items[0],
