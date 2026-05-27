@@ -14,7 +14,9 @@ export class KeysAreaDistributionStrategy implements AreaDistributionStrategy {
 
   distribute(context: AreaDistributionContext): AreaDistributionResult {
     if (context.areas.length === 0) {
-      throw new ValidationError('At least one area is required for distribution');
+      throw new ValidationError(
+        'At least one area is required for distribution',
+      );
     }
 
     const groups = this.buildGroups(context);
@@ -55,15 +57,20 @@ export class KeysAreaDistributionStrategy implements AreaDistributionStrategy {
     const grouped = new Map<string, FightQueueGroup>();
 
     for (const fight of context.fights) {
+      if (!fight.athleteAId || !fight.athleteBId) {
+        continue;
+      }
       const key =
-        fight.keyGroupId !== null ? `key-group:${fight.keyGroupId}` : `fight:${fight.id}`;
+        fight.keyGroupId !== null
+          ? `key-group:${fight.keyGroupId}`
+          : `fight:${fight.id}`;
       const current = grouped.get(key);
 
       if (current) {
         current.fights.push(fight);
         current.athleteIds = Array.from(
           new Set([...current.athleteIds, fight.athleteAId, fight.athleteBId]),
-        );
+        ).filter((id): id is number => id !== null);
         continue;
       }
 
@@ -77,13 +84,15 @@ export class KeysAreaDistributionStrategy implements AreaDistributionStrategy {
     }
 
     return Array.from(grouped.values()).sort((left, right) => {
-      const leftKeyGroupId = left.representativeFight.keyGroupId ?? Number.MAX_SAFE_INTEGER;
+      const leftKeyGroupId =
+        left.representativeFight.keyGroupId ?? Number.MAX_SAFE_INTEGER;
       const rightKeyGroupId =
         right.representativeFight.keyGroupId ?? Number.MAX_SAFE_INTEGER;
 
       return (
         leftKeyGroupId - rightKeyGroupId ||
-        left.representativeFight.orderIndex - right.representativeFight.orderIndex ||
+        left.representativeFight.orderIndex -
+          right.representativeFight.orderIndex ||
         (left.representativeFight.id ?? 0) - (right.representativeFight.id ?? 0)
       );
     });
