@@ -9,8 +9,10 @@ import { CategoryTypeOrmEntity } from '@/domain/category/infra/persistence/entit
 import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
+import { BestOfThreeProgressionService } from '../services/best-of-three-progression.service';
 import { FightStatus } from '../../domain/value-objects/fight-status.enum';
 import { FightTypeOrmEntity } from '../../entities/fight.typeorm-entity';
+import { FightMapper } from '../../infra/persistence/mappers/fight.mapper';
 
 type Input = {
   currentUserId: number;
@@ -29,8 +31,13 @@ type Output = {
   };
   nextFight: {
     id: number;
+    keyGroupId: number | null;
+    round: number;
+    orderIndex: number;
     athleteAId: number | null;
     athleteBId: number | null;
+    status: FightStatus;
+    areaId: number | null;
   } | null;
   categoryChampion: {
     categoryId: number;
@@ -50,6 +57,7 @@ export class MarkFightWinnerUseCase {
     private readonly categoryRepository: ICategoryRepository,
     @Inject(EventBus)
     private readonly eventBus: EventBus,
+    private readonly bestOfThreeProgressionService: BestOfThreeProgressionService,
   ) {}
 
   async execute(input: Input): Promise<Output> {
@@ -133,7 +141,22 @@ export class MarkFightWinnerUseCase {
         }
 
         await fightRepository.save(nextFight);
-      } else if (fight.categoryId !== null) {
+      }
+
+      await fightRepository.save(fight);
+
+      const thirdBestOfThreeFight =
+        nextFight === null
+          ? await this.createThirdBestOfThreeFightIfNeeded({
+              fight,
+              fightRepository,
+              areaQueueRepository,
+            })
+          : null;
+
+      if (thirdBestOfThreeFight) {
+        nextFight = thirdBestOfThreeFight;
+      } else if (nextFight === null && fight.categoryId !== null) {
         const category = await categoryRepository.findOneBy({ id: fight.categoryId });
         if (category) {
           category.championAthleteId = input.winnerId;
@@ -144,8 +167,6 @@ export class MarkFightWinnerUseCase {
           };
         }
       }
-
-      await fightRepository.save(fight);
 
       const queueItem = await areaQueueRepository.findOneBy({ fightId: fight.id });
       if (queueItem) {
@@ -196,12 +217,82 @@ export class MarkFightWinnerUseCase {
       nextFight: result.nextFight
         ? {
             id: result.nextFight.id,
+            keyGroupId: result.nextFight.keyGroupId,
+            round: result.nextFight.round,
+            orderIndex: result.nextFight.order,
             athleteAId: result.nextFight.athleteAId,
             athleteBId: result.nextFight.athleteBId,
+            status: result.nextFight.status,
+            areaId: result.nextFight.areaId,
           }
         : null,
       categoryChampion: result.categoryChampion,
     };
+  }
+
+  private async createThirdBestOfThreeFightIfNeeded(input: {
+    fight: FightTypeOrmEntity;
+    fightRepository: import('typeorm').Repository<FightTypeOrmEntity>;
+    areaQueueRepository: import('typeorm').Repository<AreaQueueItemTypeOrmEntity>;
+  }): Promise<FightTypeOrmEntity | null> {
+    if (input.fight.keyGroupId === null) {
+      return null;
+    }
+
+    const keyGroupFights = await input.fightRepository.find({
+      where: { keyGroupId: input.fight.keyGroupId },
+      order: { order: 'ASC', id: 'ASC' },
+    });
+
+    const shouldCreateThirdFight =
+      this.bestOfThreeProgressionService.shouldCreateThirdFight(
+        keyGroupFights.map(FightMapper.toDomain),
+      );
+
+    if (!shouldCreateThirdFight) {
+      return null;
+    }
+
+    const [firstFight] = keyGroupFights;
+    const thirdFight = input.fightRepository.create({
+      competitionId: input.fight.competitionId,
+      categoryId: input.fight.categoryId,
+      keyGroupId: input.fight.keyGroupId,
+      round: 1,
+      order: 3,
+      areaId: input.fight.areaId,
+      status: FightStatus.PENDING,
+      athleteAId: firstFight.athleteAId,
+      athleteBId: firstFight.athleteBId,
+      winnerId: null,
+      loserId: null,
+      nextFightId: null,
+      nextFightSlot: null,
+      createdManually: false,
+      isWo: false,
+      winType: null,
+      startedAt: null,
+      finishedAt: null,
+    });
+    const savedThirdFight = await input.fightRepository.save(thirdFight);
+
+    if (savedThirdFight.areaId !== null) {
+      const [lastQueueItem] = await input.areaQueueRepository.find({
+        where: { areaId: savedThirdFight.areaId },
+        order: { position: 'DESC' },
+        take: 1,
+      });
+      await input.areaQueueRepository.save(
+        input.areaQueueRepository.create({
+          areaId: savedThirdFight.areaId,
+          fightId: savedThirdFight.id,
+          position: (lastQueueItem?.position ?? 0) + 1,
+          status: AreaQueueItemStatus.QUEUED,
+        }),
+      );
+    }
+
+    return savedThirdFight;
   }
 
   private async assertAccess(userId: number, competitionId: number) {

@@ -40,6 +40,12 @@ export class WeighInTypeOrmEntity {
   @Column({ name: 'performed_at', type: 'timestamp', nullable: true })
   performedAt: Date | null;
 
+  @Column({ name: 'performed_by_id', type: 'int', nullable: true })
+  performedById: number | null;
+
   @Column({ name: 'performed_by', type: 'varchar', nullable: true })
   performedBy: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  observation: string | null;
 }

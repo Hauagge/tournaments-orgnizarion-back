@@ -28,13 +28,13 @@ describe('WeighIn use cases', () => {
         id: 1,
         competitionId: 10,
         fullName: 'Carlos Silva',
-        declaredWeightGrams: 70000,
+        declaredWeight: 70000,
       }),
       makeAthlete({
         id: 2,
         competitionId: 10,
         fullName: 'Bruno Souza',
-        declaredWeightGrams: 76000,
+        declaredWeight: 76000,
       }),
     ]);
     weighInRepository = new InMemoryWeighInRepository();
@@ -51,7 +51,9 @@ describe('WeighIn use cases', () => {
       competitionId: 10,
       athleteId: 1,
       measuredWeightGrams: 70501,
+      performedById: 99,
       performedBy: 'referee-1',
+      observation: 'Acima da margem',
     });
 
     expect(weighIn.toJSON()).toMatchObject({
@@ -59,7 +61,9 @@ describe('WeighIn use cases', () => {
       athleteId: 1,
       measuredWeightGrams: 70501,
       status: WeighInStatus.REJECTED,
+      performedById: 99,
       performedBy: 'referee-1',
+      observation: 'Acima da margem',
     });
     expect(weighIn.performedAt).toBeInstanceOf(Date);
   });
@@ -80,7 +84,9 @@ describe('WeighIn use cases', () => {
       competitionId: 10,
       athleteId: 1,
       measuredWeightGrams: 70000,
+      performedById: 99,
       performedBy: 'referee-1',
+      observation: 'Liberado',
     });
 
     const weighIn = await resetUseCase.execute({
@@ -94,7 +100,9 @@ describe('WeighIn use cases', () => {
       measuredWeightGrams: null,
       status: WeighInStatus.PENDING,
       performedAt: null,
+      performedById: null,
       performedBy: null,
+      observation: null,
     });
   });
 
@@ -119,7 +127,9 @@ describe('WeighIn use cases', () => {
       competitionId: 10,
       athleteId: 2,
       measuredWeightGrams: 76000,
+      performedById: 88,
       performedBy: 'mesa-1',
+      observation: 'Dentro do peso',
     });
 
     const [pendingAthlete] = await searchUseCase.execute({
@@ -137,14 +147,25 @@ describe('WeighIn use cases', () => {
       status: WeighInStatus.PENDING,
       measuredWeightGrams: null,
       performedAt: null,
+      performedById: null,
       performedBy: null,
+      weighInEvaluatedById: null,
+      weighInEvaluatedByName: null,
+      weighInEvaluatedAt: null,
+      weighInObservation: null,
     });
     expect(confirmedAthlete).toMatchObject({
       athleteId: 2,
       athleteName: 'Bruno Souza',
       status: WeighInStatus.APPROVED,
       measuredWeightGrams: 76000,
+      performedById: 88,
       performedBy: 'mesa-1',
+      observation: 'Dentro do peso',
+      weighInEvaluatedById: 88,
+      weighInEvaluatedByName: 'mesa-1',
+      weighInEvaluatedAt: expect.any(Date),
+      weighInObservation: 'Dentro do peso',
     });
   });
 });

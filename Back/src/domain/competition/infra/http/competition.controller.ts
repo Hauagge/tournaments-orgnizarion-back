@@ -24,6 +24,7 @@ import { ApiResponse } from 'src/shared/result/api-response.type';
 import { AddUserToCompetitionUseCase } from '../../application/use-cases/add-user-to-competition.use-case';
 import { CreateCompetitionUseCase } from '../../application/use-cases/create-competition.use-case';
 import { GetCompetitionUseCase } from '../../application/use-cases/get-competition.use-case';
+import { GetDashboardSummaryUseCase } from '../../application/use-cases/get-dashboard-summary.use-case';
 import { ImportAthletesUseCase } from '../../application/use-cases/import-athletes.use-case';
 import { ListCompetitionUsersUseCase } from '../../application/use-cases/list-competition-users.use-case';
 import { ListCompetitionsUseCase } from '../../application/use-cases/list-competitions.use-case';
@@ -83,6 +84,7 @@ export class CompetitionController {
     private readonly importAthletesUseCase: ImportAthletesUseCase,
     private readonly addUserToCompetitionUseCase: AddUserToCompetitionUseCase,
     private readonly removeUserFromCompetitionUseCase: RemoveUserFromCompetitionUseCase,
+    private readonly getDashboardSummaryUseCase: GetDashboardSummaryUseCase,
   ) {}
 
   @Get()
@@ -130,6 +132,20 @@ export class CompetitionController {
     });
     return {
       data: competition.toJSON(),
+      error: null,
+    };
+  }
+
+  @Get('dashboard-summary')
+  async dashboardSummary(
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ): Promise<ApiResponse<Awaited<ReturnType<GetDashboardSummaryUseCase['execute']>>>> {
+    const data = await this.getDashboardSummaryUseCase.execute({
+      currentUserId: currentUser.sub,
+    });
+
+    return {
+      data,
       error: null,
     };
   }

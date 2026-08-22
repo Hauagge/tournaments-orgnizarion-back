@@ -8,6 +8,7 @@ import { AthleteImportCsvService } from './application/services/athlete-import-c
 import { CompetitionTeamsHydratorService } from './application/services/competition-teams-hydrator.service';
 import { CreateCompetitionUseCase } from './application/use-cases/create-competition.use-case';
 import { GetCompetitionUseCase } from './application/use-cases/get-competition.use-case';
+import { GetDashboardSummaryUseCase } from './application/use-cases/get-dashboard-summary.use-case';
 import { ImportAthletesUseCase } from './application/use-cases/import-athletes.use-case';
 import { ListCompetitionUsersUseCase } from './application/use-cases/list-competition-users.use-case';
 import { ListCompetitionsUseCase } from './application/use-cases/list-competitions.use-case';
@@ -29,6 +30,7 @@ import { CompetitionProviderModule } from './competition-provider.module';
     CreateCompetitionUseCase,
     UpdateCompetitionSettingsUseCase,
     GetCompetitionUseCase,
+    GetDashboardSummaryUseCase,
     ListCompetitionUsersUseCase,
     ListCompetitionsUseCase,
     PreviewAthleteImportUseCase,
@@ -43,6 +45,7 @@ import { CompetitionProviderModule } from './competition-provider.module';
     CreateCompetitionUseCase,
     UpdateCompetitionSettingsUseCase,
     GetCompetitionUseCase,
+    GetDashboardSummaryUseCase,
     ListCompetitionUsersUseCase,
     ListCompetitionsUseCase,
     PreviewAthleteImportUseCase,

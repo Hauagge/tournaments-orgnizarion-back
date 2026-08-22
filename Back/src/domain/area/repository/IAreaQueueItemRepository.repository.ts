@@ -8,6 +8,11 @@ export abstract class IAreaQueueItemRepository {
     items: AreaQueueItem[];
   }): Promise<AreaQueueItem[]>;
   abstract listByAreaId(areaId: number): Promise<AreaQueueItem[]>;
+  abstract listByAreaIds(areaIds: number[]): Promise<AreaQueueItem[]>;
+  abstract replaceForAreas(input: {
+    areaIds: number[];
+    items: AreaQueueItem[];
+  }): Promise<AreaQueueItem[]>;
   abstract listFightDetailsByAreaId(areaId: number): Promise<AreaQueueFightDetails[]>;
   abstract findByFightId(fightId: number): Promise<AreaQueueItem | null>;
   abstract update(item: AreaQueueItem): Promise<AreaQueueItem>;

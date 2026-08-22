@@ -3,7 +3,7 @@ import { FightEntity } from '../../domain/entities/fight.entity';
 
 export type FightGenerationMetadata = {
   categoryId: number | null;
-  format: 'BEST_OF_THREE' | 'ROUND_ROBIN' | 'OLYMPIC_BRACKET';
+  format: 'BEST_OF_THREE' | 'ROUND_ROBIN' | 'OLYMPIC';
   notes?: string[];
 };
 

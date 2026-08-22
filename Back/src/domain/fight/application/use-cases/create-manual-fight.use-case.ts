@@ -11,11 +11,11 @@ import { IFightRepository } from '../../repository/IFightRepository.repository';
 type Input = {
   currentUserId: number;
   competitionId: number;
-  categoryId: number;
   athleteAId: number;
   athleteBId: number;
   round: number;
   order: number;
+  categoryId?: number;
   areaId?: number | null;
 };
 
@@ -41,10 +41,7 @@ export class CreateManualFightUseCase {
       throw new ValidationError('A luta manual exige dois atletas distintos');
     }
 
-    const category = await this.categoryRepository.findById(input.categoryId);
-    if (!category || category.competitionId !== input.competitionId) {
-      throw new NotFoundError(`Category with id ${input.categoryId} not found`);
-    }
+    const category = await this.resolveCategory(input);
 
     const athletes = await this.athleteRepository.findByIds([
       input.athleteAId,
@@ -61,19 +58,25 @@ export class CreateManualFightUseCase {
       throw new ValidationError('Os atletas precisam pertencer a competicao');
     }
 
-    const categoryAthleteIds = new Set(
-      await this.categoryRepository.listAthleteIdsByCategoryId(input.categoryId),
-    );
-    if (
-      !categoryAthleteIds.has(input.athleteAId) ||
-      !categoryAthleteIds.has(input.athleteBId)
-    ) {
-      throw new ValidationError('Os atletas nao pertencem a categoria informada');
+    if (category) {
+      const categoryAthleteIds = new Set(
+        await this.categoryRepository.listAthleteIdsByCategoryId(
+          category.id as number,
+        ),
+      );
+      if (
+        !categoryAthleteIds.has(input.athleteAId) ||
+        !categoryAthleteIds.has(input.athleteBId)
+      ) {
+        throw new ValidationError(
+          'Os atletas nao pertencem a categoria informada',
+        );
+      }
     }
 
     const existingFights = await this.fightRepository.listByCompetitionId({
       competitionId: input.competitionId,
-      categoryId: input.categoryId,
+      categoryId: category?.id as number | undefined,
     });
     const duplicated = existingFights.some((fight) => {
       if (fight.status === 'CANCELED') {
@@ -95,7 +98,7 @@ export class CreateManualFightUseCase {
     return this.fightRepository.create(
       FightEntity.create({
         competitionId: input.competitionId,
-        categoryId: input.categoryId,
+        categoryId: category?.id ?? null,
         keyGroupId: null,
         round: input.round,
         order: input.order,
@@ -109,8 +112,22 @@ export class CreateManualFightUseCase {
     );
   }
 
+  private async resolveCategory(input: Input) {
+    if (input.categoryId === undefined) {
+      return null;
+    }
+
+    const category = await this.categoryRepository.findById(input.categoryId);
+    if (!category || category.competitionId !== input.competitionId) {
+      throw new NotFoundError(`Category with id ${input.categoryId} not found`);
+    }
+
+    return category;
+  }
+
   private async assertAccess(userId: number, competitionId: number) {
-    const competition = await this.competitionRepository.findById(competitionId);
+    const competition =
+      await this.competitionRepository.findById(competitionId);
     if (!competition) {
       throw new NotFoundError(`Competition with id ${competitionId} not found`);
     }

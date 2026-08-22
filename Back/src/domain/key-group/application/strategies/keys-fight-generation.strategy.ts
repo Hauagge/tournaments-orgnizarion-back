@@ -43,6 +43,38 @@ export class KeysFightGenerationStrategy
       });
     }
 
+    if (athleteIds.length === 2) {
+      const [athleteAId, athleteBId] = athleteIds;
+
+      return {
+        fights: [1, 2].map((orderIndex) =>
+          FightEntity.create({
+            competitionId: input.competitionId,
+            categoryId: input.categoryId,
+            keyGroupId: input.keyGroupId,
+            round: 1,
+            order: orderIndex,
+            areaName: null,
+            areaId: null,
+            athleteAId,
+            athleteBId,
+            orderIndex,
+          }),
+        ),
+        metadata: [
+          {
+            categoryId: input.categoryId,
+            format: 'BEST_OF_THREE',
+            notes: [
+              `Key group ${input.keyGroupId} generated as best of three`,
+              'Fights 1 and 2 are active immediately',
+              'Fight 3 is created only if the first two fights end 1x1',
+            ],
+          },
+        ],
+      };
+    }
+
     const fights: FightEntity[] = [];
     let orderIndex = 1;
 

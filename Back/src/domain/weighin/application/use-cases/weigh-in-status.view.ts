@@ -9,5 +9,11 @@ export type WeighInStatusView = {
   measuredWeightGrams: number | null;
   status: WeighInStatus;
   performedAt: Date | null;
+  performedById: number | null;
   performedBy: string | null;
+  observation: string | null;
+  weighInEvaluatedById: number | null;
+  weighInEvaluatedByName: string | null;
+  weighInEvaluatedAt: Date | null;
+  weighInObservation: string | null;
 };

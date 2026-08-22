@@ -10,7 +10,9 @@ export class WeighInMapper {
       measuredWeightGrams: entity.measuredWeightGrams,
       status: entity.status,
       performedAt: entity.performedAt,
+      performedById: entity.performedById,
       performedBy: entity.performedBy,
+      observation: entity.observation,
     });
   }
 
@@ -22,7 +24,9 @@ export class WeighInMapper {
     entity.measuredWeightGrams = weighIn.measuredWeightGrams;
     entity.status = weighIn.status;
     entity.performedAt = weighIn.performedAt;
+    entity.performedById = weighIn.performedById;
     entity.performedBy = weighIn.performedBy;
+    entity.observation = weighIn.observation;
     return entity;
   }
 }

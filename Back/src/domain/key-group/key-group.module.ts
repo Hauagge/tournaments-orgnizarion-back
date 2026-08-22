@@ -21,6 +21,7 @@ import { AbsoluteGpPdfRendererStrategy } from './application/strategies/absolute
 import { KeysPdfRendererStrategy } from './application/strategies/keys-pdf-renderer.strategy';
 import { PdfRendererResolverService } from './application/services/pdf-renderer-resolver.service';
 import { SimplePdfBuilderService } from './application/services/simple-pdf-builder.service';
+import { KeyGroupBracketViewBuilderService } from './application/services/key-group-bracket-view-builder.service';
 import { KeyGroupController } from './infra/http/key-group.controller';
 import { KeyGroupProviderModule } from './key-group-provider.module';
 
@@ -52,6 +53,7 @@ import { KeyGroupProviderModule } from './key-group-provider.module';
     AbsoluteGpPdfRendererStrategy,
     PdfRendererResolverService,
     SimplePdfBuilderService,
+    KeyGroupBracketViewBuilderService,
   ],
   exports: [
     CreateKeyGroupUseCase,

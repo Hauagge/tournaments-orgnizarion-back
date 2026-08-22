@@ -159,7 +159,9 @@ describe('Athlete use cases', () => {
         measuredWeightGrams: 50000,
         status: WeighInStatus.APPROVED,
         performedAt: new Date('2026-01-01T10:00:00.000Z'),
+        performedById: 77,
         performedBy: 'mesa-1',
+        observation: 'Conferido',
       }),
     ]);
 
@@ -179,6 +181,10 @@ describe('Athlete use cases', () => {
         id: 1,
         academyName: 'Equipe A',
         weighInStatus: WeighInStatus.APPROVED,
+        weighInEvaluatedById: 77,
+        weighInEvaluatedByName: 'mesa-1',
+        weighInEvaluatedAt: new Date('2026-01-01T10:00:00.000Z'),
+        weighInObservation: 'Conferido',
       }),
     ]);
   });
@@ -202,6 +208,10 @@ describe('Athlete use cases', () => {
         id: 9,
         academyName: null,
         weighInStatus: WeighInStatus.PENDING,
+        weighInEvaluatedById: null,
+        weighInEvaluatedByName: null,
+        weighInEvaluatedAt: null,
+        weighInObservation: null,
       }),
     ]);
   });

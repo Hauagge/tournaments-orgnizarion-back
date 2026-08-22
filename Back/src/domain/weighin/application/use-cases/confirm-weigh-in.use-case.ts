@@ -11,8 +11,10 @@ export type ConfirmWeighInInput = {
   competitionId: number;
   athleteId: number;
   measuredWeightGrams: number;
-  weighInStatus: WeighInStatus.APPROVED | WeighInStatus.REJECTED;
+  weighInStatus?: WeighInStatus.APPROVED | WeighInStatus.REJECTED;
+  performedById?: number | null;
   performedBy?: string;
+  observation?: string | null;
 };
 
 @Injectable()
@@ -63,10 +65,29 @@ export class ConfirmWeighInUseCase {
       })
     ).confirm({
       measuredWeightGrams: input.measuredWeightGrams,
-      status: input.weighInStatus,
+      status:
+        input.weighInStatus ??
+        this.evaluateStatus({
+          measuredWeightGrams: input.measuredWeightGrams,
+          declaredWeightGrams: athlete.declaredWeight,
+          marginGrams: competition.weighInMarginGrams,
+        }),
+      performedById: input.performedById,
       performedBy: input.performedBy?.trim() || 'system',
+      observation: input.observation,
     });
 
     return this.weighInRepository.save(weighIn);
+  }
+
+  private evaluateStatus(input: {
+    measuredWeightGrams: number;
+    declaredWeightGrams: number;
+    marginGrams: number;
+  }): WeighInStatus.APPROVED | WeighInStatus.REJECTED {
+    return input.measuredWeightGrams <=
+      input.declaredWeightGrams + input.marginGrams
+      ? WeighInStatus.APPROVED
+      : WeighInStatus.REJECTED;
   }
 }

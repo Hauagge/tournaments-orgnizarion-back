@@ -61,7 +61,13 @@ export class GetWeighInStatusUseCase {
       measuredWeightGrams: weighIn?.measuredWeightGrams ?? null,
       status: weighIn?.status ?? WeighInStatus.PENDING,
       performedAt: weighIn?.performedAt ?? null,
+      performedById: weighIn?.performedById ?? null,
       performedBy: weighIn?.performedBy ?? null,
+      observation: weighIn?.observation ?? null,
+      weighInEvaluatedById: weighIn?.performedById ?? null,
+      weighInEvaluatedByName: weighIn?.performedBy ?? null,
+      weighInEvaluatedAt: weighIn?.performedAt ?? null,
+      weighInObservation: weighIn?.observation ?? null,
     };
   }
 }

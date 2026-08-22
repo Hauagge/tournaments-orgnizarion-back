@@ -7,6 +7,8 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { CurrentUser } from '@/core/auth/infra/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@/core/auth/infra/types/authenticated-user.type';
 import {
   CompetitionIdParamDto,
   CompetitionIdParamSchema,
@@ -44,6 +46,7 @@ export class WeighInController {
     params: CompetitionIdParamDto,
     @Body(new ZodValidationPipe(ConfirmWeighInSchema))
     body: ConfirmWeighInDto,
+    @CurrentUser() currentUser?: AuthenticatedUser,
     @Headers('x-performed-by') performedBy?: string,
   ): Promise<ApiResponse<ReturnType<WeighIn['toJSON']>>> {
     const weighIn = await this.confirmWeighInUseCase.execute({
@@ -51,7 +54,9 @@ export class WeighInController {
       athleteId: body.athleteId,
       measuredWeightGrams: body.realWeightGrams,
       weighInStatus: body.weighInStatus,
-      performedBy,
+      performedById: currentUser?.sub ?? null,
+      performedBy: currentUser?.username ?? performedBy,
+      observation: body.observation,
     });
 
     return {

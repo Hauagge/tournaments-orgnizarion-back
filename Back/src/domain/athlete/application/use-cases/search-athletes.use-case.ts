@@ -49,16 +49,27 @@ export class SearchAthletesUseCase {
     const weighInStatusByAthleteId = new Map(
       weighIns.map((weighIn) => [weighIn.athleteId, weighIn.status]),
     );
+    const weighInByAthleteId = new Map(
+      weighIns.map((weighIn) => [weighIn.athleteId, weighIn]),
+    );
 
-    return athletes.map((athlete) => ({
-      ...athlete.toJSON(),
-      academyName:
-        athlete.academyId !== null
-          ? academyNameById.get(athlete.academyId) ?? null
-          : null,
-      weighInStatus:
-        weighInStatusByAthleteId.get(athlete.id as number) ??
-        WeighInStatus.PENDING,
-    }));
+    return athletes.map((athlete) => {
+      const weighIn = weighInByAthleteId.get(athlete.id as number);
+
+      return {
+        ...athlete.toJSON(),
+        academyName:
+          athlete.academyId !== null
+            ? academyNameById.get(athlete.academyId) ?? null
+            : null,
+        weighInStatus:
+          weighInStatusByAthleteId.get(athlete.id as number) ??
+          WeighInStatus.PENDING,
+        weighInEvaluatedById: weighIn?.performedById ?? null,
+        weighInEvaluatedByName: weighIn?.performedBy ?? null,
+        weighInEvaluatedAt: weighIn?.performedAt ?? null,
+        weighInObservation: weighIn?.observation ?? null,
+      };
+    });
   }
 }

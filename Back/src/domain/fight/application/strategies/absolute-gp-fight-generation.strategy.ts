@@ -68,7 +68,7 @@ export class AbsoluteGpFightGenerationStrategy
       metadata: [
         {
           categoryId: input.categoryId,
-          format: 'OLYMPIC_BRACKET',
+          format: 'OLYMPIC',
           notes: ['Single elimination bracket generated with future fights pre-created'],
         },
       ],

@@ -64,7 +64,7 @@ export class FourAthleteOlympicBracketFightGenerationStrategy
       metadata: [
         {
           categoryId: input.categoryId,
-          format: 'OLYMPIC_BRACKET',
+          format: 'OLYMPIC',
           notes: [
             `Key group ${input.keyGroupId} generated as a 4-athlete olympic bracket`,
             'Fight 1: seed 1 vs seed 4',

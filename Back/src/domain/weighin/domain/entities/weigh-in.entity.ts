@@ -7,14 +7,18 @@ export type WeighInProps = {
   measuredWeightGrams: number | null;
   status: WeighInStatus;
   performedAt: Date | null;
+  performedById: number | null;
   performedBy: string | null;
+  observation: string | null;
 };
 
 type ConfirmWeighInInput = {
   measuredWeightGrams: number;
   status: WeighInStatus.APPROVED | WeighInStatus.REJECTED;
   performedAt?: Date;
+  performedById?: number | null;
   performedBy: string;
+  observation?: string | null;
 };
 
 export class WeighIn {
@@ -30,7 +34,9 @@ export class WeighIn {
       measuredWeightGrams: null,
       status: WeighInStatus.PENDING,
       performedAt: null,
+      performedById: null,
       performedBy: null,
+      observation: null,
     });
   }
 
@@ -44,7 +50,9 @@ export class WeighIn {
       measuredWeightGrams: input.measuredWeightGrams,
       status: input.status,
       performedAt: input.performedAt ?? new Date(),
+      performedById: input.performedById ?? null,
       performedBy: input.performedBy.trim(),
+      observation: input.observation?.trim() || null,
     });
   }
 
@@ -54,7 +62,9 @@ export class WeighIn {
       measuredWeightGrams: null,
       status: WeighInStatus.PENDING,
       performedAt: null,
+      performedById: null,
       performedBy: null,
+      observation: null,
     });
   }
 
@@ -66,7 +76,9 @@ export class WeighIn {
       measuredWeightGrams: this.measuredWeightGrams,
       status: this.status,
       performedAt: this.performedAt,
+      performedById: this.performedById,
       performedBy: this.performedBy,
+      observation: this.observation,
     };
   }
 
@@ -94,7 +106,15 @@ export class WeighIn {
     return this.props.performedAt;
   }
 
+  get performedById(): number | null {
+    return this.props.performedById;
+  }
+
   get performedBy(): string | null {
     return this.props.performedBy;
+  }
+
+  get observation(): string | null {
+    return this.props.observation;
   }
 }

@@ -5,12 +5,15 @@ import { CompetitionController } from './competition.controller';
 import { AddUserToCompetitionUseCase } from '../../application/use-cases/add-user-to-competition.use-case';
 import { CreateCompetitionUseCase } from '../../application/use-cases/create-competition.use-case';
 import { GetCompetitionUseCase } from '../../application/use-cases/get-competition.use-case';
+import { GetDashboardSummaryUseCase } from '../../application/use-cases/get-dashboard-summary.use-case';
 import { ImportAthletesUseCase } from '../../application/use-cases/import-athletes.use-case';
+import { ListCompetitionUsersUseCase } from '../../application/use-cases/list-competition-users.use-case';
 import { ListCompetitionsUseCase } from '../../application/use-cases/list-competitions.use-case';
 import { PreviewAthleteImportUseCase } from '../../application/use-cases/preview-athlete-import.use-case';
 import { RemoveUserFromCompetitionUseCase } from '../../application/use-cases/remove-user-from-competition.use-case';
 import { UpdateCompetitionSettingsUseCase } from '../../application/use-cases/update-competition-settings.use-case';
 import { CompetitionMode } from '../../domain/value-objects/competition-mode.enum';
+import { CompetitionDashboardStatus } from '../../application/use-cases/dashboard-summary.view';
 
 describe('CompetitionController', () => {
   const createCompetitionUseCase = {
@@ -25,6 +28,9 @@ describe('CompetitionController', () => {
   const listCompetitionsUseCase = {
     execute: vi.fn(),
   } as unknown as ListCompetitionsUseCase;
+  const listCompetitionUsersUseCase = {
+    execute: vi.fn(),
+  } as unknown as ListCompetitionUsersUseCase;
   const previewAthleteImportUseCase = {
     execute: vi.fn(),
   } as unknown as PreviewAthleteImportUseCase;
@@ -37,16 +43,21 @@ describe('CompetitionController', () => {
   const removeUserFromCompetitionUseCase = {
     execute: vi.fn(),
   } as unknown as RemoveUserFromCompetitionUseCase;
+  const getDashboardSummaryUseCase = {
+    execute: vi.fn(),
+  } as unknown as GetDashboardSummaryUseCase;
 
   const controller = new CompetitionController(
     createCompetitionUseCase,
     updateCompetitionSettingsUseCase,
     getCompetitionUseCase,
+    listCompetitionUsersUseCase,
     listCompetitionsUseCase,
     previewAthleteImportUseCase,
     importAthletesUseCase,
     addUserToCompetitionUseCase,
     removeUserFromCompetitionUseCase,
+    getDashboardSummaryUseCase,
   );
 
   beforeEach(() => {
@@ -186,6 +197,47 @@ describe('CompetitionController', () => {
         total: 3,
         totalPages: 2,
       },
+      error: null,
+    });
+  });
+
+  it('should return dashboard summary', async () => {
+    vi.mocked(getDashboardSummaryUseCase.execute).mockResolvedValue([
+      {
+        competitionId: 1,
+        name: 'Summer Cup',
+        athleteCount: 24,
+        areaCount: 3,
+        fightsTodayCount: 12,
+        status: CompetitionDashboardStatus.IN_PROGRESS,
+        ruleTypeLabel: 'Chaves',
+      },
+    ]);
+
+    const result = await controller.dashboardSummary({
+      sub: 99,
+      username: 'creator',
+      role: AuthRole.STAFF,
+      academyId: null,
+      competitionIds: [1],
+      exp: 9999999999,
+    });
+
+    expect(getDashboardSummaryUseCase.execute).toHaveBeenCalledWith({
+      currentUserId: 99,
+    });
+    expect(result).toEqual({
+      data: [
+        {
+          competitionId: 1,
+          name: 'Summer Cup',
+          athleteCount: 24,
+          areaCount: 3,
+          fightsTodayCount: 12,
+          status: CompetitionDashboardStatus.IN_PROGRESS,
+          ruleTypeLabel: 'Chaves',
+        },
+      ],
       error: null,
     });
   });

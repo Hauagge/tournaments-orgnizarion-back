@@ -8,6 +8,7 @@ import { CreateAreasUseCase } from './application/use-cases/create-areas.use-cas
 import { DistributeAreaFightsUseCase } from './application/use-cases/distribute-area-fights.use-case';
 import { GetAreaQueueUseCase } from './application/use-cases/get-area-queue.use-case';
 import { ListAreasByCompetitionUseCase } from './application/use-cases/list-areas-by-competition.use-case';
+import { MoveKeyGroupAreaDistributionUseCase } from './application/use-cases/move-key-group-area-distribution.use-case';
 import { AreaDistributionStrategyResolverService } from './application/services/area-distribution-strategy-resolver.service';
 import { FightQueuePlannerService } from './application/services/fight-queue-planner.service';
 import { FightQueueWriterService } from './application/services/fight-queue-writer.service';
@@ -32,6 +33,7 @@ import { AreaProviderModule } from './area-provider.module';
     DistributeAreaFightsUseCase,
     GetAreaQueueUseCase,
     CallNextAreaFightUseCase,
+    MoveKeyGroupAreaDistributionUseCase,
     RestPolicyService,
     FightQueuePlannerService,
     FightQueueWriterService,
@@ -45,6 +47,7 @@ import { AreaProviderModule } from './area-provider.module';
     DistributeAreaFightsUseCase,
     GetAreaQueueUseCase,
     CallNextAreaFightUseCase,
+    MoveKeyGroupAreaDistributionUseCase,
     FightQueuePlannerService,
     FightQueueWriterService,
     AreaProviderModule,

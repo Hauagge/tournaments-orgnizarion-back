@@ -1,4 +1,5 @@
 import { Competition } from '../domain/entities/competition.entity';
+import { CompetitionDashboardSummaryItem } from '../application/use-cases/dashboard-summary.view';
 
 export abstract class ICompetitionRepository {
   abstract create(competition: Competition): Promise<Competition>;
@@ -9,4 +10,7 @@ export abstract class ICompetitionRepository {
     page: number;
     pageSize: number;
   }): Promise<[Competition[], number]>;
+  abstract listDashboardSummary(input: {
+    currentUserId: number;
+  }): Promise<CompetitionDashboardSummaryItem[]>;
 }

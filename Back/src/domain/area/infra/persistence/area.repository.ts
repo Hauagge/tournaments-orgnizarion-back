@@ -88,6 +88,38 @@ export class AreaRepository implements IAreaRepository, IAreaQueueItemRepository
     return entities.map(AreaMapper.queueItemToDomain);
   }
 
+  async listByAreaIds(areaIds: number[]): Promise<AreaQueueItem[]> {
+    if (areaIds.length === 0) {
+      return [];
+    }
+
+    const entities = await this.areaQueueItemRepository.find({
+      where: { areaId: In(areaIds) },
+      order: { areaId: 'ASC', position: 'ASC', id: 'ASC' },
+    });
+
+    return entities.map(AreaMapper.queueItemToDomain);
+  }
+
+  async replaceForAreas(input: {
+    areaIds: number[];
+    items: AreaQueueItem[];
+  }): Promise<AreaQueueItem[]> {
+    if (input.areaIds.length === 0) {
+      return [];
+    }
+
+    await this.areaQueueItemRepository.delete({ areaId: In(input.areaIds) });
+
+    const saved = await this.areaQueueItemRepository.save(
+      input.items.map((item) =>
+        this.areaQueueItemRepository.create(AreaMapper.queueItemToPersistence(item)),
+      ),
+    );
+
+    return saved.map(AreaMapper.queueItemToDomain);
+  }
+
   async listFightDetailsByAreaId(areaId: number): Promise<AreaQueueFightDetails[]> {
     const rows = await this.areaQueueItemRepository
       .createQueryBuilder('queue_item')

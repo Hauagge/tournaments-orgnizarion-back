@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { ZodValidationPipe } from '@/core/pipe/zod-validation.pipe';
 import { ApiResponse } from '@/shared/result/api-response.type';
 import { CallNextAreaFightUseCase } from '../../application/use-cases/call-next-area-fight.use-case';
@@ -6,6 +6,7 @@ import { CreateAreasUseCase } from '../../application/use-cases/create-areas.use
 import { DistributeAreaFightsUseCase } from '../../application/use-cases/distribute-area-fights.use-case';
 import { GetAreaQueueUseCase } from '../../application/use-cases/get-area-queue.use-case';
 import { ListAreasByCompetitionUseCase } from '../../application/use-cases/list-areas-by-competition.use-case';
+import { MoveKeyGroupAreaDistributionUseCase } from '../../application/use-cases/move-key-group-area-distribution.use-case';
 import { Area } from '../../domain/entities/area.entity';
 import { AreaIdParamDto, AreaIdParamSchema } from './dtos/area-id-param.dto';
 import {
@@ -17,6 +18,10 @@ import {
   DistributeAreaFightsDto,
   DistributeAreaFightsSchema,
 } from './dtos/distribute-area-fights.dto';
+import {
+  MoveKeyGroupAreaDistributionDto,
+  MoveKeyGroupAreaDistributionSchema,
+} from './dtos/move-key-group-area-distribution.dto';
 
 @Controller()
 export class AreaController {
@@ -26,6 +31,7 @@ export class AreaController {
     private readonly distributeAreaFightsUseCase: DistributeAreaFightsUseCase,
     private readonly getAreaQueueUseCase: GetAreaQueueUseCase,
     private readonly callNextAreaFightUseCase: CallNextAreaFightUseCase,
+    private readonly moveKeyGroupAreaDistributionUseCase: MoveKeyGroupAreaDistributionUseCase,
   ) {}
 
   @Post('competitions/:id/areas')
@@ -90,6 +96,27 @@ export class AreaController {
 
     return {
       data: queue,
+      error: null,
+    };
+  }
+
+  @Patch('competitions/:id/areas/distribution')
+  async moveDistribution(
+    @Param(new ZodValidationPipe(CompetitionAreaParamSchema))
+    params: CompetitionAreaParamDto,
+    @Body(new ZodValidationPipe(MoveKeyGroupAreaDistributionSchema))
+    body: MoveKeyGroupAreaDistributionDto,
+  ) {
+    const result = await this.moveKeyGroupAreaDistributionUseCase.execute({
+      competitionId: params.id,
+      keyGroupId: body.keyGroupId,
+      fromAreaId: body.fromAreaId,
+      toAreaId: body.toAreaId,
+      orderIndex: body.orderIndex,
+    });
+
+    return {
+      data: result,
       error: null,
     };
   }
