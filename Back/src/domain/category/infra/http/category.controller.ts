@@ -1,4 +1,8 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
+import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
+import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
+import { AuthRole } from '@/domain/auth/auth-role.enum';
 import {
   CompetitionIdParamDto,
   CompetitionIdParamSchema,
@@ -33,6 +37,8 @@ import {
 } from './dtos/create-category.dto';
 
 @Controller()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class CategoryController {
   constructor(
     private readonly addAthleteToCategoryUseCase: AddAthleteToCategoryUseCase,

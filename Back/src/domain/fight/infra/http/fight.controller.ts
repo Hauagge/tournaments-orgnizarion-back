@@ -61,6 +61,8 @@ export class FightController {
   ) {}
 
   @Post('competitions/:id/fights/generate')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
   async generate(
     @Param(new ZodValidationPipe(CompetitionFightParamSchema))
     params: CompetitionFightParamDto,
@@ -74,6 +76,8 @@ export class FightController {
   }
 
   @Post('fights/:id/start')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
   async start(
     @Param(new ZodValidationPipe(FightIdParamSchema))
     params: FightIdParamDto,
@@ -87,6 +91,8 @@ export class FightController {
   }
 
   @Post('fights/:id/finish')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
   async finish(
     @Param(new ZodValidationPipe(FightIdParamSchema))
     params: FightIdParamDto,

@@ -1,4 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, StreamableFile } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, StreamableFile, UseGuards } from '@nestjs/common';
+import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
+import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
+import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
+import { AuthRole } from '@/domain/auth/auth-role.enum';
 import { ZodValidationPipe } from '@/core/pipe/zod-validation.pipe';
 import { CompetitionIdParamDto, CompetitionIdParamSchema } from '@/domain/competition/infra/http/dtos/competition-id-param.dto';
 import { ApiResponse } from '@/shared/result/api-response.type';
@@ -36,6 +40,8 @@ type CreateKeyGroupResponse = {
 };
 
 @Controller()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class KeyGroupController {
   constructor(
     private readonly createKeyGroupUseCase: CreateKeyGroupUseCase,
