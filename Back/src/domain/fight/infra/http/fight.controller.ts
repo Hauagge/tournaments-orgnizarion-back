@@ -47,6 +47,8 @@ import {
 } from './dtos/update-fight-order.dto';
 
 @Controller()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class FightController {
   constructor(
     private readonly generateFightsUseCase: GenerateFightsUseCase,
@@ -61,8 +63,6 @@ export class FightController {
   ) {}
 
   @Post('competitions/:id/fights/generate')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
   async generate(
     @Param(new ZodValidationPipe(CompetitionFightParamSchema))
     params: CompetitionFightParamDto,
@@ -76,8 +76,6 @@ export class FightController {
   }
 
   @Post('fights/:id/start')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
   async start(
     @Param(new ZodValidationPipe(FightIdParamSchema))
     params: FightIdParamDto,
@@ -91,8 +89,6 @@ export class FightController {
   }
 
   @Post('fights/:id/finish')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
   async finish(
     @Param(new ZodValidationPipe(FightIdParamSchema))
     params: FightIdParamDto,
@@ -111,8 +107,6 @@ export class FightController {
   }
 
   @Get('competitions/:id/fights')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
   async list(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionFightParamSchema))
@@ -137,8 +131,6 @@ export class FightController {
   }
 
   @Get('competitions/:competitionId/categories/:categoryId/fights')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
   async listByCategory(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionCategoryFightParamSchema))
@@ -157,8 +149,6 @@ export class FightController {
   }
 
   @Post('competitions/:id/fights/manual')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
   async createManual(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionFightParamSchema))
@@ -178,24 +168,7 @@ export class FightController {
     };
   }
 
-  @Patch('competitions/:competitionId/fights/:fightId/start')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
-  async startCompetitionFight(
-    @Param(new ZodValidationPipe(CompetitionFightIdParamSchema))
-    params: CompetitionFightIdParamDto,
-  ) {
-    const fight = await this.startFightUseCase.execute(params.fightId);
-
-    return {
-      data: fight.toJSON(),
-      error: null,
-    };
-  }
-
   @Patch('competitions/:competitionId/fights/:fightId/winner')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
   async markWinner(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionFightIdParamSchema))
@@ -217,8 +190,6 @@ export class FightController {
   }
 
   @Patch('competitions/:competitionId/fights/:fightId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
   async updateFight(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionFightIdParamSchema))
@@ -240,8 +211,6 @@ export class FightController {
   }
 
   @Delete('competitions/:competitionId/fights/:fightId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
   async deleteFight(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionFightIdParamSchema))
@@ -260,8 +229,6 @@ export class FightController {
   }
 
   @Patch('competitions/:id/fights/order')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
   async updateOrder(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionFightParamSchema))

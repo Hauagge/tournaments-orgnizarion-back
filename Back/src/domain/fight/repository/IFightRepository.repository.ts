@@ -29,4 +29,7 @@ export abstract class IFightRepository {
   ): Promise<void>;
   abstract countByCompetitionId(competitionId: number): Promise<number>;
   abstract delete(id: number): Promise<void>;
+  abstract withTransaction<T>(
+    work: (repository: IFightRepository) => Promise<T>,
+  ): Promise<T>;
 }

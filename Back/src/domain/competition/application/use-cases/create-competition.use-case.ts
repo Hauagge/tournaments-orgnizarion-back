@@ -1,9 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { CompetitionAccessRole } from '@/domain/auth/competition-access-role.enum';
-import { IUserCompetitionRepository } from '@/domain/auth/repository/IUserCompetitionRepository.repository';
+import { UserCompetitionTypeOrmEntity } from '@/domain/auth/entities/user-competition.typeorm-entity';
 import { Competition } from '../../domain/entities/competition.entity';
 import { CompetitionMode } from '../../domain/value-objects/competition-mode.enum';
-import { ICompetitionRepository } from '../../repository/ICompetitionRepository.repository';
+import { CompetitionTypeOrmEntity } from '../../infra/persistence/entities/competition.typeorm-entity';
+import { CompetitionMapper } from '../../infra/persistence/mappers/competition.mapper';
 import { Logger } from '@/configuration/logger.configuration';
 
 export type CreateCompetitionInput = {
@@ -18,12 +20,7 @@ export type CreateCompetitionInput = {
 @Injectable()
 export class CreateCompetitionUseCase {
   private readonly logger = new Logger(CreateCompetitionUseCase.name);
-  constructor(
-    @Inject(ICompetitionRepository)
-    private readonly competitionRepository: ICompetitionRepository,
-    @Inject(IUserCompetitionRepository)
-    private readonly userCompetitionRepository: IUserCompetitionRepository,
-  ) {}
+  constructor(private readonly dataSource: DataSource) {}
 
   async execute(input: CreateCompetitionInput): Promise<Competition> {
     const competition = Competition.create({
@@ -33,14 +30,31 @@ export class CreateCompetitionUseCase {
       weighInMarginGrams: input.weighInMarginGrams,
       ageSplitYears: input.ageSplitYears,
     });
-    const createdCompetition = await this.competitionRepository.create(competition);
 
-    await this.userCompetitionRepository.grantAccess({
-      userId: input.currentUserId,
-      competitionId: createdCompetition.id as number,
-      role: CompetitionAccessRole.OWNER,
+    const savedEntity = await this.dataSource.transaction(async (manager) => {
+      const competitionRepository = manager.getRepository(CompetitionTypeOrmEntity);
+      const userCompetitionRepository = manager.getRepository(UserCompetitionTypeOrmEntity);
+
+      const entity = competitionRepository.create(
+        CompetitionMapper.toPersistence(competition),
+      );
+      const created = await competitionRepository.save(entity);
+
+      await userCompetitionRepository
+        .createQueryBuilder()
+        .insert()
+        .into(UserCompetitionTypeOrmEntity)
+        .values({
+          userId: input.currentUserId,
+          competitionId: created.id,
+          role: CompetitionAccessRole.OWNER,
+        })
+        .orUpdate(['role'], ['user_id', 'competition_id'])
+        .execute();
+
+      return created;
     });
 
-    return createdCompetition;
+    return CompetitionMapper.toDomain(savedEntity);
   }
 }

@@ -179,6 +179,12 @@ class InMemoryFightRepository implements IFightRepository {
   async delete(id: number): Promise<void> {
     this.fights = this.fights.filter((fight) => fight.id !== id);
   }
+
+  async withTransaction<T>(
+    work: (repository: IFightRepository) => Promise<T>,
+  ): Promise<T> {
+    return work(this);
+  }
 }
 
 class DistributeAreaFightsUseCaseStub {

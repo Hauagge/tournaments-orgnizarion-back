@@ -73,9 +73,13 @@ export class GenerateFightsForKeyGroupUseCase {
       athleteIds: members.map((member) => member.athleteId),
     });
 
-    const fights = await this.fightRepository.createMany(generated.fights);
-    const linkedFights = await this.fightRepository.updateMany(
-      this.linkBracketFights(fights),
+    const linkedFights = await this.fightRepository.withTransaction(
+      async (txFightRepository) => {
+        const createdFights = await txFightRepository.createMany(generated.fights);
+        const linked = this.linkBracketFights(createdFights);
+
+        return txFightRepository.updateMany(linked);
+      },
     );
 
     if (linkedFights.length > 0) {

@@ -74,12 +74,15 @@ export class GenerateFightsUseCase {
       metadata.push(...generated.metadata);
     }
 
-    const createdFights = await this.fightRepository.createMany(fightsToCreate);
-    const linkedFights = await this.fightRepository.updateMany(
-      this.linkBracketFights(createdFights),
-    );
-    const walkoverResolved = await this.fightRepository.updateMany(
-      this.resolveInitialWalkovers(linkedFights),
+    const walkoverResolved = await this.fightRepository.withTransaction(
+      async (txFightRepository) => {
+        const createdFights = await txFightRepository.createMany(fightsToCreate);
+        const resolved = this.resolveInitialWalkovers(
+          this.linkBracketFights(createdFights),
+        );
+
+        return txFightRepository.updateMany(resolved);
+      },
     );
 
     return {

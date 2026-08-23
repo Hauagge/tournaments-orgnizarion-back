@@ -244,4 +244,12 @@ export class FightRepository implements IFightRepository {
   async delete(id: number): Promise<void> {
     await this.repository.delete({ id });
   }
+
+  async withTransaction<T>(
+    work: (repository: IFightRepository) => Promise<T>,
+  ): Promise<T> {
+    return this.repository.manager.transaction((manager) =>
+      work(new FightRepository(manager.getRepository(FightTypeOrmEntity))),
+    );
+  }
 }

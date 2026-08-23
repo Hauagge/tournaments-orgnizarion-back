@@ -1,4 +1,5 @@
 import { ForbiddenException } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   makeCompetition,
@@ -7,13 +8,60 @@ import {
 } from '../../../../../test/factories';
 import { InMemoryAuthRepository } from '../../../../../test/repositories/in-memory';
 import { InMemoryCompetitionRepository } from '../../../../../test/repositories/in-memory/in-memory-competition.repository';
+import { UserCompetitionTypeOrmEntity } from '../../../auth/entities/user-competition.typeorm-entity';
 import { AuthRole } from '../../../auth/auth-role.enum';
 import { CompetitionAccessRole } from '../../../auth/competition-access-role.enum';
 import { NotFoundError } from '../../../../shared/errors/not-found.error';
+import { CompetitionTypeOrmEntity } from '../../infra/persistence/entities/competition.typeorm-entity';
 import { CompetitionAccessService } from '../services/competition-access.service';
 import { AddUserToCompetitionUseCase } from './add-user-to-competition.use-case';
 import { CreateCompetitionUseCase } from './create-competition.use-case';
 import { RemoveUserFromCompetitionUseCase } from './remove-user-from-competition.use-case';
+
+class FakeTransactionalDataSource {
+  public readonly competitions: CompetitionTypeOrmEntity[] = [];
+  public readonly userCompetitions: UserCompetitionTypeOrmEntity[] = [];
+  private nextCompetitionId = 1;
+
+  async transaction<T>(work: (manager: unknown) => Promise<T>): Promise<T> {
+    return work({
+      getRepository: (entity: unknown) => {
+        if (entity === CompetitionTypeOrmEntity) {
+          return {
+            create: (data: Partial<CompetitionTypeOrmEntity>) => ({ ...data }),
+            save: async (data: CompetitionTypeOrmEntity) => {
+              data.id = data.id ?? this.nextCompetitionId++;
+              this.competitions.push(data);
+              return data;
+            },
+          };
+        }
+
+        if (entity === UserCompetitionTypeOrmEntity) {
+          return {
+            createQueryBuilder: () => ({
+              insert: () => ({
+                into: () => ({
+                  values: (value: Partial<UserCompetitionTypeOrmEntity>) => ({
+                    orUpdate: () => ({
+                      execute: async () => {
+                        this.userCompetitions.push(
+                          value as UserCompetitionTypeOrmEntity,
+                        );
+                      },
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+
+        throw new Error('Unexpected entity requested from FakeTransactionalDataSource');
+      },
+    });
+  }
+}
 
 describe('ManageCompetitionUsersUseCases', () => {
   let authRepository: InMemoryAuthRepository;
@@ -30,9 +78,9 @@ describe('ManageCompetitionUsersUseCases', () => {
   });
 
   it('should link creator as OWNER when creating competition', async () => {
+    const dataSource = new FakeTransactionalDataSource();
     const useCase = new CreateCompetitionUseCase(
-      competitionRepository,
-      authRepository,
+      dataSource as unknown as DataSource,
     );
 
     const competition = await useCase.execute({
@@ -44,16 +92,13 @@ describe('ManageCompetitionUsersUseCases', () => {
       ageSplitYears: 2,
     });
 
-    expect(
-      await authRepository.findByUserIdAndCompetitionId({
+    expect(dataSource.userCompetitions).toEqual([
+      expect.objectContaining({
         userId: 10,
-        competitionId: competition.id as number,
+        competitionId: competition.id,
+        role: CompetitionAccessRole.OWNER,
       }),
-    ).toEqual({
-      userId: 10,
-      competitionId: competition.id,
-      role: CompetitionAccessRole.OWNER,
-    });
+    ]);
   });
 
   it('should allow owner to add another user as MEMBER', async () => {
