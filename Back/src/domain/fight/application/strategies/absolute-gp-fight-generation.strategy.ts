@@ -33,11 +33,21 @@ export class AbsoluteGpFightGenerationStrategy
 
     const bracketSize = 2 ** Math.ceil(Math.log2(Math.max(2, athleteIds.length)));
     const rounds = Math.log2(bracketSize);
-    const seededAthletes = [...athleteIds];
+    const byesCount = bracketSize - athleteIds.length;
+    const remainingAthletes = [...athleteIds];
+    const seededPairs: (number | null)[][] = [];
 
-    while (seededAthletes.length < bracketSize) {
-      seededAthletes.push(null as never);
+    for (let i = 0; i < byesCount; i += 1) {
+      seededPairs.push([remainingAthletes.shift() ?? null, null]);
     }
+    while (remainingAthletes.length > 0) {
+      seededPairs.push([
+        remainingAthletes.shift() ?? null,
+        remainingAthletes.shift() ?? null,
+      ]);
+    }
+
+    const seededAthletes = seededPairs.flat();
 
     const fights: FightEntity[] = [];
     let order = 1;
