@@ -13,10 +13,15 @@ export class InMemoryKeyGroupRepository implements IKeyGroupRepository {
   private nextGroupId = 1;
   private nextMemberId = 1;
   private detailsById = new Map<number, KeyGroupDetailsView>();
+  private reportViews: KeyGroupReportView[] = [];
 
   constructor(seedGroups: KeyGroup[] = [], seedMembers: KeyGroupMember[] = []) {
     this.setGroups(seedGroups);
     this.setMembers(seedMembers);
+  }
+
+  setReportViews(views: KeyGroupReportView[]) {
+    this.reportViews = [...views];
   }
 
   setGroups(groups: KeyGroup[]) {
@@ -108,8 +113,14 @@ export class InMemoryKeyGroupRepository implements IKeyGroupRepository {
     };
   }
 
-  async listReportByCompetitionId(): Promise<KeyGroupReportView[]> {
-    return [];
+  async listReportByCompetitionId(input: {
+    competitionId: number;
+    categoryId?: number;
+    areaId?: number;
+  }): Promise<KeyGroupReportView[]> {
+    return this.reportViews.filter(
+      (view) => view.competitionId === input.competitionId,
+    );
   }
 
   async listMembersByKeyGroupId(keyGroupId: number): Promise<KeyGroupMember[]> {

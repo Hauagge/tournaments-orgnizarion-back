@@ -5,12 +5,13 @@ import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-que
 import { AreaQueueFightDetails } from '@/domain/area/repository/area-queue-fight-details.type';
 import { IAreaQueueItemRepository } from '@/domain/area/repository/IAreaQueueItemRepository.repository';
 import { IAreaRepository } from '@/domain/area/repository/IAreaRepository.repository';
-import { Competition } from '@/domain/competition/domain/entities/competition.entity';
-import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { FightStatus } from '@/domain/fight/domain/value-objects/fight-status.enum';
-import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
 import { makeCompetition } from '../../../../../test/factories';
+import {
+  InMemoryCompetitionRepository,
+  InMemoryFightRepository,
+} from '../../../../../test/repositories/in-memory';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { GetAreaQueueUseCase } from './get-area-queue.use-case';
 import { MoveKeyGroupAreaDistributionUseCase } from './move-key-group-area-distribution.use-case';
@@ -118,116 +119,6 @@ class InMemoryAreaRepository
       current.id === item.id ? item : current,
     );
     return item;
-  }
-}
-
-class InMemoryFightRepository implements IFightRepository {
-  constructor(private fights: FightEntity[] = []) {}
-
-  async create(fight: FightEntity): Promise<FightEntity> {
-    this.fights = [...this.fights, fight];
-    return fight;
-  }
-
-  async createMany(fights: FightEntity[]): Promise<FightEntity[]> {
-    this.fights = [...this.fights, ...fights];
-    return fights;
-  }
-
-  async update(fight: FightEntity): Promise<FightEntity> {
-    this.fights = this.fights.map((current) =>
-      current.id === fight.id ? fight : current,
-    );
-    return fight;
-  }
-
-  async updateMany(fights: FightEntity[]): Promise<FightEntity[]> {
-    for (const fight of fights) {
-      await this.update(fight);
-    }
-    return fights;
-  }
-
-  async findById(id: number): Promise<FightEntity | null> {
-    return this.fights.find((fight) => fight.id === id) ?? null;
-  }
-
-  async listByCompetitionId(input: {
-    competitionId: number;
-    status?: FightStatus;
-  }): Promise<FightEntity[]> {
-    return this.fights.filter(
-      (fight) =>
-        fight.competitionId === input.competitionId &&
-        (input.status ? fight.status === input.status : true),
-    );
-  }
-
-  async listByCategoryId(input: {
-    competitionId: number;
-    categoryId: number;
-  }): Promise<FightEntity[]> {
-    return this.fights.filter(
-      (fight) =>
-        fight.competitionId === input.competitionId &&
-        fight.categoryId === input.categoryId,
-    );
-  }
-
-  async listByKeyGroupId(keyGroupId: number): Promise<FightEntity[]> {
-    return this.fights.filter((fight) => fight.keyGroupId === keyGroupId);
-  }
-
-  async listQueueByAreaId(areaId: number): Promise<FightEntity[]> {
-    return this.fights.filter((fight) => fight.areaId === areaId);
-  }
-
-  async assignAreas(
-    assignments: Array<{ fightId: number; areaId: number | null }>,
-  ): Promise<void> {
-    const areaByFightId = new Map(
-      assignments.map((assignment) => [assignment.fightId, assignment.areaId]),
-    );
-    this.fights = this.fights.map((fight) =>
-      areaByFightId.has(fight.id as number)
-        ? fight.assignArea(areaByFightId.get(fight.id as number) ?? null)
-        : fight,
-    );
-  }
-
-  async updateOrder(): Promise<void> {
-    return;
-  }
-
-  async countByCompetitionId(competitionId: number): Promise<number> {
-    return this.fights.filter((fight) => fight.competitionId === competitionId)
-      .length;
-  }
-
-  async delete(id: number): Promise<void> {
-    this.fights = this.fights.filter((fight) => fight.id !== id);
-  }
-}
-
-class InMemoryCompetitionRepository implements ICompetitionRepository {
-  constructor(private readonly competitions: Competition[]) {}
-
-  async create(competition: Competition): Promise<Competition> {
-    return competition;
-  }
-
-  async update(competition: Competition): Promise<Competition> {
-    return competition;
-  }
-
-  async findById(id: number): Promise<Competition | null> {
-    return (
-      this.competitions.find((competition) => competition.id === id) ?? null
-    );
-  }
-
-  async list(): Promise<[Competition[], number]> {
-    return [this.competitions, this.competitions.length];
   }
 }
 

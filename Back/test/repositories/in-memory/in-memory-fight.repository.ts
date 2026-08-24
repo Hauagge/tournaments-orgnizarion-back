@@ -54,16 +54,32 @@ export class InMemoryFightRepository implements IFightRepository {
     round?: number;
     areaId?: number;
   }): Promise<FightEntity[]> {
-    return this.fights.filter(
-      (fight) =>
-        fight.competitionId === input.competitionId &&
-        (input.status ? fight.status === input.status : true) &&
-        (input.categoryId !== undefined
-          ? fight.categoryId === input.categoryId
-          : true) &&
-        (input.round !== undefined ? fight.round === input.round : true) &&
-        (input.areaId !== undefined ? fight.areaId === input.areaId : true),
-    );
+    return this.fights
+      .filter(
+        (fight) =>
+          fight.competitionId === input.competitionId &&
+          (input.status ? fight.status === input.status : true) &&
+          (input.categoryId !== undefined
+            ? fight.categoryId === input.categoryId
+            : true) &&
+          (input.round !== undefined ? fight.round === input.round : true) &&
+          (input.areaId !== undefined ? fight.areaId === input.areaId : true),
+      )
+      .sort((left, right) => {
+        if (left.order !== right.order) {
+          return left.order - right.order;
+        }
+        if (left.round !== right.round) {
+          return left.round - right.round;
+        }
+        if ((left.categoryId ?? 0) !== (right.categoryId ?? 0)) {
+          return (left.categoryId ?? 0) - (right.categoryId ?? 0);
+        }
+        if ((left.keyGroupId ?? 0) !== (right.keyGroupId ?? 0)) {
+          return (left.keyGroupId ?? 0) - (right.keyGroupId ?? 0);
+        }
+        return (left.id ?? 0) - (right.id ?? 0);
+      });
   }
 
   async listByCategoryId(input: {

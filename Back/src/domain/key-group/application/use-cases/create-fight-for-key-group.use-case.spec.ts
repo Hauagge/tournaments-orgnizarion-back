@@ -1,160 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { Competition } from '@/domain/competition/domain/entities/competition.entity';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
-import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { FightStatus } from '@/domain/fight/domain/value-objects/fight-status.enum';
-import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { makeCompetition } from '../../../../../test/factories';
+import {
+  InMemoryCompetitionRepository,
+  InMemoryFightRepository,
+  InMemoryKeyGroupRepository,
+} from '../../../../../test/repositories/in-memory';
 import { KeyGroup } from '../../domain/entities/key-group.entity';
 import { KeyGroupMember } from '../../domain/entities/key-group-member.entity';
 import { KeyGroupStatus } from '../../domain/value-objects/key-group-status.enum';
-import {
-  IKeyGroupRepository,
-  KeyGroupDetailsView,
-  KeyGroupListItemView,
-  KeyGroupReportView,
-} from '../../repository/IKeyGroupRepository.repository';
 import { CreateFightForKeyGroupUseCase } from './create-fight-for-key-group.use-case';
-
-class InMemoryCompetitionRepository implements ICompetitionRepository {
-  constructor(private readonly competitions: Competition[]) {}
-
-  async create(competition: Competition): Promise<Competition> {
-    return competition;
-  }
-
-  async update(competition: Competition): Promise<Competition> {
-    return competition;
-  }
-
-  async findById(id: number): Promise<Competition | null> {
-    return (
-      this.competitions.find((competition) => competition.id === id) ?? null
-    );
-  }
-
-  async list(): Promise<[Competition[], number]> {
-    return [this.competitions, this.competitions.length];
-  }
-}
-
-class InMemoryKeyGroupRepository implements IKeyGroupRepository {
-  constructor(
-    private readonly groups: KeyGroup[],
-    private readonly members: KeyGroupMember[],
-  ) {}
-
-  async create(group: KeyGroup): Promise<KeyGroup> {
-    return group;
-  }
-
-  async update(group: KeyGroup): Promise<KeyGroup> {
-    return group;
-  }
-
-  async findById(id: number): Promise<KeyGroup | null> {
-    return this.groups.find((group) => group.id === id) ?? null;
-  }
-
-  async listByCompetitionId(): Promise<KeyGroupListItemView[]> {
-    return [];
-  }
-
-  async getDetails(): Promise<KeyGroupDetailsView | null> {
-    return null;
-  }
-
-  async listReportByCompetitionId(): Promise<KeyGroupReportView[]> {
-    return [];
-  }
-
-  async listMembersByKeyGroupId(keyGroupId: number): Promise<KeyGroupMember[]> {
-    return this.members.filter((member) => member.keyGroupId === keyGroupId);
-  }
-
-  async findByCompetitionIdAndAthleteId(): Promise<KeyGroup | null> {
-    return null;
-  }
-
-  async addMember(
-    keyGroupId: number,
-    athleteId: number,
-  ): Promise<KeyGroupMember> {
-    return KeyGroupMember.restore({
-      id: 1,
-      keyGroupId,
-      athleteId,
-      createdAt: new Date('2026-01-10T00:00:00.000Z'),
-    });
-  }
-
-  async removeMember(): Promise<void> {
-    return;
-  }
-}
-
-class InMemoryFightRepository implements IFightRepository {
-  private nextId = 100;
-
-  constructor(private fights: FightEntity[]) {}
-
-  async createMany(fights: FightEntity[]): Promise<FightEntity[]> {
-    const saved = fights.map((fight) =>
-      FightEntity.restore({
-        ...fight.toJSON(),
-        id: this.nextId++,
-      }),
-    );
-    this.fights = [...this.fights, ...saved];
-    return saved;
-  }
-
-  async update(fight: FightEntity): Promise<FightEntity> {
-    this.fights = this.fights.map((current) =>
-      current.id === fight.id ? fight : current,
-    );
-    return fight;
-  }
-
-  async findById(id: number): Promise<FightEntity | null> {
-    return this.fights.find((fight) => fight.id === id) ?? null;
-  }
-
-  async listByCompetitionId(input: {
-    competitionId: number;
-    status?: FightStatus;
-  }): Promise<FightEntity[]> {
-    return this.fights.filter(
-      (fight) =>
-        fight.competitionId === input.competitionId &&
-        (input.status ? fight.status === input.status : true),
-    );
-  }
-
-  async listByKeyGroupId(keyGroupId: number): Promise<FightEntity[]> {
-    return this.fights.filter((fight) => fight.keyGroupId === keyGroupId);
-  }
-
-  async listQueueByAreaId(areaId: number): Promise<FightEntity[]> {
-    return this.fights.filter((fight) => fight.areaId === areaId);
-  }
-
-  async assignAreas(): Promise<void> {
-    return;
-  }
-
-  async updateOrder(): Promise<void> {
-    return;
-  }
-
-  async countByCompetitionId(competitionId: number): Promise<number> {
-    return this.fights.filter((fight) => fight.competitionId === competitionId)
-      .length;
-  }
-}
 
 class DistributeAreaFightsUseCaseStub {
   public calls: unknown[] = [];
@@ -253,7 +112,6 @@ describe('CreateFightForKeyGroupUseCase', () => {
     });
 
     expect(fight.toJSON()).toMatchObject({
-      id: 100,
       competitionId: 1,
       categoryId: 10,
       keyGroupId: 20,
@@ -267,7 +125,7 @@ describe('CreateFightForKeyGroupUseCase', () => {
         competitionId: 1,
         mode: 'INCREMENTAL',
         restGapFights: 2,
-        fightIds: [100],
+        fightIds: [fight.id],
       },
     ]);
   });
@@ -414,6 +272,6 @@ describe('CreateFightForKeyGroupUseCase', () => {
       athleteBId: 102,
     });
 
-    expect(fight.id).toBe(100);
+    expect(fight.id).toEqual(expect.any(Number));
   });
 });

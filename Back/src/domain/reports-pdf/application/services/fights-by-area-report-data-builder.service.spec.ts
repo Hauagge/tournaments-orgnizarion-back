@@ -3,11 +3,6 @@ import { Area } from '@/domain/area/domain/entities/area.entity';
 import { IAreaRepository } from '@/domain/area/repository/IAreaRepository.repository';
 import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { FightStatus } from '@/domain/fight/domain/value-objects/fight-status.enum';
-import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
-import {
-  IKeyGroupRepository,
-  KeyGroupReportView,
-} from '@/domain/key-group/repository/IKeyGroupRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import {
@@ -19,6 +14,8 @@ import {
   InMemoryAthleteRepository,
   InMemoryCategoryRepository,
   InMemoryCompetitionRepository,
+  InMemoryFightRepository,
+  InMemoryKeyGroupRepository,
 } from '../../../../../test/repositories/in-memory';
 import { FightsByAreaReportDataBuilderService } from './fights-by-area-report-data-builder.service';
 
@@ -38,91 +35,6 @@ class InMemoryAreaRepository implements IAreaRepository {
   }
 }
 
-class InMemoryFightRepository implements IFightRepository {
-  constructor(private readonly fights: FightEntity[] = []) {}
-
-  async createMany(fights: FightEntity[]): Promise<FightEntity[]> {
-    return fights;
-  }
-
-  async update(fight: FightEntity): Promise<FightEntity> {
-    return fight;
-  }
-
-  async findById(id: number): Promise<FightEntity | null> {
-    return this.fights.find((fight) => fight.id === id) ?? null;
-  }
-
-  async listByCompetitionId(): Promise<FightEntity[]> {
-    return this.fights;
-  }
-
-  async listByKeyGroupId(keyGroupId: number): Promise<FightEntity[]> {
-    return this.fights.filter((fight) => fight.keyGroupId === keyGroupId);
-  }
-
-  async listQueueByAreaId(areaId: number): Promise<FightEntity[]> {
-    return this.fights.filter((fight) => fight.areaId === areaId);
-  }
-
-  async assignAreas(): Promise<void> {
-    return;
-  }
-
-  async updateOrder(): Promise<void> {
-    return;
-  }
-
-  async countByCompetitionId(competitionId: number): Promise<number> {
-    return this.fights.filter((fight) => fight.competitionId === competitionId)
-      .length;
-  }
-}
-
-class InMemoryKeyGroupRepository implements IKeyGroupRepository {
-  constructor(private readonly groups: KeyGroupReportView[] = []) {}
-
-  async create(): Promise<any> {
-    throw new Error('not implemented');
-  }
-
-  async update(): Promise<any> {
-    throw new Error('not implemented');
-  }
-
-  async findById(): Promise<any> {
-    throw new Error('not implemented');
-  }
-
-  async listByCompetitionId(): Promise<any> {
-    throw new Error('not implemented');
-  }
-
-  async getDetails(): Promise<any> {
-    throw new Error('not implemented');
-  }
-
-  async listReportByCompetitionId(): Promise<KeyGroupReportView[]> {
-    return this.groups;
-  }
-
-  async listMembersByKeyGroupId(): Promise<any> {
-    throw new Error('not implemented');
-  }
-
-  async findByCompetitionIdAndAthleteId(): Promise<any> {
-    throw new Error('not implemented');
-  }
-
-  async addMember(): Promise<any> {
-    throw new Error('not implemented');
-  }
-
-  async removeMember(): Promise<any> {
-    throw new Error('not implemented');
-  }
-}
-
 describe('FightsByAreaReportDataBuilderService', () => {
   let competitionRepository: InMemoryCompetitionRepository;
   let areaRepository: InMemoryAreaRepository;
@@ -139,7 +51,7 @@ describe('FightsByAreaReportDataBuilderService', () => {
     fightRepository = new InMemoryFightRepository([]);
     athleteRepository = new InMemoryAthleteRepository([]);
     categoryRepository = new InMemoryCategoryRepository([]);
-    keyGroupRepository = new InMemoryKeyGroupRepository([]);
+    keyGroupRepository = new InMemoryKeyGroupRepository();
   });
 
   it('should group fights by area, sort areas and fights, include unassigned fights and apply fallbacks', async () => {
@@ -232,7 +144,8 @@ describe('FightsByAreaReportDataBuilderService', () => {
         weightMaxGrams: 70000,
       }),
     ]);
-    keyGroupRepository = new InMemoryKeyGroupRepository([
+    keyGroupRepository = new InMemoryKeyGroupRepository();
+    keyGroupRepository.setReportViews([
       {
         id: 500,
         competitionId: 1,

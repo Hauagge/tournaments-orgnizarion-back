@@ -6,14 +6,16 @@ import { AreaQueueFightDetails } from '@/domain/area/repository/area-queue-fight
 import { IAreaQueueItemRepository } from '@/domain/area/repository/IAreaQueueItemRepository.repository';
 import { IAreaRepository } from '@/domain/area/repository/IAreaRepository.repository';
 import { Athlete } from '@/domain/athlete/domain/entities/athlete.entity';
-import { IAthleteRepository } from '@/domain/athlete/repository/IAthleteRepository.repository';
 import { Competition } from '@/domain/competition/domain/entities/competition.entity';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
-import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { FightStatus } from '@/domain/fight/domain/value-objects/fight-status.enum';
-import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
 import { makeAthlete, makeCompetition } from '../../../../../test/factories';
+import {
+  InMemoryAthleteRepository,
+  InMemoryCompetitionRepository,
+  InMemoryFightRepository,
+} from '../../../../../test/repositories/in-memory';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { AreaDistributionStrategyResolverService } from '../services/area-distribution-strategy-resolver.service';
 import { FightQueuePlannerService } from '../services/fight-queue-planner.service';
@@ -89,142 +91,6 @@ class InMemoryAreaRepository
       current.id === item.id ? item : current,
     );
     return item;
-  }
-}
-
-class InMemoryFightRepository implements IFightRepository {
-  constructor(private fights: FightEntity[] = []) {}
-  create(fight: FightEntity): Promise<FightEntity> {
-    throw new Error('Method not implemented.');
-  }
-  updateMany(fights: FightEntity[]): Promise<FightEntity[]> {
-    throw new Error('Method not implemented.');
-  }
-  listByCategoryId(input: { competitionId: number; categoryId: number; }): Promise<FightEntity[]> {
-    throw new Error('Method not implemented.');
-  }
-  delete(id: number): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  async createMany(fights: FightEntity[]): Promise<FightEntity[]> {
-    this.fights = [...this.fights, ...fights];
-    return fights;
-  }
-
-  async update(fight: FightEntity): Promise<FightEntity> {
-    this.fights = this.fights.map((current) =>
-      current.id === fight.id ? fight : current,
-    );
-    return fight;
-  }
-
-  async findById(id: number): Promise<FightEntity | null> {
-    return this.fights.find((fight) => fight.id === id) ?? null;
-  }
-
-  async listByCompetitionId(input: {
-    competitionId: number;
-    status?: FightStatus;
-  }): Promise<FightEntity[]> {
-    return this.fights.filter(
-      (fight) =>
-        fight.competitionId === input.competitionId &&
-        (input.status ? fight.status === input.status : true),
-    );
-  }
-
-  async listByKeyGroupId(keyGroupId: number): Promise<FightEntity[]> {
-    return this.fights.filter((fight) => fight.keyGroupId === keyGroupId);
-  }
-
-  async listQueueByAreaId(areaId: number): Promise<FightEntity[]> {
-    return this.fights.filter((fight) => fight.areaId === areaId);
-  }
-
-  async assignAreas(
-    assignments: Array<{ fightId: number; areaId: number | null }>,
-  ): Promise<void> {
-    const areaByFightId = new Map(
-      assignments.map((assignment) => [assignment.fightId, assignment.areaId]),
-    );
-
-    this.fights = this.fights.map((fight) =>
-      areaByFightId.has(fight.id as number)
-        ? fight.assignArea(areaByFightId.get(fight.id as number) ?? null)
-        : fight,
-    );
-  }
-
-  async updateOrder(
-    items: Array<{ fightId: number; orderIndex: number }>,
-  ): Promise<void> {
-    const orderByFightId = new Map(
-      items.map((item) => [item.fightId, item.orderIndex]),
-    );
-
-    this.fights = this.fights.map((fight) =>
-      orderByFightId.has(fight.id as number)
-        ? FightEntity.restore({
-            ...fight.toJSON(),
-            orderIndex: orderByFightId.get(fight.id as number) as number,
-          })
-        : fight,
-    );
-  }
-
-  async countByCompetitionId(competitionId: number): Promise<number> {
-    return this.fights.filter((fight) => fight.competitionId === competitionId)
-      .length;
-  }
-}
-
-class InMemoryCompetitionRepository implements ICompetitionRepository {
-  constructor(private readonly competitions: Competition[]) {}
-
-  async create(competition: Competition): Promise<Competition> {
-    return competition;
-  }
-
-  async update(competition: Competition): Promise<Competition> {
-    return competition;
-  }
-
-  async findById(id: number): Promise<Competition | null> {
-    return (
-      this.competitions.find((competition) => competition.id === id) ?? null
-    );
-  }
-
-  async list(): Promise<[Competition[], number]> {
-    return [this.competitions, this.competitions.length];
-  }
-}
-
-class InMemoryAthleteRepository implements IAthleteRepository {
-  constructor(private readonly athletes: Athlete[]) {}
-
-  async create(athlete: Athlete): Promise<Athlete> {
-    return athlete;
-  }
-
-  async update(athlete: Athlete): Promise<Athlete> {
-    return athlete;
-  }
-
-  async findById(id: number): Promise<Athlete | null> {
-    return this.athletes.find((athlete) => athlete.id === id) ?? null;
-  }
-
-  async findByIds(ids: number[]): Promise<Athlete[]> {
-    const allowedIds = new Set(ids);
-    return this.athletes.filter((athlete) =>
-      allowedIds.has(athlete.id as number),
-    );
-  }
-
-  async search(): Promise<Athlete[]> {
-    return this.athletes;
   }
 }
 
