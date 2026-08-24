@@ -6,6 +6,7 @@ import {
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
+  Relation,
 } from 'typeorm';
 import { AthleteTypeOrmEntity } from '@/domain/athlete/infra/persistence/entities/athlete.typeorm-entity';
 import { CompetitionTypeOrmEntity } from '@/domain/competition/infra/persistence/entities/competition.typeorm-entity';
@@ -29,7 +30,7 @@ export class WeighInTypeOrmEntity {
 
   @OneToOne(() => AthleteTypeOrmEntity, { nullable: false })
   @JoinColumn({ name: 'athlete_id' })
-  athlete?: AthleteTypeOrmEntity;
+  athlete?: Relation<AthleteTypeOrmEntity>;
 
   @Column({ name: 'measured_weight_grams', type: 'int', nullable: true })
   measuredWeightGrams: number | null;

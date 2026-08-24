@@ -4,6 +4,7 @@ import {
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
+  Relation,
 } from 'typeorm';
 import { AthleteTypeOrmEntity } from '@/domain/athlete/infra/persistence/entities/athlete.typeorm-entity';
 
@@ -19,7 +20,7 @@ export class AcademyTypeOrmEntity {
   name: string;
 
   @OneToMany(() => AthleteTypeOrmEntity, (athlete) => athlete.academy)
-  athletes?: AthleteTypeOrmEntity[];
+  athletes?: Relation<AthleteTypeOrmEntity>[];
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;

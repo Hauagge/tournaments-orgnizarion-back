@@ -6,6 +6,7 @@ import {
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
+  Relation,
 } from 'typeorm';
 import { AcademyTypeOrmEntity } from '@/domain/academy/infra/persistence/entities/academy.typeorm-entity';
 import { WeighInTypeOrmEntity } from '@/domain/weighin/infra/persistence/entities/weigh-in.typeorm-entity';
@@ -50,11 +51,11 @@ export class AthleteTypeOrmEntity {
     nullable: true,
   })
   @JoinColumn({ name: 'academy_id' })
-  academy?: AcademyTypeOrmEntity | null;
+  academy?: Relation<AcademyTypeOrmEntity> | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
 
   @OneToOne(() => WeighInTypeOrmEntity, (weighIn) => weighIn.athlete)
-  weighIn?: WeighInTypeOrmEntity;
+  weighIn?: Relation<WeighInTypeOrmEntity>;
 }
