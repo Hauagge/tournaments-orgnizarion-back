@@ -1,6 +1,4 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
-import { IUserCompetitionRepository } from '@/domain/auth/repository/IUserCompetitionRepository.repository';
-import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
+import { Inject, Injectable } from '@nestjs/common';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { IFightRepository } from '../../repository/IFightRepository.repository';
@@ -8,10 +6,6 @@ import { IFightRepository } from '../../repository/IFightRepository.repository';
 @Injectable()
 export class DeleteFightUseCase {
   constructor(
-    @Inject(ICompetitionRepository)
-    private readonly competitionRepository: ICompetitionRepository,
-    @Inject(IUserCompetitionRepository)
-    private readonly userCompetitionRepository: IUserCompetitionRepository,
     @Inject(IFightRepository)
     private readonly fightRepository: IFightRepository,
   ) {}
@@ -21,8 +15,6 @@ export class DeleteFightUseCase {
     competitionId: number;
     fightId: number;
   }) {
-    await this.assertAccess(input.currentUserId, input.competitionId);
-
     const fight = await this.fightRepository.findById(input.fightId);
     if (!fight || fight.competitionId !== input.competitionId) {
       throw new NotFoundError(`Fight with id ${input.fightId} not found`);
@@ -42,24 +34,5 @@ export class DeleteFightUseCase {
       deleted: true,
       fightId: input.fightId,
     };
-  }
-
-  private async assertAccess(userId: number, competitionId: number) {
-    const competition = await this.competitionRepository.findById(competitionId);
-    if (!competition) {
-      throw new NotFoundError(`Competition with id ${competitionId} not found`);
-    }
-
-    const access =
-      await this.userCompetitionRepository.findByUserIdAndCompetitionId({
-        userId,
-        competitionId,
-      });
-
-    if (!access) {
-      throw new ForbiddenException(
-        'Usuario autenticado nao possui acesso a esta competicao',
-      );
-    }
   }
 }
