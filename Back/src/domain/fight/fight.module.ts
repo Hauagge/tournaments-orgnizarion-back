@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { EventBusModule } from '@/core/events/event-bus.module';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
 import { AuthModule } from '../auth/auth.module';
 import { AcademyProviderModule } from '../academy/academy-provider.module';
 import { AreaProviderModule } from '../area/area-provider.module';
@@ -44,6 +45,7 @@ import { FightProviderModule } from './fight-provider.module';
     UpdateFightUseCase,
     DeleteFightUseCase,
     BestOfThreeProgressionService,
+    CompetitionAccessGuard,
   ],
   exports: [
     GenerateFightsUseCase,
