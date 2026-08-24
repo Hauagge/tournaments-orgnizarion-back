@@ -1,8 +1,6 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { IAthleteRepository } from '@/domain/athlete/repository/IAthleteRepository.repository';
-import { IUserCompetitionRepository } from '@/domain/auth/repository/IUserCompetitionRepository.repository';
 import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
-import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { FightStatus } from '../../domain/value-objects/fight-status.enum';
@@ -23,10 +21,6 @@ type Input = {
 @Injectable()
 export class UpdateFightUseCase {
   constructor(
-    @Inject(ICompetitionRepository)
-    private readonly competitionRepository: ICompetitionRepository,
-    @Inject(IUserCompetitionRepository)
-    private readonly userCompetitionRepository: IUserCompetitionRepository,
     @Inject(ICategoryRepository)
     private readonly categoryRepository: ICategoryRepository,
     @Inject(IAthleteRepository)
@@ -36,8 +30,6 @@ export class UpdateFightUseCase {
   ) {}
 
   async execute(input: Input) {
-    await this.assertAccess(input.currentUserId, input.competitionId);
-
     const fight = await this.fightRepository.findById(input.fightId);
     if (!fight || fight.competitionId !== input.competitionId) {
       throw new NotFoundError(`Fight with id ${input.fightId} not found`);
@@ -86,24 +78,5 @@ export class UpdateFightUseCase {
         status: input.status,
       }),
     );
-  }
-
-  private async assertAccess(userId: number, competitionId: number) {
-    const competition = await this.competitionRepository.findById(competitionId);
-    if (!competition) {
-      throw new NotFoundError(`Competition with id ${competitionId} not found`);
-    }
-
-    const access =
-      await this.userCompetitionRepository.findByUserIdAndCompetitionId({
-        userId,
-        competitionId,
-      });
-
-    if (!access) {
-      throw new ForbiddenException(
-        'Usuario autenticado nao possui acesso a esta competicao',
-      );
-    }
   }
 }
