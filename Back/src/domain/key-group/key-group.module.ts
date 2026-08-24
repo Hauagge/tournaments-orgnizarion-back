@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
 import { AreaModule } from '../area/area.module';
 import { AcademyProviderModule } from '../academy/academy-provider.module';
 import { AthleteProviderModule } from '../athlete/athlete-provider.module';
+import { AuthModule } from '../auth/auth.module';
 import { CategoryProviderModule } from '../category/category-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
 import { FightGenerationStrategyModule } from '../fight/fight-generation-strategy.module';
@@ -36,6 +38,7 @@ import { KeyGroupProviderModule } from './key-group-provider.module';
     WeighInProviderModule,
     FightProviderModule,
     FightGenerationStrategyModule,
+    AuthModule,
   ],
   controllers: [KeyGroupController],
   providers: [
@@ -54,6 +57,7 @@ import { KeyGroupProviderModule } from './key-group-provider.module';
     PdfRendererResolverService,
     SimplePdfBuilderService,
     KeyGroupBracketViewBuilderService,
+    CompetitionAccessGuard,
   ],
   exports: [
     CreateKeyGroupUseCase,

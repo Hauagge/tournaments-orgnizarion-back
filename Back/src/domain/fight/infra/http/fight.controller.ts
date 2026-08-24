@@ -1,6 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
 import { CurrentUser } from '@/core/auth/infra/decorators/current-user.decorator';
+import { CompetitionAccess } from '@/core/auth/infra/decorators/competition-access.decorator';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
 import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
 import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
 import { AuthenticatedUser } from '@/core/auth/infra/types/authenticated-user.type';
@@ -47,7 +49,7 @@ import {
 } from './dtos/update-fight-order.dto';
 
 @Controller()
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, CompetitionAccessGuard)
 @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class FightController {
   constructor(
@@ -63,6 +65,7 @@ export class FightController {
   ) {}
 
   @Post('competitions/:id/fights/generate')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async generate(
     @Param(new ZodValidationPipe(CompetitionFightParamSchema))
     params: CompetitionFightParamDto,
@@ -76,6 +79,7 @@ export class FightController {
   }
 
   @Post('fights/:id/start')
+  @CompetitionAccess({ type: 'fight', param: 'id' })
   async start(
     @Param(new ZodValidationPipe(FightIdParamSchema))
     params: FightIdParamDto,
@@ -89,6 +93,7 @@ export class FightController {
   }
 
   @Post('fights/:id/finish')
+  @CompetitionAccess({ type: 'fight', param: 'id' })
   async finish(
     @Param(new ZodValidationPipe(FightIdParamSchema))
     params: FightIdParamDto,
@@ -107,6 +112,7 @@ export class FightController {
   }
 
   @Get('competitions/:id/fights')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async list(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionFightParamSchema))
@@ -131,6 +137,7 @@ export class FightController {
   }
 
   @Get('competitions/:competitionId/categories/:categoryId/fights')
+  @CompetitionAccess({ type: 'competition', param: 'competitionId' })
   async listByCategory(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionCategoryFightParamSchema))
@@ -149,6 +156,7 @@ export class FightController {
   }
 
   @Post('competitions/:id/fights/manual')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async createManual(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionFightParamSchema))
@@ -169,6 +177,7 @@ export class FightController {
   }
 
   @Patch('competitions/:competitionId/fights/:fightId/winner')
+  @CompetitionAccess({ type: 'competition', param: 'competitionId' })
   async markWinner(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionFightIdParamSchema))
@@ -190,6 +199,7 @@ export class FightController {
   }
 
   @Patch('competitions/:competitionId/fights/:fightId')
+  @CompetitionAccess({ type: 'competition', param: 'competitionId' })
   async updateFight(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionFightIdParamSchema))
@@ -211,6 +221,7 @@ export class FightController {
   }
 
   @Delete('competitions/:competitionId/fights/:fightId')
+  @CompetitionAccess({ type: 'competition', param: 'competitionId' })
   async deleteFight(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionFightIdParamSchema))
@@ -229,6 +240,7 @@ export class FightController {
   }
 
   @Patch('competitions/:id/fights/order')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async updateOrder(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param(new ZodValidationPipe(CompetitionFightParamSchema))
