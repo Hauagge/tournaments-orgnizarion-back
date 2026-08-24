@@ -1,8 +1,6 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { IAthleteRepository } from '@/domain/athlete/repository/IAthleteRepository.repository';
-import { IUserCompetitionRepository } from '@/domain/auth/repository/IUserCompetitionRepository.repository';
 import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
-import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { FightEntity } from '../../domain/entities/fight.entity';
@@ -22,10 +20,6 @@ type Input = {
 @Injectable()
 export class CreateManualFightUseCase {
   constructor(
-    @Inject(ICompetitionRepository)
-    private readonly competitionRepository: ICompetitionRepository,
-    @Inject(IUserCompetitionRepository)
-    private readonly userCompetitionRepository: IUserCompetitionRepository,
     @Inject(ICategoryRepository)
     private readonly categoryRepository: ICategoryRepository,
     @Inject(IAthleteRepository)
@@ -35,8 +29,6 @@ export class CreateManualFightUseCase {
   ) {}
 
   async execute(input: Input) {
-    await this.assertAccess(input.currentUserId, input.competitionId);
-
     if (input.athleteAId === input.athleteBId) {
       throw new ValidationError('A luta manual exige dois atletas distintos');
     }
@@ -123,25 +115,5 @@ export class CreateManualFightUseCase {
     }
 
     return category;
-  }
-
-  private async assertAccess(userId: number, competitionId: number) {
-    const competition =
-      await this.competitionRepository.findById(competitionId);
-    if (!competition) {
-      throw new NotFoundError(`Competition with id ${competitionId} not found`);
-    }
-
-    const access =
-      await this.userCompetitionRepository.findByUserIdAndCompetitionId({
-        userId,
-        competitionId,
-      });
-
-    if (!access) {
-      throw new ForbiddenException(
-        'Usuario autenticado nao possui acesso a esta competicao',
-      );
-    }
   }
 }
