@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
 import { AcademyProviderModule } from '../academy/academy-provider.module';
 import { AthleteProviderModule } from '../athlete/athlete-provider.module';
+import { AuthModule } from '../auth/auth.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
 import { WeighInProviderModule } from '../weighin/weighin-provider.module';
 import { AddAthleteToCategoryUseCase } from './application/use-cases/add-athlete-to-category.use-case';
@@ -22,6 +24,7 @@ import { CategoryProviderModule } from './category-provider.module';
     AthleteProviderModule,
     AcademyProviderModule,
     WeighInProviderModule,
+    AuthModule,
   ],
   controllers: [CategoryController],
   providers: [
@@ -34,6 +37,7 @@ import { CategoryProviderModule } from './category-provider.module';
     CategoryGenerationService,
     CategoryEligibilityService,
     CategoryDistributionService,
+    CompetitionAccessGuard,
   ],
   exports: [
     GenerateCategoriesUseCase,
