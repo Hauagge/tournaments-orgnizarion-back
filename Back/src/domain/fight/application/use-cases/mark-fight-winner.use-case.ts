@@ -1,12 +1,10 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { EventBus } from '@/core/events/event-bus.interface';
-import { IUserCompetitionRepository } from '@/domain/auth/repository/IUserCompetitionRepository.repository';
 import { AreaQueueItemTypeOrmEntity } from '@/domain/area/infra/persistence/entities/area-queue-item.typeorm-entity';
 import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-queue-item-status.enum';
 import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
 import { CategoryTypeOrmEntity } from '@/domain/category/infra/persistence/entities/category.typeorm-entity';
-import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { BestOfThreeProgressionService } from '../services/best-of-three-progression.service';
@@ -49,10 +47,6 @@ type Output = {
 export class MarkFightWinnerUseCase {
   constructor(
     private readonly dataSource: DataSource,
-    @Inject(ICompetitionRepository)
-    private readonly competitionRepository: ICompetitionRepository,
-    @Inject(IUserCompetitionRepository)
-    private readonly userCompetitionRepository: IUserCompetitionRepository,
     @Inject(ICategoryRepository)
     private readonly categoryRepository: ICategoryRepository,
     @Inject(EventBus)
@@ -61,8 +55,6 @@ export class MarkFightWinnerUseCase {
   ) {}
 
   async execute(input: Input): Promise<Output> {
-    await this.assertAccess(input.currentUserId, input.competitionId);
-
     const result = await this.dataSource.transaction(async (manager) => {
       const fightRepository = manager.getRepository(FightTypeOrmEntity);
       const categoryRepository = manager.getRepository(CategoryTypeOrmEntity);
@@ -293,24 +285,5 @@ export class MarkFightWinnerUseCase {
     }
 
     return savedThirdFight;
-  }
-
-  private async assertAccess(userId: number, competitionId: number) {
-    const competition = await this.competitionRepository.findById(competitionId);
-    if (!competition) {
-      throw new NotFoundError(`Competition with id ${competitionId} not found`);
-    }
-
-    const access =
-      await this.userCompetitionRepository.findByUserIdAndCompetitionId({
-        userId,
-        competitionId,
-      });
-
-    if (!access) {
-      throw new ForbiddenException(
-        'Usuario autenticado nao possui acesso a esta competicao',
-      );
-    }
   }
 }
