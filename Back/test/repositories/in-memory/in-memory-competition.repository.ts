@@ -1,5 +1,6 @@
 import { NotFoundError } from '../../../src/shared/errors/not-found.error';
 import { Competition } from '../../../src/domain/competition/domain/entities/competition.entity';
+import { CompetitionDashboardSummaryItem } from '../../../src/domain/competition/application/use-cases/dashboard-summary.view';
 import { ICompetitionRepository } from '../../../src/domain/competition/repository/ICompetitionRepository.repository';
 import { makeCompetition } from '../../factories';
 
@@ -82,5 +83,11 @@ export class InMemoryCompetitionRepository
       .slice(start, end);
 
     return [items, total];
+  }
+
+  async listDashboardSummary(_input: {
+    currentUserId: number;
+  }): Promise<CompetitionDashboardSummaryItem[]> {
+    return [];
   }
 }

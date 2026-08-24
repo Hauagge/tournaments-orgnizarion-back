@@ -6,3 +6,4 @@ export * from './in-memory-fight.repository';
 export * from './in-memory-academy.repository';
 export * from './in-memory-weigh-in.repository';
 export * from './in-memory-category.repository';
+export * from './in-memory-key-group.repository';

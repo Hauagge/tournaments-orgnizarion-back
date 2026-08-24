@@ -1,5 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, StreamableFile, UseGuards } from '@nestjs/common';
 import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
+import { CompetitionAccess } from '@/core/auth/infra/decorators/competition-access.decorator';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
 import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
 import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
 import { AuthRole } from '@/domain/auth/auth-role.enum';
@@ -40,7 +42,7 @@ type CreateKeyGroupResponse = {
 };
 
 @Controller()
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, CompetitionAccessGuard)
 @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class KeyGroupController {
   constructor(
@@ -57,6 +59,7 @@ export class KeyGroupController {
   ) {}
 
   @Post('competitions/:id/key-groups')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async create(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
@@ -84,6 +87,7 @@ export class KeyGroupController {
   }
 
   @Get('competitions/:id/key-groups')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async list(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
@@ -102,6 +106,7 @@ export class KeyGroupController {
   }
 
   @Get('key-groups/:id')
+  @CompetitionAccess({ type: 'keyGroup', param: 'id' })
   async getDetails(
     @Param(new ZodValidationPipe(KeyGroupIdParamSchema))
     params: KeyGroupIdParamDto,
@@ -115,6 +120,7 @@ export class KeyGroupController {
   }
 
   @Patch('key-groups/:id')
+  @CompetitionAccess({ type: 'keyGroup', param: 'id' })
   async update(
     @Param(new ZodValidationPipe(KeyGroupIdParamSchema))
     params: KeyGroupIdParamDto,
@@ -133,6 +139,7 @@ export class KeyGroupController {
   }
 
   @Post('key-groups/:id/members/:athleteId')
+  @CompetitionAccess({ type: 'keyGroup', param: 'id' })
   async addMember(
     @Param(new ZodValidationPipe(KeyGroupMemberParamSchema))
     params: KeyGroupMemberParamDto,
@@ -149,6 +156,7 @@ export class KeyGroupController {
   }
 
   @Delete('key-groups/:id/members/:athleteId')
+  @CompetitionAccess({ type: 'keyGroup', param: 'id' })
   async removeMember(
     @Param(new ZodValidationPipe(KeyGroupMemberParamSchema))
     params: KeyGroupMemberParamDto,
@@ -165,6 +173,7 @@ export class KeyGroupController {
   }
 
   @Post('key-groups/:id/generate-fights')
+  @CompetitionAccess({ type: 'keyGroup', param: 'id' })
   async generateFights(
     @Param(new ZodValidationPipe(KeyGroupIdParamSchema))
     params: KeyGroupIdParamDto,
@@ -178,6 +187,7 @@ export class KeyGroupController {
   }
 
   @Post('key-groups/:id/fights')
+  @CompetitionAccess({ type: 'keyGroup', param: 'id' })
   async createFight(
     @Param(new ZodValidationPipe(KeyGroupIdParamSchema))
     params: KeyGroupIdParamDto,
@@ -196,6 +206,7 @@ export class KeyGroupController {
   }
 
   @Post('key-groups/:id/lock')
+  @CompetitionAccess({ type: 'keyGroup', param: 'id' })
   async lock(
     @Param(new ZodValidationPipe(KeyGroupIdParamSchema))
     params: KeyGroupIdParamDto,
@@ -209,6 +220,7 @@ export class KeyGroupController {
   }
 
   @Get('competitions/:id/brackets/pdf')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async exportPdf(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
