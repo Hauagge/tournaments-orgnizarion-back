@@ -37,19 +37,11 @@ export class CreateCategoryUseCase {
       );
     }
 
-    if (
-      input.ageMin &&
-      input.ageMax &&
-      input.ageMin &&
-      input.ageMax &&
-      input.ageMin > input.ageMax
-    ) {
+    if (input.ageMin && input.ageMax && input.ageMin > input.ageMax) {
       throw new ValidationError('ageMin cannot be greater than ageMax');
     }
 
     if (
-      input.weightMinGrams &&
-      input.weightMaxGrams &&
       input.weightMinGrams &&
       input.weightMaxGrams &&
       input.weightMinGrams > input.weightMaxGrams

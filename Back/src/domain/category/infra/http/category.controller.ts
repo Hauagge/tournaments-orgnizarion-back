@@ -1,5 +1,7 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
+import { CompetitionAccess } from '@/core/auth/infra/decorators/competition-access.decorator';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
 import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
 import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
 import { AuthRole } from '@/domain/auth/auth-role.enum';
@@ -37,7 +39,7 @@ import {
 } from './dtos/create-category.dto';
 
 @Controller()
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, CompetitionAccessGuard)
 @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class CategoryController {
   constructor(
@@ -50,6 +52,7 @@ export class CategoryController {
   ) {}
 
   @Post('competitions/:competitionId/categories/:categoryId/athletes')
+  @CompetitionAccess({ type: 'competition', param: 'competitionId' })
   async addAthlete(
     @Param(new ZodValidationPipe(AddAthleteToCategoryParamSchema))
     params: AddAthleteToCategoryParamDto,
@@ -68,6 +71,7 @@ export class CategoryController {
   }
 
   @Post('competitions/:id/categories')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async create(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
@@ -86,6 +90,7 @@ export class CategoryController {
   }
 
   @Post('competitions/:id/categories/generate')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async generate(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
@@ -103,6 +108,7 @@ export class CategoryController {
   }
 
   @Post('competitions/:id/categories/distribute-athletes')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async distributeAthletes(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
@@ -118,6 +124,7 @@ export class CategoryController {
   }
 
   @Get('competitions/:id/categories')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async listByCompetition(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
@@ -131,6 +138,7 @@ export class CategoryController {
   }
 
   @Get('categories/:id')
+  @CompetitionAccess({ type: 'category', param: 'id' })
   async getById(
     @Param(new ZodValidationPipe(CategoryIdParamSchema))
     params: CategoryIdParamDto,
