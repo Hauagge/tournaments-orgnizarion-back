@@ -117,9 +117,9 @@ describe('CreateFightForKeyGroupUseCase', () => {
       keyGroupId: 20,
       athleteAId: 101,
       athleteBId: 102,
-      orderIndex: 1,
       status: FightStatus.WAITING,
     });
+    expect(fight.orderIndex).toBe(1);
     expect(distributeAreaFightsUseCase.calls).toEqual([
       {
         competitionId: 1,

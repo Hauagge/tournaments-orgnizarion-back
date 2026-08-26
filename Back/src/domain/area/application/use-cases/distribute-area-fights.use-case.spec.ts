@@ -76,6 +76,26 @@ class InMemoryAreaRepository
       .sort((left, right) => left.position - right.position);
   }
 
+  async listByAreaIds(areaIds: number[]): Promise<AreaQueueItem[]> {
+    const allowedIds = new Set(areaIds);
+    return this.queueItems
+      .filter((item) => allowedIds.has(item.areaId))
+      .sort((left, right) => left.position - right.position);
+  }
+
+  async replaceForAreas(input: {
+    areaIds: number[];
+    items: AreaQueueItem[];
+  }): Promise<AreaQueueItem[]> {
+    const areaIds = new Set(input.areaIds);
+    this.queueItems = this.queueItems.filter(
+      (item) => !areaIds.has(item.areaId),
+    );
+    this.queueItems.push(...input.items);
+
+    return input.items;
+  }
+
   async listFightDetailsByAreaId(
     _areaId: number,
   ): Promise<AreaQueueFightDetails[]> {

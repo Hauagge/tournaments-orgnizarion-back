@@ -1,6 +1,24 @@
+import { Global, Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { describe, expect, it } from 'vitest';
+import { CoreAuthModule } from '@/core/auth/core-auth.module';
+
+@Global()
+@Module({
+  providers: [
+    {
+      provide: DataSource,
+      useValue: {
+        transaction: async (work: (manager: unknown) => Promise<unknown>) =>
+          work({}),
+      },
+    },
+  ],
+  exports: [DataSource],
+})
+class FakeDataSourceModule {}
 import { AthleteTypeOrmEntity } from '../athlete/infra/persistence/entities/athlete.typeorm-entity';
 import { AcademyTypeOrmEntity } from '../academy/infra/persistence/entities/academy.typeorm-entity';
 import { UserCompetitionTypeOrmEntity } from '../auth/entities/user-competition.typeorm-entity';
@@ -21,7 +39,7 @@ import { ICompetitionRepository } from './repository/ICompetitionRepository.repo
 describe('CompetitionModule', () => {
   it('should expose use cases and bind repository contract to TypeOrm implementation', async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [CompetitionModule],
+      imports: [CompetitionModule, CoreAuthModule, FakeDataSourceModule],
     })
       .overrideProvider(getRepositoryToken(CompetitionTypeOrmEntity))
       .useValue({

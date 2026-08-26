@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it } from 'vitest';
+import { CoreAuthModule } from '@/core/auth/core-auth.module';
 import { AcademyTypeOrmEntity } from '../academy/infra/persistence/entities/academy.typeorm-entity';
 import { WeighInTypeOrmEntity } from '../weighin/infra/persistence/entities/weigh-in.typeorm-entity';
 import { AthleteModule } from './athlete.module';
@@ -15,7 +16,7 @@ import { IAthleteRepository } from './repository/IAthleteRepository.repository';
 describe('AthleteModule', () => {
   it('should expose use cases and bind repository contract', async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [AthleteModule],
+      imports: [AthleteModule, CoreAuthModule],
     })
       .overrideProvider(getRepositoryToken(AthleteTypeOrmEntity))
       .useValue({

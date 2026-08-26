@@ -473,6 +473,8 @@ function approvedWeighIn(
     measuredWeightGrams,
     status: WeighInStatus.APPROVED,
     performedAt: new Date('2026-01-10T10:00:00.000Z'),
+    performedById: null,
     performedBy: 'mesa-1',
+    observation: null,
   });
 }

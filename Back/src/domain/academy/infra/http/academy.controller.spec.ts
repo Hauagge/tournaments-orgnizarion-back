@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeAthlete, makeTeam } from '../../../../../test/factories';
-import { LinkAthleteToAcademyUseCase } from '../../application/use-cases/add-athlete-to-academy.use-case';
+import { makeAthlete, makeAcademy } from '../../../../../test/factories';
+import { LinkAthleteToAcademyUseCase } from '../../application/use-cases/link-athlete-to-academy.use-case';
 import { CreateAcademyUseCase } from '../../application/use-cases/create-academy.use-case';
 import { ListAcademiesByCompetitionUseCase } from '../../application/use-cases/list-academies-by-competition.use-case';
-import { UnlinkAthleteFromAcademyUseCase } from '../../application/use-cases/remove-athlete-from-academy.use-case';
+import { UnlinkAthleteFromAcademyUseCase } from '../../application/use-cases/unlink-athlete-from-academy.use-case';
 import { UpdateAcademyUseCase } from '../../application/use-cases/update-academy.use-case';
-import { TeamController } from './academy.controller';
+import { AcademyController } from './academy.controller';
 
-describe('TeamController', () => {
+describe('AcademyController', () => {
   const createTeamUseCase = {
     execute: vi.fn(),
   } as unknown as CreateAcademyUseCase;
@@ -24,7 +24,7 @@ describe('TeamController', () => {
     execute: vi.fn(),
   } as unknown as UnlinkAthleteFromAcademyUseCase;
 
-  const controller = new TeamController(
+  const controller = new AcademyController(
     createTeamUseCase,
     updateTeamUseCase,
     listTeamsByCompetitionUseCase,
@@ -37,28 +37,28 @@ describe('TeamController', () => {
   });
 
   it('should create and return wrapped response', async () => {
-    vi.mocked(createTeamUseCase.execute).mockResolvedValue(makeTeam({ id: 1 }));
+    vi.mocked(createTeamUseCase.execute).mockResolvedValue(makeAcademy({ id: 1 }));
 
     const result = await controller.create({ id: 10 }, { name: 'Academy One' });
 
     expect(result).toEqual({
-      data: makeTeam({ id: 1 }).toJSON(),
+      data: makeAcademy({ id: 1 }).toJSON(),
       error: null,
     });
   });
 
   it('should list and return wrapped response', async () => {
     vi.mocked(listTeamsByCompetitionUseCase.execute).mockResolvedValue([
-      makeTeam({ id: 1 }),
-      makeTeam({ id: 2, name: 'Academy Two' }),
+      makeAcademy({ id: 1 }),
+      makeAcademy({ id: 2, name: 'Academy Two' }),
     ]);
 
     const result = await controller.listByCompetition({ id: 10 });
 
     expect(result).toEqual({
       data: [
-        makeTeam({ id: 1 }).toJSON(),
-        makeTeam({ id: 2, name: 'Academy Two' }).toJSON(),
+        makeAcademy({ id: 1 }).toJSON(),
+        makeAcademy({ id: 2, name: 'Academy Two' }).toJSON(),
       ],
       error: null,
     });
@@ -66,13 +66,13 @@ describe('TeamController', () => {
 
   it('should update and return wrapped response', async () => {
     vi.mocked(updateTeamUseCase.execute).mockResolvedValue(
-      makeTeam({ id: 3, name: 'Updated Academy' }),
+      makeAcademy({ id: 3, name: 'Updated Academy' }),
     );
 
     const result = await controller.update({ id: 3 }, { name: 'Updated Academy' });
 
     expect(result).toEqual({
-      data: makeTeam({ id: 3, name: 'Updated Academy' }).toJSON(),
+      data: makeAcademy({ id: 3, name: 'Updated Academy' }).toJSON(),
       error: null,
     });
   });
@@ -82,7 +82,7 @@ describe('TeamController', () => {
       makeAthlete({ id: 9, academyId: 4 }),
     );
 
-    const result = await controller.addAthlete({ id: 4, athleteId: 9 });
+    const result = await controller.linkAthlete({ id: 4, athleteId: 9 });
 
     expect(result).toEqual({
       data: makeAthlete({ id: 9, academyId: 4 }).toJSON(),
@@ -95,7 +95,7 @@ describe('TeamController', () => {
       makeAthlete({ id: 9, academyId: null }),
     );
 
-    const result = await controller.removeAthlete({ id: 4, athleteId: 9 });
+    const result = await controller.unlinkAthlete({ id: 4, athleteId: 9 });
 
     expect(result).toEqual({
       data: makeAthlete({ id: 9, academyId: null }).toJSON(),

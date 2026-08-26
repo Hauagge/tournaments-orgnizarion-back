@@ -128,6 +128,8 @@ function approvedWeighIn(athleteId: number, measuredWeightGrams: number) {
     measuredWeightGrams,
     status: WeighInStatus.APPROVED,
     performedAt: new Date('2026-05-23T10:00:00.000Z'),
+    performedById: null,
     performedBy: 'mesa-1',
+    observation: null,
   });
 }

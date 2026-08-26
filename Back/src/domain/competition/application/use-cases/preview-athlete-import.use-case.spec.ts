@@ -30,10 +30,12 @@ describe('PreviewAthleteImportUseCase', () => {
         },
         athlete: {
           fullName: 'Ana Silva',
-          birthDate: '2010-05-10T00:00:00.000Z',
+          documentNumber: null,
+          birthDate: new Date(2010, 4, 10).toISOString(),
           belt: 'branca',
           declaredWeightGrams: 65000,
           academyName: 'Academy One',
+          phone: null,
           age: null,
         },
         errors: [],

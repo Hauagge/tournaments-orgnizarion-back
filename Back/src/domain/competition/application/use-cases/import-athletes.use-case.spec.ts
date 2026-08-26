@@ -5,7 +5,7 @@ import {
   InMemoryCompetitionRepository,
   InMemoryAcademyRepository,
 } from '../../../../../test/repositories/in-memory';
-import { makeCompetition, makeTeam } from '../../../../../test/factories';
+import { makeCompetition, makeAcademy } from '../../../../../test/factories';
 import { AthleteImportCsvService } from '../services/athlete-import-csv.service';
 import { ImportAthletesUseCase } from './import-athletes.use-case';
 
@@ -49,14 +49,14 @@ describe('ImportAthletesUseCase', () => {
         competitionId: 10,
         fullName: 'Ana Silva',
         belt: 'white',
-        declaredWeightGrams: 65000,
+        declaredWeight: 65000,
         academyId: 1,
       }),
       expect.objectContaining({
         competitionId: 10,
         fullName: 'Bruno Souza',
         belt: 'blue',
-        declaredWeightGrams: 72500,
+        declaredWeight: 72500,
         academyId: null,
       }),
     ]);
@@ -84,7 +84,7 @@ describe('ImportAthletesUseCase', () => {
 
   it('should reuse existing academies loaded in batch before importing athletes', async () => {
     teamRepository = new InMemoryAcademyRepository([
-      makeTeam({
+      makeAcademy({
         id: 7,
         competitionId: 10,
         name: 'Academy One',

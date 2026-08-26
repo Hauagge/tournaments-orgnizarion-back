@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   makeAthlete,
   makeCompetition,
-  makeTeam,
+  makeAcademy,
 } from '../../../../../test/factories';
 import {
   InMemoryAthleteRepository,
@@ -10,10 +10,10 @@ import {
   InMemoryAcademyRepository,
 } from '../../../../../test/repositories/in-memory';
 import { ValidationError } from '@/shared/errors/validation.error';
-import { LinkAthleteToAcademyUseCase } from './add-athlete-to-academy.use-case';
+import { LinkAthleteToAcademyUseCase } from './link-athlete-to-academy.use-case';
 import { CreateAcademyUseCase } from './create-academy.use-case';
 import { ListAcademiesByCompetitionUseCase } from './list-academies-by-competition.use-case';
-import { UnlinkAthleteFromAcademyUseCase } from './remove-athlete-from-academy.use-case';
+import { UnlinkAthleteFromAcademyUseCase } from './unlink-athlete-from-academy.use-case';
 import { UpdateAcademyUseCase } from './update-academy.use-case';
 
 describe('Academy use cases', () => {
@@ -27,8 +27,8 @@ describe('Academy use cases', () => {
       makeCompetition({ id: 20 }),
     ]);
     teamRepository = new InMemoryAcademyRepository([
-      makeTeam({ id: 1, competitionId: 10, name: 'Alpha Academy' }),
-      makeTeam({ id: 2, competitionId: 10, name: 'Bravo Academy' }),
+      makeAcademy({ id: 1, competitionId: 10, name: 'Alpha Academy' }),
+      makeAcademy({ id: 2, competitionId: 10, name: 'Bravo Academy' }),
     ]);
     athleteRepository = new InMemoryAthleteRepository([
       makeAthlete({ id: 5, competitionId: 10, academyId: null }),

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { UserCompetitionTypeOrmEntity } from '../../../auth/entities/user-competition.typeorm-entity';
 import { makeCompetition } from '../../../../../test/factories';
 import { NotFoundError } from '../../../../shared/errors/not-found.error';
 import { CompetitionRepository } from './competition.repository';
@@ -20,6 +21,7 @@ describe('CompetitionRepository', () => {
     save: vi.fn(),
     update: vi.fn(),
     findOneBy: vi.fn(),
+    createQueryBuilder: vi.fn(),
   };
 
   const repository = new CompetitionRepository(repositoryMock as any);
@@ -75,20 +77,34 @@ describe('CompetitionRepository', () => {
   });
 
   it('should list competitions with pagination', async () => {
-    repositoryMock.findAndCount = vi.fn().mockResolvedValue([[ormEntity], 1]);
+    const queryBuilderMock = {
+      innerJoin: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+      skip: vi.fn().mockReturnThis(),
+      take: vi.fn().mockReturnThis(),
+      getManyAndCount: vi.fn().mockResolvedValue([[ormEntity], 1]),
+    };
+    repositoryMock.createQueryBuilder = vi.fn().mockReturnValue(queryBuilderMock);
 
     const result = await repository.list({
+      currentUserId: 7,
       page: 2,
       pageSize: 5,
     });
 
-    expect(repositoryMock.findAndCount).toHaveBeenCalledWith({
-      order: {
-        createdAt: 'DESC',
-      },
-      skip: 5,
-      take: 5,
-    });
+    expect(repositoryMock.createQueryBuilder).toHaveBeenCalledWith('competition');
+    expect(queryBuilderMock.innerJoin).toHaveBeenCalledWith(
+      UserCompetitionTypeOrmEntity,
+      'userCompetition',
+      'userCompetition.competition_id = competition.id AND userCompetition.user_id = :currentUserId',
+      { currentUserId: 7 },
+    );
+    expect(queryBuilderMock.orderBy).toHaveBeenCalledWith(
+      'competition.createdAt',
+      'DESC',
+    );
+    expect(queryBuilderMock.skip).toHaveBeenCalledWith(5);
+    expect(queryBuilderMock.take).toHaveBeenCalledWith(5);
     expect(result[1]).toBe(1);
     expect(result[0][0].id).toBe(1);
   });

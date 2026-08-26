@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { Athlete } from './athlete.entity';
+import { PaymentStatus } from '../value-objects/payment-status.enum';
 
 describe('Athlete', () => {
   it('should create athlete with normalized full name', () => {
     const athlete = Athlete.create({
       competitionId: 1,
       fullName: '  Ana   Maria  Silva  ',
+      documentNumber: null,
       birthDate: new Date('2010-05-10T00:00:00.000Z'),
       belt: ' white ',
-      declaredWeightGrams: 50200,
+      declaredWeight: 50200,
       academyId: null,
     });
 
@@ -24,9 +26,11 @@ describe('Athlete', () => {
       id: 10,
       competitionId: 3,
       fullName: 'Ana Silva',
+      documentNumber: null,
       birthDate: new Date('2010-05-10T00:00:00.000Z'),
       belt: 'gray',
-      declaredWeightGrams: 48000,
+      declaredWeight: 48000,
+      paymentStatus: PaymentStatus.PENDING,
       academyId: 5,
       createdAt,
     });
@@ -41,9 +45,11 @@ describe('Athlete', () => {
       id: 10,
       competitionId: 3,
       fullName: 'Ana Clara Silva',
+      documentNumber: null,
       birthDate: new Date('2010-05-10T00:00:00.000Z'),
       belt: 'gray',
-      declaredWeightGrams: 48000,
+      declaredWeight: 48000,
+      paymentStatus: 'PENDING',
       academyId: null,
       createdAt,
     });
