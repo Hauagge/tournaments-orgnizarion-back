@@ -16,6 +16,8 @@ export function makeCategory(
     weightMaxGrams: 70000,
     totalAthletes: 0,
     createdAt: new Date('2026-01-10T00:00:00.000Z'),
+    updatedAt: new Date('2026-01-10T00:00:00.000Z'),
+    championAthleteId: null,
     ...overrides,
   });
 }

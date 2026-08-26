@@ -33,6 +33,33 @@ export class InMemoryAuthRepository
     return user;
   }
 
+  async list(input: { term?: string }): Promise<User[]> {
+    const term = input.term?.trim().toLowerCase();
+
+    return [...this.users]
+      .filter((user) =>
+        term ? user.username.toLowerCase().includes(term) : true,
+      )
+      .sort((left, right) => left.username.localeCompare(right.username));
+  }
+
+  async listByCompetitionId(input: {
+    competitionId: number;
+    search?: string;
+  }): Promise<UserCompetitionTypeOrmEntity[]> {
+    const search = input.search?.trim().toLowerCase();
+
+    return this.userCompetitions
+      .filter((link) => link.competitionId === input.competitionId)
+      .filter((link) => {
+        if (!search) {
+          return true;
+        }
+        const user = this.users.find((item) => item.id === link.userId);
+        return user?.username.toLowerCase().includes(search) ?? false;
+      });
+  }
+
   async findByUserIdAndCompetitionId(input: {
     userId: number;
     competitionId: number;

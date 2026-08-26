@@ -9,12 +9,13 @@ export class InMemoryAthleteRepository implements IAthleteRepository {
 
   constructor(seed: Athlete[] = []) {
     this.athletes = [...seed];
-    this.nextId = seed.reduce((max, item) => Math.max(max, item.id), 0) + 1;
+    this.nextId = seed.reduce((max, item) => Math.max(max, item.id ?? 0), 0) + 1;
   }
 
   setAthletes(athletes: Athlete[]) {
     this.athletes = [...athletes];
-    this.nextId = athletes.reduce((max, item) => Math.max(max, item.id), 0) + 1;
+    this.nextId =
+      athletes.reduce((max, item) => Math.max(max, item.id ?? 0), 0) + 1;
   }
 
   async findById(id: number): Promise<Athlete | null> {
