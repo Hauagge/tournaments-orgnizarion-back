@@ -29,7 +29,11 @@ export class StartFightUseCase {
 
     await this.eventBus.publish({
       name: 'fight.started',
-      payload: { fightId: startedFight.id as number, competitionId: startedFight.competitionId },
+      payload: {
+        fightId: startedFight.id as number,
+        competitionId: startedFight.competitionId,
+        areaId: startedFight.areaId,
+      },
       occurredAt: new Date(),
     });
 

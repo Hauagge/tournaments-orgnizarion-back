@@ -1,4 +1,10 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
+import { CompetitionAccess } from '@/core/auth/infra/decorators/competition-access.decorator';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
+import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
+import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
+import { AuthRole } from '@/domain/auth/auth-role.enum';
 import { ZodValidationPipe } from '@/core/pipe/zod-validation.pipe';
 import { ApiResponse } from '@/shared/result/api-response.type';
 import { CallNextAreaFightUseCase } from '../../application/use-cases/call-next-area-fight.use-case';
@@ -24,6 +30,8 @@ import {
 } from './dtos/move-key-group-area-distribution.dto';
 
 @Controller()
+@UseGuards(JwtAuthGuard, RolesGuard, CompetitionAccessGuard)
+@Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class AreaController {
   constructor(
     private readonly createAreasUseCase: CreateAreasUseCase,
@@ -35,6 +43,7 @@ export class AreaController {
   ) {}
 
   @Post('competitions/:id/areas')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async create(
     @Param(new ZodValidationPipe(CompetitionAreaParamSchema))
     params: CompetitionAreaParamDto,
@@ -54,6 +63,7 @@ export class AreaController {
   }
 
   @Get('competitions/:id/areas')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async list(
     @Param(new ZodValidationPipe(CompetitionAreaParamSchema))
     params: CompetitionAreaParamDto,
@@ -67,6 +77,7 @@ export class AreaController {
   }
 
   @Post('competitions/:id/areas/distribute')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async distribute(
     @Param(new ZodValidationPipe(CompetitionAreaParamSchema))
     params: CompetitionAreaParamDto,
@@ -88,6 +99,7 @@ export class AreaController {
   }
 
   @Get('areas/:id/queue')
+  @CompetitionAccess({ type: 'area', param: 'id' })
   async queue(
     @Param(new ZodValidationPipe(AreaIdParamSchema))
     params: AreaIdParamDto,
@@ -101,6 +113,7 @@ export class AreaController {
   }
 
   @Patch('competitions/:id/areas/distribution')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async moveDistribution(
     @Param(new ZodValidationPipe(CompetitionAreaParamSchema))
     params: CompetitionAreaParamDto,
@@ -122,6 +135,7 @@ export class AreaController {
   }
 
   @Post('areas/:id/call-next')
+  @CompetitionAccess({ type: 'area', param: 'id' })
   async callNext(
     @Param(new ZodValidationPipe(AreaIdParamSchema))
     params: AreaIdParamDto,

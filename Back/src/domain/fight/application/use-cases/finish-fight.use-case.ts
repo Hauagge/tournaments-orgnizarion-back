@@ -85,6 +85,7 @@ export class FinishFightUseCase {
       payload: {
         fightId: finishedFight.id as number,
         competitionId: finishedFight.competitionId,
+        areaId: finishedFight.areaId,
         winnerAthleteId: finishedFight.winnerAthleteId,
         winType: finishedFight.winType,
       },

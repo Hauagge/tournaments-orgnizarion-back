@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { EventBusModule } from '@/core/events/event-bus.module';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
+import { AuthModule } from '../auth/auth.module';
 import { AthleteProviderModule } from '../athlete/athlete-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
 import { FightProviderModule } from '../fight/fight-provider.module';
@@ -25,6 +27,7 @@ import { AreaProviderModule } from './area-provider.module';
     FightProviderModule,
     AthleteProviderModule,
     EventBusModule,
+    AuthModule,
   ],
   controllers: [AreaController],
   providers: [
@@ -40,6 +43,7 @@ import { AreaProviderModule } from './area-provider.module';
     SplitByAgeStrategy,
     KeysAreaDistributionStrategy,
     AreaDistributionStrategyResolverService,
+    CompetitionAccessGuard,
   ],
   exports: [
     CreateAreasUseCase,

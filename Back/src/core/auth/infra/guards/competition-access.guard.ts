@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IUserCompetitionRepository } from '@/domain/auth/repository/IUserCompetitionRepository.repository';
+import { IAreaRepository } from '@/domain/area/repository/IAreaRepository.repository';
 import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
 import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
 import { IKeyGroupRepository } from '@/domain/key-group/repository/IKeyGroupRepository.repository';
@@ -33,6 +34,9 @@ export class CompetitionAccessGuard implements CanActivate {
     @Optional()
     @Inject(IFightRepository)
     private readonly fightRepository?: IFightRepository,
+    @Optional()
+    @Inject(IAreaRepository)
+    private readonly areaRepository?: IAreaRepository,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -106,6 +110,11 @@ export class CompetitionAccessGuard implements CanActivate {
       case 'fight': {
         const fight = await this.fightRepository?.findById(rawId);
         return fight ? fight.competitionId : null;
+      }
+
+      case 'area': {
+        const area = await this.areaRepository?.findById(rawId);
+        return area ? area.competitionId : null;
       }
     }
   }

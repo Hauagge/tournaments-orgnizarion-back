@@ -179,6 +179,7 @@ export class MarkFightWinnerUseCase {
       payload: {
         fightId: result.fight.id,
         competitionId: input.competitionId,
+        areaId: result.fight.areaId,
         winnerAthleteId: result.fight.winnerId,
         winType: result.fight.winType,
       },

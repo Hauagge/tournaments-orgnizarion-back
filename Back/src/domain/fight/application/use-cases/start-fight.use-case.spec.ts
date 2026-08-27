@@ -58,7 +58,7 @@ describe('StartFightUseCase', () => {
     expect(eventBus.published).toEqual([
       expect.objectContaining({
         name: 'fight.started',
-        payload: { fightId: 1, competitionId: 1 },
+        payload: { fightId: 1, competitionId: 1, areaId: null },
       }),
     ]);
   });
