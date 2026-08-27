@@ -65,6 +65,7 @@ export class SearchAthletesUseCase {
         weighInStatus:
           weighInStatusByAthleteId.get(athlete.id as number) ??
           WeighInStatus.PENDING,
+        weighInMeasuredWeightGrams: weighIn?.measuredWeightGrams ?? null,
         weighInEvaluatedById: weighIn?.performedById ?? null,
         weighInEvaluatedByName: weighIn?.performedBy ?? null,
         weighInEvaluatedAt: weighIn?.performedAt ?? null,

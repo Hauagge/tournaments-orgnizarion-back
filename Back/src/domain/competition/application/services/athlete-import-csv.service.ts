@@ -155,6 +155,7 @@ export class AthleteImportCsvService {
         'ACADEMYNAME',
         'ACADEMY_NAME',
         'ACADEMY',
+        'ACADEMIA',
         'TEAMNAME',
         'TEAM_NAME',
         'TEAM',
