@@ -161,4 +161,41 @@ describe('KeyGroupBracketViewBuilderService', () => {
       { athleteId: 2, athleteName: 'Bia', wins: 0, losses: 1, points: 0 },
     ]);
   });
+
+  it('does not misclassify a 3-member group as best-of-three when stale best-of-three fights were canceled', () => {
+    const details = makeDetails({
+      members: [
+        ...makeDetails().members,
+        {
+          id: 3,
+          fullName: 'Caio',
+          birthDate: new Date('2010-01-01T00:00:00.000Z'),
+          belt: 'white',
+          declaredWeightGrams: 50000,
+          academyName: null,
+          weighInStatus: 'APPROVED' as any,
+        },
+      ],
+      fights: [
+        makeFight({
+          id: 1,
+          athleteAId: 1,
+          athleteBId: 2,
+          status: FightStatus.CANCELED,
+          orderIndex: 1,
+        }),
+        makeFight({
+          id: 2,
+          athleteAId: 1,
+          athleteBId: 2,
+          status: FightStatus.CANCELED,
+          orderIndex: 2,
+        }),
+      ],
+    });
+
+    const result = service.build(details);
+
+    expect(result.bracketFormat).toBe(KeyGroupBracketFormat.ROUND_ROBIN);
+  });
 });

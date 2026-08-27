@@ -77,9 +77,12 @@ export class KeyGroupBracketViewBuilderService {
 
   private detectFormat(details: KeyGroupDetailsView): KeyGroupBracketFormat {
     const uniqueMemberIds = new Set(details.members.map((member) => member.id));
+    const activeFights = details.fights.filter(
+      (fight) => fight.status !== FightStatus.CANCELED,
+    );
     const allFightsUseSameTwoAthletes =
-      details.fights.length > 0 &&
-      details.fights.every((fight) => {
+      activeFights.length > 0 &&
+      activeFights.every((fight) => {
         const fightAthleteIds = [fight.athleteAId, fight.athleteBId].sort(
           (left, right) => left - right,
         );
