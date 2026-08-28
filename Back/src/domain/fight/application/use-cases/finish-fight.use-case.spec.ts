@@ -2,54 +2,15 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { DomainEvent, DomainEventHandler, EventBus } from '@/core/events/event-bus.interface';
 import { AreaQueueItem } from '@/domain/area/domain/entities/area-queue-item.entity';
 import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-queue-item-status.enum';
-import { AreaQueueFightDetails } from '@/domain/area/repository/area-queue-fight-details.type';
-import { IAreaQueueItemRepository } from '@/domain/area/repository/IAreaQueueItemRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
-import { InMemoryFightRepository } from '../../../../../test/repositories/in-memory';
+import {
+  InMemoryAreaQueueItemRepository,
+  InMemoryFightRepository,
+} from '../../../../../test/repositories/in-memory';
 import { FightEntity } from '../../domain/entities/fight.entity';
 import { FightStatus } from '../../domain/value-objects/fight-status.enum';
 import { FinishFightUseCase } from './finish-fight.use-case';
-
-class InMemoryAreaQueueItemRepository implements IAreaQueueItemRepository {
-  constructor(private items: AreaQueueItem[] = []) {}
-
-  async createManyQueueItems(items: AreaQueueItem[]): Promise<AreaQueueItem[]> {
-    this.items = [...this.items, ...items];
-    return items;
-  }
-
-  async replaceForCompetition(): Promise<AreaQueueItem[]> {
-    return [];
-  }
-
-  async listByAreaId(areaId: number): Promise<AreaQueueItem[]> {
-    return this.items.filter((item) => item.areaId === areaId);
-  }
-
-  async listByAreaIds(areaIds: number[]): Promise<AreaQueueItem[]> {
-    return this.items.filter((item) => areaIds.includes(item.areaId));
-  }
-
-  async replaceForAreas(): Promise<AreaQueueItem[]> {
-    return [];
-  }
-
-  async listFightDetailsByAreaId(): Promise<AreaQueueFightDetails[]> {
-    return [];
-  }
-
-  async findByFightId(fightId: number): Promise<AreaQueueItem | null> {
-    return this.items.find((item) => item.fightId === fightId) ?? null;
-  }
-
-  async update(item: AreaQueueItem): Promise<AreaQueueItem> {
-    this.items = this.items.map((current) =>
-      current.id === item.id ? item : current,
-    );
-    return item;
-  }
-}
 
 class RecordingEventBus implements EventBus {
   public published: DomainEvent[] = [];

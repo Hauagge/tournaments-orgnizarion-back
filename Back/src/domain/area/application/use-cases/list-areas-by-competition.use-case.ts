@@ -84,21 +84,23 @@ export class ListAreasByCompetitionUseCase {
           })
           .filter((fight): fight is AreaListFightView => fight !== null);
 
+        const orderedFightViews = this.sortByQueuePosition(fightViews);
+
         const currentFight =
-          fightViews.find(
+          orderedFightViews.find(
             (fight) =>
               fight.fightStatus === FightStatus.IN_PROGRESS ||
               fight.queueStatus === AreaQueueItemStatus.CALLED,
           ) ?? null;
 
         const nextFight =
-          fightViews.find(
+          orderedFightViews.find(
             (fight) =>
               fight.queueStatus === AreaQueueItemStatus.QUEUED &&
               fight.fightStatus === FightStatus.WAITING,
           ) ?? null;
 
-        const queue = fightViews.filter(
+        const queue = orderedFightViews.filter(
           (fight) => fight.queueStatus === AreaQueueItemStatus.QUEUED,
         );
 
@@ -109,13 +111,27 @@ export class ListAreasByCompetitionUseCase {
           queuedFights: items.filter(
             (item) => item.status === AreaQueueItemStatus.QUEUED,
           ).length,
-          fightCount: fightViews.length,
+          fightCount: orderedFightViews.length,
           next: nextFight,
           currentFight,
           queue,
-          fights: fightViews,
+          fights: orderedFightViews,
         };
       }),
     );
+  }
+
+  private sortByQueuePosition(
+    fightViews: AreaListFightView[],
+  ): AreaListFightView[] {
+    return fightViews
+      .map((fight, index) => ({ fight, index }))
+      .sort((left, right) => {
+        const leftPosition = left.fight.position ?? Number.MAX_SAFE_INTEGER;
+        const rightPosition = right.fight.position ?? Number.MAX_SAFE_INTEGER;
+
+        return leftPosition - rightPosition || left.index - right.index;
+      })
+      .map((entry) => entry.fight);
   }
 }

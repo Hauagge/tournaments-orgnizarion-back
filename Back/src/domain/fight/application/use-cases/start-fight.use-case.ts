@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EventBus } from '@/core/events/event-bus.interface';
+import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-queue-item-status.enum';
+import { IAreaQueueItemRepository } from '@/domain/area/repository/IAreaQueueItemRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { FightStatus } from '../../domain/value-objects/fight-status.enum';
@@ -10,6 +12,8 @@ export class StartFightUseCase {
   constructor(
     @Inject(IFightRepository)
     private readonly fightRepository: IFightRepository,
+    @Inject(IAreaQueueItemRepository)
+    private readonly areaQueueItemRepository: IAreaQueueItemRepository,
     @Inject(EventBus)
     private readonly eventBus: EventBus,
   ) {}
@@ -48,6 +52,15 @@ export class StartFightUseCase {
       fight.start(new Date()),
     );
 
+
+    const queueItem = await this.areaQueueItemRepository.findByFightId(
+      startedFight.id as number,
+    );
+    const startedQueueItem =
+      queueItem?.status === AreaQueueItemStatus.QUEUED
+        ? await this.areaQueueItemRepository.update(queueItem.call())
+        : null;
+
     await this.eventBus.publish({
       name: 'fight.started',
       payload: {
@@ -57,6 +70,20 @@ export class StartFightUseCase {
       },
       occurredAt: new Date(),
     });
+
+    if (startedQueueItem) {
+      await this.eventBus.publish({
+        name: 'queue.updated',
+        payload: {
+          competitionId: startedFight.competitionId,
+          areaId: startedQueueItem.areaId,
+          fightId: startedFight.id as number,
+          queueItemId: startedQueueItem.id as number,
+          status: AreaQueueItemStatus.CALLED,
+        },
+        occurredAt: new Date(),
+      });
+    }
 
     return startedFight;
   }
