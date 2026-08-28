@@ -1,6 +1,7 @@
 import { AreaQueueItemTypeOrmEntity } from '@/domain/area/infra/persistence/entities/area-queue-item.typeorm-entity';
 import { CategoryTypeOrmEntity } from '@/domain/category/infra/persistence/entities/category.typeorm-entity';
 import { FightTypeOrmEntity } from '@/domain/fight/entities/fight.typeorm-entity';
+import { KeyGroupTypeOrmEntity } from '@/domain/key-group/infra/persistence/entities/key-group.typeorm-entity';
 
 export class FakeRepository<T extends { id?: number }> {
   private nextId = 1;
@@ -75,12 +76,14 @@ export class FakeManager {
     public readonly fights: FakeRepository<FightTypeOrmEntity>,
     public readonly categories: FakeRepository<CategoryTypeOrmEntity>,
     public readonly areaQueueItems: FakeRepository<AreaQueueItemTypeOrmEntity>,
+    public readonly keyGroups: FakeRepository<KeyGroupTypeOrmEntity>,
   ) {}
 
   getRepository(entity: unknown) {
     if (entity === FightTypeOrmEntity) return this.fights;
     if (entity === CategoryTypeOrmEntity) return this.categories;
     if (entity === AreaQueueItemTypeOrmEntity) return this.areaQueueItems;
+    if (entity === KeyGroupTypeOrmEntity) return this.keyGroups;
     throw new Error('Unexpected entity requested from FakeManager');
   }
 }
@@ -97,11 +100,13 @@ export function makeFakeDataSource(input: {
   fights?: FightTypeOrmEntity[];
   categories?: CategoryTypeOrmEntity[];
   areaQueueItems?: AreaQueueItemTypeOrmEntity[];
+  keyGroups?: KeyGroupTypeOrmEntity[];
 }) {
   const manager = new FakeManager(
     new FakeRepository<FightTypeOrmEntity>(input.fights ?? []),
     new FakeRepository<CategoryTypeOrmEntity>(input.categories ?? []),
     new FakeRepository<AreaQueueItemTypeOrmEntity>(input.areaQueueItems ?? []),
+    new FakeRepository<KeyGroupTypeOrmEntity>(input.keyGroups ?? []),
   );
 
   return { manager, dataSource: new FakeDataSource(manager) };

@@ -93,6 +93,7 @@ export class KeyGroupRepository implements IKeyGroupRepository {
       .addSelect('keyGroup.name', 'name')
       .addSelect('keyGroup.status', 'status')
       .addSelect('keyGroup.created_at', 'createdAt')
+      .addSelect('keyGroup.champion_athlete_id', 'championAthleteId')
       .addSelect('COUNT(member.id)', 'membersCount')
       .groupBy('keyGroup.id')
       .orderBy('keyGroup.category_id', 'ASC')
@@ -105,6 +106,7 @@ export class KeyGroupRepository implements IKeyGroupRepository {
         status: string;
         createdAt: Date;
         membersCount: string;
+        championAthleteId: string | null;
       }>();
 
     return rows.map((row) => ({
@@ -115,6 +117,8 @@ export class KeyGroupRepository implements IKeyGroupRepository {
       status: row.status,
       createdAt: new Date(row.createdAt),
       membersCount: Number(row.membersCount),
+      championAthleteId:
+        row.championAthleteId === null ? null : Number(row.championAthleteId),
     }));
   }
 

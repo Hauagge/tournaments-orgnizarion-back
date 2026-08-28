@@ -11,6 +11,7 @@ export type KeyGroupListItemView = {
   status: string;
   createdAt: Date;
   membersCount: number;
+  championAthleteId: number | null;
 };
 
 export type KeyGroupDetailsAthleteView = {

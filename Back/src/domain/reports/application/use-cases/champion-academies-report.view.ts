@@ -1,8 +1,10 @@
 export type ChampionAthleteView = {
   athleteId: number;
   athleteName: string;
-  categoryId: number;
-  categoryName: string;
+  categoryId: number | null;
+  categoryName: string | null;
+  keyGroupId: number | null;
+  keyGroupName: string | null;
   belt: string | null;
   ageDivision: string | null;
   weightDivision: string | null;

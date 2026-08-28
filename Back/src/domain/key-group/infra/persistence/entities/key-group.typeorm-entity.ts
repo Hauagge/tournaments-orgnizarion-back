@@ -18,6 +18,9 @@ export class KeyGroupTypeOrmEntity {
   @Column({ type: 'varchar' })
   status: KeyGroupStatus;
 
+  @Column({ name: 'champion_athlete_id', type: 'int', nullable: true })
+  championAthleteId: number | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
 }

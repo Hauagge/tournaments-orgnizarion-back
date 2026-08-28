@@ -4,6 +4,7 @@ import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-que
 import { AreaQueueItemTypeOrmEntity } from '@/domain/area/infra/persistence/entities/area-queue-item.typeorm-entity';
 import { CategoryTypeOrmEntity } from '@/domain/category/infra/persistence/entities/category.typeorm-entity';
 import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
+import { KeyGroupChampionService } from '@/domain/key-group/application/services/key-group-champion.service';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { FightStatus } from '../../domain/value-objects/fight-status.enum';
@@ -68,6 +69,7 @@ describe('MarkFightWinnerUseCase', () => {
       {} as ICategoryRepository,
       eventBus,
       bestOfThreeProgressionService,
+      new KeyGroupChampionService(),
     );
     return { useCase, manager };
   }
@@ -172,6 +174,7 @@ describe('MarkFightWinnerUseCase', () => {
       {} as ICategoryRepository,
       eventBus,
       bestOfThreeProgressionService,
+      new KeyGroupChampionService(),
     );
 
     await useCase.execute({ competitionId: 1, fightId: 1, winnerId: 10 });
@@ -226,6 +229,7 @@ describe('MarkFightWinnerUseCase', () => {
       {} as ICategoryRepository,
       eventBus,
       bestOfThreeProgressionService,
+      new KeyGroupChampionService(),
     );
 
     await useCase.execute({ competitionId: 1, fightId: 1, winnerId: 10 });
@@ -262,6 +266,7 @@ describe('MarkFightWinnerUseCase', () => {
       {} as ICategoryRepository,
       eventBus,
       bestOfThreeProgressionService,
+      new KeyGroupChampionService(),
     );
 
     await useCase.execute({ competitionId: 1, fightId: 1, winnerId: 10 });
@@ -291,6 +296,7 @@ describe('MarkFightWinnerUseCase', () => {
       {} as ICategoryRepository,
       eventBus,
       bestOfThreeProgressionService,
+      new KeyGroupChampionService(),
     );
 
     await useCase.execute({

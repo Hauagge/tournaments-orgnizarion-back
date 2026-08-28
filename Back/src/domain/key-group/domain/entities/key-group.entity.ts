@@ -7,6 +7,7 @@ export type KeyGroupProps = {
   name: string | null;
   status: KeyGroupStatus;
   createdAt: Date;
+  championAthleteId?: number | null;
 };
 
 export class KeyGroup {
@@ -68,4 +69,7 @@ export class KeyGroup {
   get name(): string | null { return this.props.name; }
   get status(): KeyGroupStatus { return this.props.status; }
   get createdAt(): Date { return this.props.createdAt; }
+  get championAthleteId(): number | null {
+    return this.props.championAthleteId ?? null;
+  }
 }

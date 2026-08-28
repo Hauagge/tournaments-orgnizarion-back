@@ -72,6 +72,7 @@ export class InMemoryKeyGroupRepository implements IKeyGroupRepository {
         id: group.id as number,
         competitionId: group.competitionId,
         categoryId: group.categoryId,
+        championAthleteId: group.championAthleteId,
         name: group.name,
         status: group.status,
         createdAt: group.createdAt,

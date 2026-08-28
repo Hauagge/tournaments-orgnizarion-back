@@ -4,6 +4,8 @@ import { EventBus } from '@/core/events/event-bus.interface';
 import { AreaQueueItemTypeOrmEntity } from '@/domain/area/infra/persistence/entities/area-queue-item.typeorm-entity';
 import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-queue-item-status.enum';
 import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
+import { KeyGroupChampionService } from '@/domain/key-group/application/services/key-group-champion.service';
+import { KeyGroupTypeOrmEntity } from '@/domain/key-group/infra/persistence/entities/key-group.typeorm-entity';
 import { CategoryTypeOrmEntity } from '@/domain/category/infra/persistence/entities/category.typeorm-entity';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
@@ -52,6 +54,7 @@ export class MarkFightWinnerUseCase {
     @Inject(EventBus)
     private readonly eventBus: EventBus,
     private readonly bestOfThreeProgressionService: BestOfThreeProgressionService,
+    private readonly keyGroupChampionService: KeyGroupChampionService,
   ) {}
 
   async execute(input: Input): Promise<Output> {
@@ -59,6 +62,7 @@ export class MarkFightWinnerUseCase {
       const fightRepository = manager.getRepository(FightTypeOrmEntity);
       const categoryRepository = manager.getRepository(CategoryTypeOrmEntity);
       const areaQueueRepository = manager.getRepository(AreaQueueItemTypeOrmEntity);
+      const keyGroupRepository = manager.getRepository(KeyGroupTypeOrmEntity);
 
       const fight = await fightRepository.findOneBy({ id: input.fightId });
       if (!fight || fight.competitionId !== input.competitionId) {
@@ -162,6 +166,16 @@ export class MarkFightWinnerUseCase {
 
       if (thirdBestOfThreeFight) {
         nextFight = thirdBestOfThreeFight;
+      }
+
+      if (fight.keyGroupId !== null) {
+        champion = await this.persistKeyGroupChampion({
+          keyGroupId: fight.keyGroupId,
+          fallbackCategoryId: fight.categoryId,
+          fightRepository,
+          keyGroupRepository,
+          categoryRepository,
+        });
       } else if (nextFight === null && fight.categoryId !== null) {
         const category = await categoryRepository.findOneBy({ id: fight.categoryId });
         if (category) {
@@ -247,6 +261,57 @@ export class MarkFightWinnerUseCase {
           }
         : null,
       categoryChampion: result.categoryChampion,
+    };
+  }
+
+  /**
+   * O campeao da chave e gravado em key_groups; quando a chave tem categoria,
+   * a categoria tambem recebe o campeao (usado pelo relatorio de academias).
+   */
+  private async persistKeyGroupChampion(input: {
+    keyGroupId: number;
+    fallbackCategoryId: number | null;
+    fightRepository: import('typeorm').Repository<FightTypeOrmEntity>;
+    keyGroupRepository: import('typeorm').Repository<KeyGroupTypeOrmEntity>;
+    categoryRepository: import('typeorm').Repository<CategoryTypeOrmEntity>;
+  }): Promise<Output['categoryChampion']> {
+    const keyGroupFights = await input.fightRepository.find({
+      where: { keyGroupId: input.keyGroupId },
+      order: { order: 'ASC', id: 'ASC' },
+    });
+    const championAthleteId = this.keyGroupChampionService.resolve(
+      keyGroupFights.map(FightMapper.toDomain),
+    );
+
+    const keyGroup = await input.keyGroupRepository.findOneBy({
+      id: input.keyGroupId,
+    });
+
+    if (keyGroup && keyGroup.championAthleteId !== championAthleteId) {
+      keyGroup.championAthleteId = championAthleteId;
+      await input.keyGroupRepository.save(keyGroup);
+    }
+
+    const categoryId = keyGroup?.categoryId ?? input.fallbackCategoryId;
+
+    if (championAthleteId === null || categoryId === null) {
+      return null;
+    }
+
+    const category = await input.categoryRepository.findOneBy({
+      id: categoryId,
+    });
+
+    if (!category) {
+      return null;
+    }
+
+    category.championAthleteId = championAthleteId;
+    await input.categoryRepository.save(category);
+
+    return {
+      categoryId: category.id,
+      athleteId: championAthleteId,
     };
   }
 

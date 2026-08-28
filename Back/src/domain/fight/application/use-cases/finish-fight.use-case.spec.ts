@@ -8,7 +8,9 @@ import { AreaQueueItem } from '@/domain/area/domain/entities/area-queue-item.ent
 import { AreaQueueItemTypeOrmEntity } from '@/domain/area/infra/persistence/entities/area-queue-item.typeorm-entity';
 import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-queue-item-status.enum';
 import { CategoryTypeOrmEntity } from '@/domain/category/infra/persistence/entities/category.typeorm-entity';
+import { KeyGroupTypeOrmEntity } from '@/domain/key-group/infra/persistence/entities/key-group.typeorm-entity';
 import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
+import { KeyGroupChampionService } from '@/domain/key-group/application/services/key-group-champion.service';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { makeFight as makeFightRow } from '../../../../../test/factories/fight.factory';
@@ -44,11 +46,13 @@ describe('FinishFightUseCase', () => {
   function setup(input: {
     fights: FightTypeOrmEntity[];
     categories?: CategoryTypeOrmEntity[];
+    keyGroups?: KeyGroupTypeOrmEntity[];
     queueItems?: AreaQueueItem[];
   }) {
     const { manager, dataSource } = makeFakeDataSource({
       fights: input.fights,
       categories: input.categories,
+      keyGroups: input.keyGroups,
       areaQueueItems: (input.queueItems ?? []).map(
         (item) => ({ ...item.toJSON() }) as AreaQueueItemTypeOrmEntity,
       ),
@@ -72,6 +76,7 @@ describe('FinishFightUseCase', () => {
       {} as ICategoryRepository,
       eventBus,
       new BestOfThreeProgressionService(),
+      new KeyGroupChampionService(),
     );
     const useCase = new FinishFightUseCase(
       fightRepository,
@@ -182,6 +187,125 @@ describe('FinishFightUseCase', () => {
 
     const category = await manager.categories.findOneBy({ id: 7 });
     expect(category?.championAthleteId).toBe(1);
+  });
+
+  it('saves the key group champion when the last bracket fight ends', async () => {
+    const { useCase, manager } = setup({
+      fights: [
+        makeFightRow({
+          id: 1,
+          keyGroupId: 8,
+          categoryId: null,
+          round: 2,
+          order: 3,
+          status: FightStatus.IN_PROGRESS,
+        }),
+        makeFightRow({
+          id: 2,
+          keyGroupId: 8,
+          categoryId: null,
+          round: 1,
+          order: 1,
+          status: FightStatus.FINISHED,
+          winnerId: 1,
+        }),
+        makeFightRow({
+          id: 3,
+          keyGroupId: 8,
+          categoryId: null,
+          round: 1,
+          order: 2,
+          athleteAId: 3,
+          athleteBId: 4,
+          status: FightStatus.FINISHED,
+          winnerId: 2,
+        }),
+      ],
+      keyGroups: [
+        {
+          id: 8,
+          competitionId: 1,
+          categoryId: null,
+          name: 'Chave A',
+          status: 'READY',
+          championAthleteId: null,
+          createdAt: new Date('2026-01-10T00:00:00.000Z'),
+        } as KeyGroupTypeOrmEntity,
+      ],
+    });
+
+    await useCase.execute({ id: 1, winnerAthleteId: 2, winType: 'POINTS' });
+
+    const keyGroup = await manager.keyGroups.findOneBy({ id: 8 });
+    expect(keyGroup?.championAthleteId).toBe(2);
+  });
+
+  it('does not set a champion while the key group has open fights', async () => {
+    const { useCase, manager } = setup({
+      fights: [
+        makeFightRow({
+          id: 1,
+          keyGroupId: 8,
+          categoryId: null,
+          status: FightStatus.IN_PROGRESS,
+        }),
+        makeFightRow({
+          id: 2,
+          keyGroupId: 8,
+          categoryId: null,
+          order: 2,
+          athleteAId: 3,
+          athleteBId: 4,
+          status: FightStatus.PENDING,
+        }),
+      ],
+      keyGroups: [
+        {
+          id: 8,
+          competitionId: 1,
+          categoryId: null,
+          name: 'Chave A',
+          status: 'READY',
+          championAthleteId: null,
+          createdAt: new Date('2026-01-10T00:00:00.000Z'),
+        } as KeyGroupTypeOrmEntity,
+      ],
+    });
+
+    await useCase.execute({ id: 1, winnerAthleteId: 2, winType: 'POINTS' });
+
+    const keyGroup = await manager.keyGroups.findOneBy({ id: 8 });
+    expect(keyGroup?.championAthleteId).toBeNull();
+  });
+
+  it('mirrors the key group champion into the category when there is one', async () => {
+    const { useCase, manager } = setup({
+      fights: [
+        makeFightRow({
+          id: 1,
+          keyGroupId: 8,
+          categoryId: 7,
+          status: FightStatus.IN_PROGRESS,
+        }),
+      ],
+      categories: [{ id: 7, championAthleteId: null } as CategoryTypeOrmEntity],
+      keyGroups: [
+        {
+          id: 8,
+          competitionId: 1,
+          categoryId: 7,
+          name: 'Chave A',
+          status: 'READY',
+          championAthleteId: null,
+          createdAt: new Date('2026-01-10T00:00:00.000Z'),
+        } as KeyGroupTypeOrmEntity,
+      ],
+    });
+
+    await useCase.execute({ id: 1, winnerAthleteId: 1, winType: 'POINTS' });
+
+    expect((await manager.keyGroups.findOneBy({ id: 8 }))?.championAthleteId).toBe(1);
+    expect((await manager.categories.findOneBy({ id: 7 }))?.championAthleteId).toBe(1);
   });
 
   it('rejects a winner that does not belong to the fight', async () => {

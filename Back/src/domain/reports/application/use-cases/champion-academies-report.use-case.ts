@@ -4,6 +4,10 @@ import { IAthleteRepository } from '@/domain/athlete/repository/IAthleteReposito
 import { Category } from '@/domain/category/domain/entities/category.entity';
 import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
 import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
+import {
+  IKeyGroupRepository,
+  KeyGroupListItemView,
+} from '@/domain/key-group/repository/IKeyGroupRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import {
   ChampionAcademiesReportView,
@@ -20,6 +24,12 @@ export type ChampionAcademiesReportInput = {
 
 const UNKNOWN_ACADEMY_NAME = 'Academia nao informada';
 
+type ChampionSource = {
+  athleteId: number;
+  keyGroup: KeyGroupListItemView | null;
+  category: Category | null;
+};
+
 @Injectable()
 export class ChampionAcademiesReportUseCase {
   constructor(
@@ -31,6 +41,8 @@ export class ChampionAcademiesReportUseCase {
     private readonly athleteRepository: IAthleteRepository,
     @Inject(IAcademyRepository)
     private readonly academyRepository: IAcademyRepository,
+    @Inject(IKeyGroupRepository)
+    private readonly keyGroupRepository: IKeyGroupRepository,
   ) {}
 
   async execute(
@@ -46,14 +58,51 @@ export class ChampionAcademiesReportUseCase {
       );
     }
 
-    const categories = await this.categoryRepository.listByCompetitionId(
-      input.competitionId,
-    );
-    const championCategories = categories.filter((category) =>
-      this.matchesFilters(category, input),
+    const [categories, keyGroups] = await Promise.all([
+      this.categoryRepository.listByCompetitionId(input.competitionId),
+      this.keyGroupRepository.listByCompetitionId({
+        competitionId: input.competitionId,
+      }),
+    ]);
+    const categoriesById = new Map(
+      categories.map((category) => [category.id as number, category]),
     );
 
-    if (championCategories.length === 0) {
+    // Chaves decididas primeiro: em competicao por chaves a categoria pode nem
+    // existir. A categoria so entra depois se nenhuma chave dela ja apareceu.
+    const championKeyGroups = keyGroups.filter(
+      (keyGroup) =>
+        keyGroup.championAthleteId !== null &&
+        this.matchesKeyGroupFilters(keyGroup, categoriesById, input),
+    );
+    const categoryIdsFromKeyGroups = new Set(
+      championKeyGroups
+        .map((keyGroup) => keyGroup.categoryId)
+        .filter((categoryId): categoryId is number => categoryId !== null),
+    );
+    const championCategories = categories.filter(
+      (category) =>
+        !categoryIdsFromKeyGroups.has(category.id as number) &&
+        this.matchesFilters(category, input),
+    );
+
+    const championSources: ChampionSource[] = [
+      ...championKeyGroups.map((keyGroup) => ({
+        athleteId: keyGroup.championAthleteId as number,
+        keyGroup,
+        category:
+          keyGroup.categoryId !== null
+            ? (categoriesById.get(keyGroup.categoryId) ?? null)
+            : null,
+      })),
+      ...championCategories.map((category) => ({
+        athleteId: category.championAthleteId as number,
+        keyGroup: null,
+        category,
+      })),
+    ];
+
+    if (championSources.length === 0) {
       return {
         competitionId: input.competitionId,
         totalChampionAthletes: 0,
@@ -63,13 +112,7 @@ export class ChampionAcademiesReportUseCase {
 
     const [athletes, academies] = await Promise.all([
       this.athleteRepository.findByIds(
-        Array.from(
-          new Set(
-            championCategories.map(
-              (category) => category.championAthleteId as number,
-            ),
-          ),
-        ),
+        Array.from(new Set(championSources.map((source) => source.athleteId))),
       ),
       this.academyRepository.listByCompetitionId(input.competitionId),
     ]);
@@ -86,12 +129,14 @@ export class ChampionAcademiesReportUseCase {
       { academyId: number | null; academyName: string; champions: ChampionAthleteView[] }
     >();
 
-    for (const category of championCategories) {
-      const athlete = athletesById.get(category.championAthleteId as number);
+    for (const source of championSources) {
+      const athlete = athletesById.get(source.athleteId);
 
       if (!athlete) {
         continue;
       }
+
+      const category = source.category;
 
       const academyId = athlete.academyId ?? null;
       const key = academyId === null ? 'none' : String(academyId);
@@ -107,11 +152,16 @@ export class ChampionAcademiesReportUseCase {
       group.champions.push({
         athleteId: athlete.id as number,
         athleteName: athlete.fullName,
-        categoryId: category.id as number,
-        categoryName: category.name,
-        belt: category.belt || athlete.belt || null,
-        ageDivision: this.buildAgeDivision(category),
-        weightDivision: this.buildWeightDivision(category),
+        categoryId: category?.id ?? null,
+        categoryName: category?.name ?? null,
+        keyGroupId: source.keyGroup?.id ?? null,
+        keyGroupName:
+          source.keyGroup === null
+            ? null
+            : (source.keyGroup.name ?? `Chave ${source.keyGroup.id}`),
+        belt: category?.belt || athlete.belt || null,
+        ageDivision: category ? this.buildAgeDivision(category) : null,
+        weightDivision: category ? this.buildWeightDivision(category) : null,
       });
       championsByAcademy.set(key, group);
     }
@@ -145,11 +195,34 @@ export class ChampionAcademiesReportUseCase {
     };
   }
 
+  private matchesKeyGroupFilters(
+    keyGroup: KeyGroupListItemView,
+    categoriesById: Map<number, Category>,
+    input: ChampionAcademiesReportInput,
+  ): boolean {
+    const category =
+      keyGroup.categoryId !== null
+        ? (categoriesById.get(keyGroup.categoryId) ?? null)
+        : null;
+
+    if (input.categoryId !== undefined) {
+      return keyGroup.categoryId === input.categoryId;
+    }
+
+    // Chave sem categoria nao tem faixa nem divisao de idade para comparar.
+    if (input.belt !== undefined || input.ageDivision !== undefined) {
+      return category !== null && this.matchesFilters(category, input, false);
+    }
+
+    return true;
+  }
+
   private matchesFilters(
     category: Category,
     input: ChampionAcademiesReportInput,
+    requireChampion = true,
   ): boolean {
-    if (category.championAthleteId === null) {
+    if (requireChampion && category.championAthleteId === null) {
       return false;
     }
 

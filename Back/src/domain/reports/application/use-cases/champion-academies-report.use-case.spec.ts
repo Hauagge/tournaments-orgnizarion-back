@@ -4,11 +4,14 @@ import { makeAcademy } from '../../../../../test/factories/academy.factory';
 import { makeAthlete } from '../../../../../test/factories/athlete.factory';
 import { makeCategory } from '../../../../../test/factories/category.factory';
 import { makeCompetition } from '../../../../../test/factories/competition.factory';
+import { KeyGroup } from '@/domain/key-group/domain/entities/key-group.entity';
+import { KeyGroupStatus } from '@/domain/key-group/domain/value-objects/key-group-status.enum';
 import {
   InMemoryAcademyRepository,
   InMemoryAthleteRepository,
   InMemoryCategoryRepository,
   InMemoryCompetitionRepository,
+  InMemoryKeyGroupRepository,
 } from '../../../../../test/repositories/in-memory';
 import { ChampionAcademiesReportUseCase } from './champion-academies-report.use-case';
 
@@ -42,6 +45,7 @@ describe('ChampionAcademiesReportUseCase', () => {
         makeAcademy({ id: 1, competitionId: 1, name: 'Gracie Barra' }),
         makeAcademy({ id: 2, competitionId: 1, name: 'Alliance' }),
       ]),
+      new InMemoryKeyGroupRepository(),
     );
   });
 
@@ -76,6 +80,8 @@ describe('ChampionAcademiesReportUseCase', () => {
       athleteName: 'Carla',
       categoryId: 3,
       categoryName: 'Infantil Branco Leve',
+      keyGroupId: null,
+      keyGroupName: null,
       belt: 'white',
       ageDivision: '10-11 anos',
       weightDivision: 'ate 40,0 kg',
@@ -119,6 +125,7 @@ describe('ChampionAcademiesReportUseCase', () => {
       new InMemoryCategoryRepository([makeCategory({ id: 1 })]),
       new InMemoryAthleteRepository([]),
       new InMemoryAcademyRepository([]),
+      new InMemoryKeyGroupRepository(),
     );
 
     const report = await emptyUseCase.execute({ competitionId: 1 });
@@ -128,6 +135,101 @@ describe('ChampionAcademiesReportUseCase', () => {
       totalChampionAthletes: 0,
       academies: [],
     });
+  });
+
+  it('ranks key group champions when the competition has no categories', async () => {
+    const useCase = new ChampionAcademiesReportUseCase(
+      new InMemoryCompetitionRepository([makeCompetition({ id: 1 })]),
+      new InMemoryCategoryRepository([]),
+      new InMemoryAthleteRepository([
+        makeAthlete({ id: 10, fullName: 'Bruno', academyId: 1 }),
+        makeAthlete({ id: 20, fullName: 'Ana', academyId: 2 }),
+      ]),
+      new InMemoryAcademyRepository([
+        makeAcademy({ id: 1, competitionId: 1, name: 'Gracie Barra' }),
+        makeAcademy({ id: 2, competitionId: 1, name: 'Alliance' }),
+      ]),
+      new InMemoryKeyGroupRepository([
+        KeyGroup.restore({
+          id: 1,
+          competitionId: 1,
+          categoryId: null,
+          name: 'Chave Azul',
+          status: KeyGroupStatus.READY,
+          createdAt: new Date('2026-01-10T00:00:00.000Z'),
+          championAthleteId: 10,
+        }),
+        KeyGroup.restore({
+          id: 2,
+          competitionId: 1,
+          categoryId: null,
+          name: null,
+          status: KeyGroupStatus.READY,
+          createdAt: new Date('2026-01-10T00:00:00.000Z'),
+          championAthleteId: 20,
+        }),
+        KeyGroup.restore({
+          id: 3,
+          competitionId: 1,
+          categoryId: null,
+          name: 'Chave sem campeao',
+          status: KeyGroupStatus.READY,
+          createdAt: new Date('2026-01-10T00:00:00.000Z'),
+          championAthleteId: null,
+        }),
+      ]),
+    );
+
+    const report = await useCase.execute({ competitionId: 1 });
+
+    expect(report.totalChampionAthletes).toBe(2);
+    expect(report.academies.map((academy) => academy.academyName)).toEqual([
+      'Alliance',
+      'Gracie Barra',
+    ]);
+    expect(report.academies[1].champions[0]).toEqual(
+      expect.objectContaining({
+        athleteId: 10,
+        categoryId: null,
+        categoryName: null,
+        keyGroupId: 1,
+        keyGroupName: 'Chave Azul',
+      }),
+    );
+    expect(report.academies[0].champions[0].keyGroupName).toBe('Chave 2');
+  });
+
+  it('does not count the same champion twice when the key group has a category', async () => {
+    const useCase = new ChampionAcademiesReportUseCase(
+      new InMemoryCompetitionRepository([makeCompetition({ id: 1 })]),
+      new InMemoryCategoryRepository([
+        makeCategory({ id: 4, competitionId: 1, championAthleteId: 10 }),
+      ]),
+      new InMemoryAthleteRepository([
+        makeAthlete({ id: 10, fullName: 'Bruno', academyId: 1 }),
+      ]),
+      new InMemoryAcademyRepository([
+        makeAcademy({ id: 1, competitionId: 1, name: 'Gracie Barra' }),
+      ]),
+      new InMemoryKeyGroupRepository([
+        KeyGroup.restore({
+          id: 1,
+          competitionId: 1,
+          categoryId: 4,
+          name: 'Chave A',
+          status: KeyGroupStatus.READY,
+          createdAt: new Date('2026-01-10T00:00:00.000Z'),
+          championAthleteId: 10,
+        }),
+      ]),
+    );
+
+    const report = await useCase.execute({ competitionId: 1 });
+
+    expect(report.totalChampionAthletes).toBe(1);
+    expect(report.academies[0].champions[0]).toEqual(
+      expect.objectContaining({ keyGroupId: 1, categoryId: 4 }),
+    );
   });
 
   it('throws NotFoundError when the competition does not exist', async () => {

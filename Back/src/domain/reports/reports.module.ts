@@ -5,6 +5,7 @@ import { AthleteProviderModule } from '../athlete/athlete-provider.module';
 import { AuthModule } from '../auth/auth.module';
 import { CategoryProviderModule } from '../category/category-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
+import { KeyGroupProviderModule } from '../key-group/key-group-provider.module';
 import { ChampionAcademiesReportUseCase } from './application/use-cases/champion-academies-report.use-case';
 import { ReportsController } from './infra/http/reports.controller';
 
@@ -15,6 +16,7 @@ import { ReportsController } from './infra/http/reports.controller';
     CategoryProviderModule,
     AthleteProviderModule,
     AcademyProviderModule,
+    KeyGroupProviderModule,
   ],
   controllers: [ReportsController],
   providers: [ChampionAcademiesReportUseCase, CompetitionAccessGuard],
