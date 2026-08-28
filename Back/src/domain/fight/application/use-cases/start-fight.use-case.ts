@@ -22,10 +22,31 @@ export class StartFightUseCase {
     }
 
     if (![FightStatus.WAITING, FightStatus.CALLED].includes(fight.status)) {
-      throw new ValidationError('Fight cannot be started from the current status');
+      throw new ValidationError(
+        'Fight cannot be started from the current status',
+      );
     }
 
-    const startedFight = await this.fightRepository.update(fight.start(new Date()));
+    if (!fight.areaId) {
+      throw new ValidationError(
+        'Fight must have an area assigned before starting',
+      );
+    }
+
+    const fightsInProgressInArea =
+      await this.fightRepository.listByCompetitionId({
+        competitionId: fight.competitionId,
+        areaId: fight.areaId,
+        status: FightStatus.IN_PROGRESS,
+      });
+
+    if (fightsInProgressInArea.some((other) => other.id !== fight.id)) {
+      throw new ValidationError('This area already has a fight in progress');
+    }
+
+    const startedFight = await this.fightRepository.update(
+      fight.start(new Date()),
+    );
 
     await this.eventBus.publish({
       name: 'fight.started',

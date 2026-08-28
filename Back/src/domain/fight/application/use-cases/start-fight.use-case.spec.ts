@@ -49,7 +49,7 @@ describe('StartFightUseCase', () => {
   });
 
   it('starts a pending fight with both athletes and publishes fight.started', async () => {
-    fightRepository = new InMemoryFightRepository([makeFight()]);
+    fightRepository = new InMemoryFightRepository([makeFight({ areaId: 5 })]);
     useCase = new StartFightUseCase(fightRepository, eventBus);
 
     const result = await useCase.execute(1);
@@ -58,9 +58,17 @@ describe('StartFightUseCase', () => {
     expect(eventBus.published).toEqual([
       expect.objectContaining({
         name: 'fight.started',
-        payload: { fightId: 1, competitionId: 1, areaId: null },
+        payload: { fightId: 1, competitionId: 1, areaId: 5 },
       }),
     ]);
+  });
+
+  it('rejects starting a fight that has no area assigned', async () => {
+    fightRepository = new InMemoryFightRepository([makeFight({ areaId: null })]);
+    useCase = new StartFightUseCase(fightRepository, eventBus);
+
+    await expect(useCase.execute(1)).rejects.toBeInstanceOf(ValidationError);
+    expect(eventBus.published).toEqual([]);
   });
 
   it('throws NotFoundError when the fight does not exist', async () => {
@@ -81,10 +89,45 @@ describe('StartFightUseCase', () => {
 
   it('rejects starting a fight missing an athlete even if status allows it', async () => {
     fightRepository = new InMemoryFightRepository([
-      makeFight({ athleteBId: null }),
+      makeFight({ areaId: 5, athleteBId: null }),
     ]);
     useCase = new StartFightUseCase(fightRepository, eventBus);
 
     await expect(useCase.execute(1)).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it('rejects starting a fight when another fight in the same area is in progress', async () => {
+    fightRepository = new InMemoryFightRepository([
+      makeFight({ id: 1, areaId: 5 }),
+      makeFight({
+        id: 2,
+        areaId: 5,
+        athleteAId: 30,
+        athleteBId: 40,
+        status: FightStatus.IN_PROGRESS,
+      }),
+    ]);
+    useCase = new StartFightUseCase(fightRepository, eventBus);
+
+    await expect(useCase.execute(1)).rejects.toBeInstanceOf(ValidationError);
+    expect(eventBus.published).toEqual([]);
+  });
+
+  it('allows starting a fight when the in-progress fight is in a different area', async () => {
+    fightRepository = new InMemoryFightRepository([
+      makeFight({ id: 1, areaId: 5 }),
+      makeFight({
+        id: 2,
+        areaId: 6,
+        athleteAId: 30,
+        athleteBId: 40,
+        status: FightStatus.IN_PROGRESS,
+      }),
+    ]);
+    useCase = new StartFightUseCase(fightRepository, eventBus);
+
+    const result = await useCase.execute(1);
+
+    expect(result.status).toBe(FightStatus.IN_PROGRESS);
   });
 });
