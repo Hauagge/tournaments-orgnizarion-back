@@ -1,10 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EventBus } from '@/core/events/event-bus.interface';
+import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-queue-item-status.enum';
 import { IAreaQueueItemRepository } from '@/domain/area/repository/IAreaQueueItemRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { FightStatus } from '../../domain/value-objects/fight-status.enum';
 import { IFightRepository } from '../../repository/IFightRepository.repository';
+import { MarkFightWinnerUseCase } from './mark-fight-winner.use-case';
 
 export type FinishFightInput = {
   id: number;
@@ -19,6 +21,7 @@ export class FinishFightUseCase {
     private readonly fightRepository: IFightRepository,
     @Inject(IAreaQueueItemRepository)
     private readonly areaQueueItemRepository: IAreaQueueItemRepository,
+    private readonly markFightWinnerUseCase: MarkFightWinnerUseCase,
     @Inject(EventBus)
     private readonly eventBus: EventBus,
   ) {}
@@ -34,39 +37,33 @@ export class FinishFightUseCase {
       throw new ValidationError('Only fights in progress can be finished');
     }
 
-    const finishedFight = await this.fightRepository.update(
-      fight.finish({
-        winnerId: input.winnerAthleteId,
-        loserId:
-          fight.athleteAId === input.winnerAthleteId
-            ? fight.athleteBId
-            : fight.athleteAId,
-        winType: input.winType,
-        finishedAt: new Date(),
-      }),
+    await this.markFightWinnerUseCase.execute({
+      competitionId: fight.competitionId,
+      fightId: input.id,
+      winnerId: input.winnerAthleteId,
+      winType: input.winType,
+    });
+
+    const finishedFight = await this.fightRepository.findById(input.id);
+
+    if (!finishedFight) {
+      throw new NotFoundError(`Fight with id ${input.id} not found`);
+    }
+
+    const queueItem = await this.areaQueueItemRepository.findByFightId(
+      finishedFight.id as number,
     );
 
-    const queueItem = await this.areaQueueItemRepository.findByFightId(finishedFight.id as number);
     if (queueItem) {
-      await this.areaQueueItemRepository.update(queueItem.markDone());
-      const areaQueue = await this.areaQueueItemRepository.listByAreaId(queueItem.areaId);
+      const areaQueue = await this.areaQueueItemRepository.listByAreaId(
+        queueItem.areaId,
+      );
       const nextQueueItem =
-        areaQueue.find((item) => item.id === queueItem.id)?.status === 'CALLED'
-          ? areaQueue.find((item) => item.status === 'QUEUED')
-          : areaQueue.find((item) => item.status === 'CALLED') ??
-            areaQueue.find((item) => item.status === 'QUEUED');
-
-      await this.eventBus.publish({
-        name: 'queue.updated',
-        payload: {
-          competitionId: finishedFight.competitionId,
-          areaId: queueItem.areaId,
-          fightId: finishedFight.id as number,
-          queueItemId: queueItem.id as number,
-          status: 'DONE',
-        },
-        occurredAt: new Date(),
-      });
+        areaQueue.find(
+          (item) => item.status === AreaQueueItemStatus.CALLED,
+        ) ??
+        areaQueue.find((item) => item.status === AreaQueueItemStatus.QUEUED) ??
+        null;
 
       await this.eventBus.publish({
         name: 'nextfight.updated',
@@ -79,18 +76,6 @@ export class FinishFightUseCase {
         occurredAt: new Date(),
       });
     }
-
-    await this.eventBus.publish({
-      name: 'fight.finished',
-      payload: {
-        fightId: finishedFight.id as number,
-        competitionId: finishedFight.competitionId,
-        areaId: finishedFight.areaId,
-        winnerAthleteId: finishedFight.winnerAthleteId,
-        winType: finishedFight.winType,
-      },
-      occurredAt: new Date(),
-    });
 
     return finishedFight;
   }

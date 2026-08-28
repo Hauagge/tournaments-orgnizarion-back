@@ -8,94 +8,9 @@ import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { FightStatus } from '../../domain/value-objects/fight-status.enum';
 import { FightTypeOrmEntity } from '../../entities/fight.typeorm-entity';
+import { makeFakeDataSource } from '../../../../../test/fakes/typeorm-fake-data-source';
 import { BestOfThreeProgressionService } from '../services/best-of-three-progression.service';
 import { MarkFightWinnerUseCase } from './mark-fight-winner.use-case';
-
-class FakeRepository<T extends { id?: number }> {
-  private nextId = 1;
-
-  constructor(private rows: T[] = []) {}
-
-  create(data: Partial<T>): T {
-    return { ...(data as T) };
-  }
-
-  async save(entity: T): Promise<T> {
-    if (entity.id === undefined || entity.id === null) {
-      entity.id = this.nextId++;
-      this.rows.push(entity);
-      return entity;
-    }
-
-    const index = this.rows.findIndex((row) => row.id === entity.id);
-    if (index === -1) {
-      this.rows.push(entity);
-    } else {
-      this.rows[index] = entity;
-    }
-    return entity;
-  }
-
-  async findOneBy(where: Partial<T>): Promise<T | null> {
-    return (
-      this.rows.find((row) =>
-        Object.entries(where).every(
-          ([key, value]) => (row as Record<string, unknown>)[key] === value,
-        ),
-      ) ?? null
-    );
-  }
-
-  async find(
-    options: { where?: Partial<T>; order?: Record<string, 'ASC' | 'DESC'>; take?: number } = {},
-  ): Promise<T[]> {
-    let result = options.where
-      ? this.rows.filter((row) =>
-          Object.entries(options.where as Partial<T>).every(
-            ([key, value]) => (row as Record<string, unknown>)[key] === value,
-          ),
-        )
-      : [...this.rows];
-
-    if (options.order) {
-      const [key, direction] = Object.entries(options.order)[0];
-      result = [...result].sort((left, right) => {
-        const diff =
-          (left as Record<string, number>)[key] - (right as Record<string, number>)[key];
-        return direction === 'DESC' ? -diff : diff;
-      });
-    }
-
-    if (options.take !== undefined) {
-      result = result.slice(0, options.take);
-    }
-
-    return result;
-  }
-}
-
-class FakeManager {
-  constructor(
-    public readonly fights: FakeRepository<FightTypeOrmEntity>,
-    public readonly categories: FakeRepository<CategoryTypeOrmEntity>,
-    public readonly areaQueueItems: FakeRepository<AreaQueueItemTypeOrmEntity>,
-  ) {}
-
-  getRepository(entity: unknown) {
-    if (entity === FightTypeOrmEntity) return this.fights;
-    if (entity === CategoryTypeOrmEntity) return this.categories;
-    if (entity === AreaQueueItemTypeOrmEntity) return this.areaQueueItems;
-    throw new Error('Unexpected entity requested from FakeManager');
-  }
-}
-
-class FakeDataSource {
-  constructor(private readonly manager: FakeManager) {}
-
-  async transaction<T>(work: (manager: FakeManager) => Promise<T>): Promise<T> {
-    return work(this.manager);
-  }
-}
 
 class RecordingEventBus implements EventBus {
   public published: DomainEvent[] = [];
@@ -147,12 +62,7 @@ describe('MarkFightWinnerUseCase', () => {
   });
 
   function setup(fights: FightTypeOrmEntity[], categories: CategoryTypeOrmEntity[] = []) {
-    const manager = new FakeManager(
-      new FakeRepository<FightTypeOrmEntity>(fights),
-      new FakeRepository<CategoryTypeOrmEntity>(categories),
-      new FakeRepository<AreaQueueItemTypeOrmEntity>([]),
-    );
-    const dataSource = new FakeDataSource(manager);
+    const { manager, dataSource } = makeFakeDataSource({ fights, categories });
     const useCase = new MarkFightWinnerUseCase(
       dataSource as never,
       {} as ICategoryRepository,
@@ -227,11 +137,74 @@ describe('MarkFightWinnerUseCase', () => {
     expect(nextFightRow?.athleteAId).toBe(10);
   });
 
-  it('marks the linked queue item as done and publishes queue.updated', async () => {
-    const manager = new FakeManager(
-      new FakeRepository<FightTypeOrmEntity>([makeFightRow()]),
-      new FakeRepository<CategoryTypeOrmEntity>([]),
-      new FakeRepository<AreaQueueItemTypeOrmEntity>([
+  it('moves the next fight to the area where the fight happened', async () => {
+    const { manager, dataSource } = makeFakeDataSource({
+      fights: [
+        makeFightRow({ id: 1, areaId: 2, nextFightId: 2, nextFightSlot: 'A' }),
+        makeFightRow({
+          id: 2,
+          areaId: 9,
+          athleteAId: null,
+          athleteBId: 30,
+          status: FightStatus.PENDING,
+          startedAt: null,
+        }),
+      ],
+      areaQueueItems: [
+        {
+          id: 5,
+          areaId: 2,
+          fightId: 1,
+          position: 4,
+          status: AreaQueueItemStatus.CALLED,
+        },
+        {
+          id: 6,
+          areaId: 9,
+          fightId: 2,
+          position: 1,
+          status: AreaQueueItemStatus.QUEUED,
+        },
+      ],
+    });
+    const useCase = new MarkFightWinnerUseCase(
+      dataSource as never,
+      {} as ICategoryRepository,
+      eventBus,
+      bestOfThreeProgressionService,
+    );
+
+    await useCase.execute({ competitionId: 1, fightId: 1, winnerId: 10 });
+
+    const nextFightRow = await manager.fights.findOneBy({ id: 2 });
+    expect(nextFightRow?.areaId).toBe(2);
+    const nextQueueItem = await manager.areaQueueItems.findOneBy({ id: 6 });
+    expect(nextQueueItem?.areaId).toBe(2);
+    expect(nextQueueItem?.position).toBe(5);
+    expect(nextQueueItem?.status).toBe(AreaQueueItemStatus.QUEUED);
+    // A area de origem perdeu uma luta da fila e precisa ser avisada.
+    expect(eventBus.published).toContainEqual(
+      expect.objectContaining({
+        name: 'queue.updated',
+        payload: expect.objectContaining({ areaId: 9, fightId: 2 }),
+      }),
+    );
+  });
+
+  it('keeps the next fight queue position when it is already in the same area', async () => {
+    const { manager, dataSource } = makeFakeDataSource({
+      fights: [
+        makeFightRow({ id: 1, areaId: 2, nextFightId: 2, nextFightSlot: 'A' }),
+        makeFightRow({
+          id: 2,
+          areaId: 2,
+          athleteAId: null,
+          athleteBId: 30,
+          status: FightStatus.PENDING,
+          startedAt: null,
+        }),
+      ],
+      areaQueueItems: [
         {
           id: 5,
           areaId: 2,
@@ -239,10 +212,82 @@ describe('MarkFightWinnerUseCase', () => {
           position: 1,
           status: AreaQueueItemStatus.CALLED,
         },
-      ]),
-    );
+        {
+          id: 6,
+          areaId: 2,
+          fightId: 2,
+          position: 2,
+          status: AreaQueueItemStatus.QUEUED,
+        },
+      ],
+    });
     const useCase = new MarkFightWinnerUseCase(
-      new FakeDataSource(manager) as never,
+      dataSource as never,
+      {} as ICategoryRepository,
+      eventBus,
+      bestOfThreeProgressionService,
+    );
+
+    await useCase.execute({ competitionId: 1, fightId: 1, winnerId: 10 });
+
+    const nextQueueItem = await manager.areaQueueItems.findOneBy({ id: 6 });
+    expect(nextQueueItem?.position).toBe(2);
+  });
+
+  it('queues the next fight when it had no queue item yet', async () => {
+    const { manager, dataSource } = makeFakeDataSource({
+      fights: [
+        makeFightRow({ id: 1, areaId: 2, nextFightId: 2, nextFightSlot: 'A' }),
+        makeFightRow({
+          id: 2,
+          areaId: null,
+          athleteAId: null,
+          athleteBId: 30,
+          status: FightStatus.PENDING,
+          startedAt: null,
+        }),
+      ],
+      areaQueueItems: [
+        {
+          id: 5,
+          areaId: 2,
+          fightId: 1,
+          position: 1,
+          status: AreaQueueItemStatus.CALLED,
+        },
+      ],
+    });
+    const useCase = new MarkFightWinnerUseCase(
+      dataSource as never,
+      {} as ICategoryRepository,
+      eventBus,
+      bestOfThreeProgressionService,
+    );
+
+    await useCase.execute({ competitionId: 1, fightId: 1, winnerId: 10 });
+
+    const nextFightRow = await manager.fights.findOneBy({ id: 2 });
+    expect(nextFightRow?.areaId).toBe(2);
+    const nextQueueItem = await manager.areaQueueItems.findOneBy({ fightId: 2 });
+    expect(nextQueueItem?.areaId).toBe(2);
+    expect(nextQueueItem?.position).toBe(2);
+  });
+
+  it('marks the linked queue item as done and publishes queue.updated', async () => {
+    const { manager, dataSource } = makeFakeDataSource({
+      fights: [makeFightRow()],
+      areaQueueItems: [
+        {
+          id: 5,
+          areaId: 2,
+          fightId: 1,
+          position: 1,
+          status: AreaQueueItemStatus.CALLED,
+        },
+      ],
+    });
+    const useCase = new MarkFightWinnerUseCase(
+      dataSource as never,
       {} as ICategoryRepository,
       eventBus,
       bestOfThreeProgressionService,

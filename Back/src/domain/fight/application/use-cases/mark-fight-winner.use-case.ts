@@ -13,7 +13,7 @@ import { FightTypeOrmEntity } from '../../entities/fight.typeorm-entity';
 import { FightMapper } from '../../infra/persistence/mappers/fight.mapper';
 
 type Input = {
-  currentUserId: number;
+  currentUserId?: number;
   competitionId: number;
   fightId: number;
   winnerId: number;
@@ -110,6 +110,7 @@ export class MarkFightWinnerUseCase {
       }
 
       let champion: Output['categoryChampion'] = null;
+      let vacatedAreaId: number | null = null;
 
       if (nextFight) {
         if (!fight.nextFightSlot) {
@@ -132,7 +133,20 @@ export class MarkFightWinnerUseCase {
           nextFight.athleteBId = input.winnerId;
         }
 
+        if (fight.areaId !== null && nextFight.areaId !== fight.areaId) {
+          vacatedAreaId = nextFight.areaId;
+          nextFight.areaId = fight.areaId;
+        }
+
         await fightRepository.save(nextFight);
+
+        if (nextFight.areaId !== null) {
+          await this.enqueueFightInArea({
+            fightId: nextFight.id,
+            areaId: nextFight.areaId,
+            areaQueueRepository,
+          });
+        }
       }
 
       await fightRepository.save(fight);
@@ -171,6 +185,7 @@ export class MarkFightWinnerUseCase {
         nextFight,
         categoryChampion: champion,
         queueItem,
+        vacatedAreaId,
       };
     });
 
@@ -195,6 +210,18 @@ export class MarkFightWinnerUseCase {
           fightId: result.fight.id,
           queueItemId: result.queueItem.id,
           status: 'DONE',
+        },
+        occurredAt: new Date(),
+      });
+    }
+
+    if (result.vacatedAreaId !== null && result.nextFight) {
+      await this.eventBus.publish({
+        name: 'queue.updated',
+        payload: {
+          competitionId: input.competitionId,
+          areaId: result.vacatedAreaId,
+          fightId: result.nextFight.id,
         },
         occurredAt: new Date(),
       });
@@ -270,21 +297,55 @@ export class MarkFightWinnerUseCase {
     const savedThirdFight = await input.fightRepository.save(thirdFight);
 
     if (savedThirdFight.areaId !== null) {
-      const [lastQueueItem] = await input.areaQueueRepository.find({
-        where: { areaId: savedThirdFight.areaId },
-        order: { position: 'DESC' },
-        take: 1,
+      await this.enqueueFightInArea({
+        fightId: savedThirdFight.id,
+        areaId: savedThirdFight.areaId,
+        areaQueueRepository: input.areaQueueRepository,
       });
-      await input.areaQueueRepository.save(
-        input.areaQueueRepository.create({
-          areaId: savedThirdFight.areaId,
-          fightId: savedThirdFight.id,
-          position: (lastQueueItem?.position ?? 0) + 1,
-          status: AreaQueueItemStatus.QUEUED,
-        }),
-      );
     }
 
     return savedThirdFight;
+  }
+
+  private async enqueueFightInArea(input: {
+    fightId: number;
+    areaId: number;
+    areaQueueRepository: import('typeorm').Repository<AreaQueueItemTypeOrmEntity>;
+  }): Promise<void> {
+    const queueItem = await input.areaQueueRepository.findOneBy({
+      fightId: input.fightId,
+    });
+
+    if (
+      queueItem &&
+      queueItem.areaId === input.areaId &&
+      queueItem.status !== AreaQueueItemStatus.DONE
+    ) {
+      return;
+    }
+
+    const [lastQueueItem] = await input.areaQueueRepository.find({
+      where: { areaId: input.areaId },
+      order: { position: 'DESC' },
+      take: 1,
+    });
+    const position = (lastQueueItem?.position ?? 0) + 1;
+
+    if (queueItem) {
+      queueItem.areaId = input.areaId;
+      queueItem.position = position;
+      queueItem.status = AreaQueueItemStatus.QUEUED;
+      await input.areaQueueRepository.save(queueItem);
+      return;
+    }
+
+    await input.areaQueueRepository.save(
+      input.areaQueueRepository.create({
+        areaId: input.areaId,
+        fightId: input.fightId,
+        position,
+        status: AreaQueueItemStatus.QUEUED,
+      }),
+    );
   }
 }
