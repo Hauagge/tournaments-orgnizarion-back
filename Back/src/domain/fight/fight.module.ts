@@ -7,6 +7,7 @@ import { AreaProviderModule } from '../area/area-provider.module';
 import { AthleteProviderModule } from '../athlete/athlete-provider.module';
 import { CategoryProviderModule } from '../category/category-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
+import { KeyGroupProviderModule } from '../key-group/key-group-provider.module';
 import { FinishFightUseCase } from './application/use-cases/finish-fight.use-case';
 import { BestOfThreeProgressionService } from './application/services/best-of-three-progression.service';
 import { CreateManualFightUseCase } from './application/use-cases/create-manual-fight.use-case';
@@ -31,6 +32,7 @@ import { FightProviderModule } from './fight-provider.module';
     CategoryProviderModule,
     AthleteProviderModule,
     AreaProviderModule,
+    KeyGroupProviderModule,
     FightGenerationStrategyModule,
   ],
   controllers: [FightController],

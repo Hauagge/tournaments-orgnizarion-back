@@ -4,7 +4,9 @@ export type FightListItemView = {
   id?: number;
   competitionId: number;
   categoryId: number | null;
+  categoryName: string | null;
   keyGroupId: number | null;
+  keyGroupName: string | null;
   areaId: number | null;
   areaName: string | null;
   status: FightStatus;

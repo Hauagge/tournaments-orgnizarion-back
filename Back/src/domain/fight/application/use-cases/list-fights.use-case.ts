@@ -2,6 +2,8 @@ import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { IAcademyRepository } from '@/domain/academy/repository/IAcademyRepository.repository';
 import { IAthleteRepository } from '@/domain/athlete/repository/IAthleteRepository.repository';
 import { IUserCompetitionRepository } from '@/domain/auth/repository/IUserCompetitionRepository.repository';
+import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
+import { IKeyGroupRepository } from '@/domain/key-group/repository/IKeyGroupRepository.repository';
 import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { FightStatus } from '../../domain/value-objects/fight-status.enum';
@@ -21,6 +23,10 @@ export class ListFightsUseCase {
     private readonly athleteRepository: IAthleteRepository,
     @Inject(IAcademyRepository)
     private readonly academyRepository: IAcademyRepository,
+    @Inject(ICategoryRepository)
+    private readonly categoryRepository: ICategoryRepository,
+    @Inject(IKeyGroupRepository)
+    private readonly keyGroupRepository: IKeyGroupRepository,
   ) {}
 
   async execute(input: {
@@ -54,7 +60,19 @@ export class ListFightsUseCase {
       );
     }
 
-    const fights = await this.fightRepository.listByCompetitionId(input);
+    const [fights, categories, keyGroups] = await Promise.all([
+      this.fightRepository.listByCompetitionId(input),
+      this.categoryRepository.listByCompetitionId(input.competitionId),
+      this.keyGroupRepository.listByCompetitionId({
+        competitionId: input.competitionId,
+      }),
+    ]);
+    const categoryNamesById = new Map(
+      categories.map((category) => [category.id as number, category.name]),
+    );
+    const keyGroupNamesById = new Map(
+      keyGroups.map((keyGroup) => [keyGroup.id, keyGroup.name]),
+    );
     const athleteIds = Array.from(
       new Set(
         fights.flatMap((fight) =>
@@ -94,7 +112,15 @@ export class ListFightsUseCase {
       id: fight.id,
       competitionId: fight.competitionId,
       categoryId: fight.categoryId,
+      categoryName:
+        fight.categoryId !== null
+          ? (categoryNamesById.get(fight.categoryId) ?? null)
+          : null,
       keyGroupId: fight.keyGroupId,
+      keyGroupName:
+        fight.keyGroupId !== null
+          ? (keyGroupNamesById.get(fight.keyGroupId) ?? null)
+          : null,
       areaId: fight.areaId,
       areaName: fight.areaName,
       status: fight.status,
