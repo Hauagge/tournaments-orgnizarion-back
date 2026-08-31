@@ -10,6 +10,7 @@ export class AthleteMapper {
       documentNumber: entity.documentNumber,
       birthDate: new Date(entity.birthDate),
       belt: entity.belt,
+      gender: entity.gender ?? null,
       declaredWeight: entity.declaredWeight,
       paymentStatus: entity.paymentStatus,
       academyId: entity.academyId,
@@ -25,6 +26,7 @@ export class AthleteMapper {
     entity.documentNumber = athlete.documentNumber;
     entity.birthDate = athlete.birthDate;
     entity.belt = athlete.belt;
+    entity.gender = athlete.gender;
     entity.declaredWeight = athlete.declaredWeight;
     entity.paymentStatus = athlete.paymentStatus;
     entity.academyId = athlete.academyId;

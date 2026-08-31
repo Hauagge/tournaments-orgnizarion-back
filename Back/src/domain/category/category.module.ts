@@ -14,6 +14,10 @@ import { GenerateCategoriesUseCase } from './application/use-cases/generate-cate
 import { ListCategoriesUseCase } from './application/use-cases/list-categories.use-case';
 import { CategoryDistributionService } from './application/services/category-distribution.service';
 import { CategoryGenerationService } from './application/services/category-generation.service';
+import { CategoryGenerationStrategyResolverService } from './application/services/category-generation-strategy-resolver.service';
+import { AbsoluteGpCategoryGenerationStrategy } from './application/strategies/absolute-gp-category-generation.strategy';
+import { CbjjCategoryGenerationStrategy } from './application/strategies/cbjj-category-generation.strategy';
+import { TeamCategoryGenerationStrategy } from './application/strategies/team-category-generation.strategy';
 import { CategoryController } from './infra/http/category.controller';
 import { CategoryProviderModule } from './category-provider.module';
 
@@ -35,6 +39,10 @@ import { CategoryProviderModule } from './category-provider.module';
     ListCategoriesUseCase,
     GetCategoryUseCase,
     CategoryGenerationService,
+    CategoryGenerationStrategyResolverService,
+    TeamCategoryGenerationStrategy,
+    AbsoluteGpCategoryGenerationStrategy,
+    CbjjCategoryGenerationStrategy,
     CategoryEligibilityService,
     CategoryDistributionService,
     CompetitionAccessGuard,

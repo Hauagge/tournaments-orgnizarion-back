@@ -13,6 +13,7 @@ describe('AthleteRepository', () => {
     documentNumber: null,
     birthDate: new Date('2010-05-10'),
     belt: 'white',
+    gender: null,
     declaredWeight: 50000,
     paymentStatus: PaymentStatus.PENDING,
     academyId: 3,

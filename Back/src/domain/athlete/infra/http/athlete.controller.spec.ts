@@ -39,6 +39,7 @@ describe('AthleteController', () => {
         fullName: 'Ana Silva',
         birthDate: new Date('2010-05-10T00:00:00.000Z'),
         belt: 'white',
+        gender: null,
         declaredWeight: 50000,
         documentNumber: null,
         paymentStatus: PaymentStatus.PENDING,

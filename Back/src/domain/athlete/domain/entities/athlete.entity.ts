@@ -1,3 +1,4 @@
+import { AthleteGender } from '../value-objects/athlete-gender.enum';
 import { PaymentStatus } from '../value-objects/payment-status.enum';
 
 export type AthleteProps = {
@@ -7,6 +8,7 @@ export type AthleteProps = {
   documentNumber: string | null;
   birthDate: Date;
   belt: string;
+  gender: AthleteGender | null;
   declaredWeight: number;
   paymentStatus: PaymentStatus;
   academyId: number | null;
@@ -20,6 +22,7 @@ type UpdatableAthleteProps = Partial<
     | 'documentNumber'
     | 'birthDate'
     | 'belt'
+    | 'gender'
     | 'declaredWeight'
     | 'paymentStatus'
     | 'academyId'
@@ -30,12 +33,14 @@ export class Athlete {
   private constructor(private readonly props: AthleteProps) {}
 
   static create(
-    props: Omit<AthleteProps, 'id' | 'createdAt' | 'paymentStatus'> & {
+    props: Omit<AthleteProps, 'id' | 'createdAt' | 'paymentStatus' | 'gender'> & {
       paymentStatus?: PaymentStatus;
+      gender?: AthleteGender | null;
     },
   ): Athlete {
     return new Athlete({
       ...props,
+      gender: props.gender ?? null,
       fullName: Athlete.normalizeFullName(props.fullName),
       documentNumber: Athlete.normalizeDocumentNumber(props.documentNumber),
       belt: props.belt.trim(),
@@ -45,12 +50,14 @@ export class Athlete {
   }
 
   static restore(
-    props: Omit<AthleteProps, 'paymentStatus'> & {
+    props: Omit<AthleteProps, 'paymentStatus' | 'gender'> & {
       paymentStatus?: PaymentStatus;
+      gender?: AthleteGender | null;
     },
   ): Athlete {
     return new Athlete({
       ...props,
+      gender: props.gender ?? null,
       fullName: Athlete.normalizeFullName(props.fullName),
       documentNumber: Athlete.normalizeDocumentNumber(props.documentNumber),
       belt: props.belt.trim(),
@@ -71,6 +78,7 @@ export class Athlete {
           : this.props.documentNumber,
       birthDate: input.birthDate ?? this.props.birthDate,
       belt: input.belt !== undefined ? input.belt.trim() : this.props.belt,
+      gender: input.gender !== undefined ? input.gender : this.props.gender,
       declaredWeight: input.declaredWeight ?? this.props.declaredWeight,
       paymentStatus: input.paymentStatus ?? this.props.paymentStatus,
       academyId:
@@ -94,6 +102,7 @@ export class Athlete {
       documentNumber: this.documentNumber,
       birthDate: this.birthDate,
       belt: this.belt,
+      gender: this.gender,
       declaredWeight: this.declaredWeight,
       paymentStatus: this.paymentStatus,
       academyId: this.academyId,
@@ -119,6 +128,10 @@ export class Athlete {
 
   get birthDate(): Date {
     return this.props.birthDate;
+  }
+
+  get gender(): AthleteGender | null {
+    return this.props.gender;
   }
 
   get belt(): string {

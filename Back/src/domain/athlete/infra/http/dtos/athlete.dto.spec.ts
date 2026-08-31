@@ -22,6 +22,7 @@ describe('Athlete DTO schemas', () => {
       birthDate: new Date('2010-05-10T00:00:00.000Z'),
       belt: 'white',
       declaredWeight: 50000,
+      gender: null,
       paymentStatus: 'PENDING',
       weighInStatus: WeighInStatus.APPROVED,
       academyId: null,

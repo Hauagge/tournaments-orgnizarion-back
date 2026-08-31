@@ -6,6 +6,7 @@ import { IWeighInRepository } from '@/domain/weighin/repository/IWeighInReposito
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { Athlete } from '../../domain/entities/athlete.entity';
+import { AthleteGender } from '../../domain/value-objects/athlete-gender.enum';
 import { PaymentStatus } from '../../domain/value-objects/payment-status.enum';
 import { IAthleteRepository } from '../../repository/IAthleteRepository.repository';
 
@@ -15,6 +16,7 @@ export type CreateAthleteInput = {
   documentNumber: string | null;
   birthDate: Date;
   belt: string;
+  gender?: AthleteGender | null;
   declaredWeight: number;
   paymentStatus?: PaymentStatus;
   weighInStatus?: WeighInStatus.PENDING | WeighInStatus.APPROVED;

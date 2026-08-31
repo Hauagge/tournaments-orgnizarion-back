@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { AcademyTypeOrmEntity } from '@/domain/academy/infra/persistence/entities/academy.typeorm-entity';
 import { WeighInTypeOrmEntity } from '@/domain/weighin/infra/persistence/entities/weigh-in.typeorm-entity';
+import { AthleteGender } from '@/domain/athlete/domain/value-objects/athlete-gender.enum';
 import { PaymentStatus } from '@/domain/athlete/domain/value-objects/payment-status.enum';
 
 @Entity('athletes')
@@ -31,6 +32,9 @@ export class AthleteTypeOrmEntity {
 
   @Column({ type: 'varchar' })
   belt: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  gender: AthleteGender | null;
 
   @Column({ name: 'declared_weight_grams', type: 'int' })
   declaredWeight: number;

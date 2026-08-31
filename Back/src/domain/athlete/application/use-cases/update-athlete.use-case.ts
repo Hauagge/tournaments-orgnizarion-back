@@ -4,6 +4,7 @@ import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { Athlete } from '../../domain/entities/athlete.entity';
 import { PaymentStatus } from '../../domain/value-objects/payment-status.enum';
+import { AthleteGender } from '../../domain/value-objects/athlete-gender.enum';
 import { IAthleteRepository } from '../../repository/IAthleteRepository.repository';
 
 export type UpdateAthleteInput = {
@@ -11,6 +12,7 @@ export type UpdateAthleteInput = {
   fullName?: string;
   birthDate?: Date;
   belt?: string;
+  gender?: AthleteGender | null;
   declaredWeightGrams?: number;
   paymentStatus?: PaymentStatus;
   academyId?: number | null;
@@ -50,6 +52,7 @@ export class UpdateAthleteUseCase {
       fullName: input.fullName,
       birthDate: input.birthDate,
       belt: input.belt,
+      gender: input.gender,
       declaredWeight: input.declaredWeightGrams,
       paymentStatus: input.paymentStatus,
       academyId: input.academyId,
