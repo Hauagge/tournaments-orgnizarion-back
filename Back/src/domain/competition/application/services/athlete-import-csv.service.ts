@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import {
+  AthleteGender,
+  parseAthleteGender,
+} from '@/domain/athlete/domain/value-objects/athlete-gender.enum';
+import {
   buildHeaderAliasMap,
   getColumnValueByHeader,
   mapRowValuesByHeaders,
@@ -18,6 +22,7 @@ export type ParsedAthleteImportRow = {
     documentNumber: string | null;
     birthDate: Date;
     belt: string;
+    gender: AthleteGender | null;
     declaredWeightGrams: number;
     academyName: string | null;
     phone: string | null;
@@ -31,6 +36,7 @@ type HeaderMap = {
   documentNumber: string | null;
   birthDate: string | null;
   belt: string | null;
+  gender: string | null;
   declaredWeightKg: string | null;
   academyName: string | null;
   phone: string | null;
@@ -66,6 +72,9 @@ export class AthleteImportCsvService {
       const belt = normalizeWhitespace(
         getColumnValueByHeader(columns, headers, headerMap.belt),
       );
+      const genderValue = normalizeWhitespace(
+        getColumnValueByHeader(columns, headers, headerMap.gender),
+      );
       const declaredWeightKgInput = normalizeWhitespace(
         getColumnValueByHeader(columns, headers, headerMap.declaredWeightKg),
       );
@@ -92,6 +101,11 @@ export class AthleteImportCsvService {
         errors.push('Faixa e obrigatoria.');
       }
 
+      const gender = parseAthleteGender(genderValue);
+      if (genderValue && !gender) {
+        errors.push('Sexo invalido. Use Masculino/Feminino ou M/F.');
+      }
+
       const declaredWeightGrams = parseMassToGrams(declaredWeightKgInput);
       if (declaredWeightGrams === null) {
         errors.push('Peso invalido.');
@@ -107,6 +121,7 @@ export class AthleteImportCsvService {
                 documentNumber: documentNumberValue || null,
                 birthDate,
                 belt,
+                gender,
                 declaredWeightGrams,
                 academyName: academyNameValue || null,
                 phone: phoneValue || null,
@@ -142,6 +157,7 @@ export class AthleteImportCsvService {
         'Data de nascimento',
       ],
       belt: ['BELT', 'FAIXA'],
+      gender: ['GENDER', 'SEX', 'SEXO', 'GENERO', 'GÊNERO'],
       declaredWeightKg: [
         'DECLAREDWEIGHTKG',
         'DECLARED_WEIGHT_KG',

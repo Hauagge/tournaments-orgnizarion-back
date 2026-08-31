@@ -18,6 +18,8 @@ export function makeFight(
     loserId: null,
     nextFightId: null,
     nextFightSlot: null,
+    loserNextFightId: null,
+    loserNextFightSlot: null,
     createdManually: false,
     isWo: false,
     winType: null,

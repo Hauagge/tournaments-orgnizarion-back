@@ -34,6 +34,7 @@ describe('PreviewAthleteImportUseCase', () => {
           birthDate: new Date(2010, 4, 10).toISOString(),
           belt: 'branca',
           declaredWeightGrams: 65000,
+          gender: null,
           academyName: 'Academy One',
           phone: null,
           age: null,
@@ -53,5 +54,29 @@ describe('PreviewAthleteImportUseCase', () => {
         errors: ['Data de nascimento invalida.', 'Peso invalido.'],
       },
     ]);
+  });
+
+  it('reads the Sexo column and rejects unknown values', async () => {
+    const useCase = new PreviewAthleteImportUseCase(
+      new AthleteImportCsvService(),
+    );
+
+    const result = await useCase.execute({
+      csvText: [
+        'nome,datadenasc,faixa,peso,sexo',
+        'Ana Silva,10/05/2010,branca,65,Feminino',
+        'Bruno Souza,10/05/2010,azul,80,M',
+        'Carla Dias,10/05/2010,azul,60,',
+        'Diego Reis,10/05/2010,azul,70,indefinido',
+      ].join('\n'),
+    });
+
+    expect(result.rows[0].athlete?.gender).toBe('FEMALE');
+    expect(result.rows[1].athlete?.gender).toBe('MALE');
+    expect(result.rows[2].athlete?.gender).toBeNull();
+    expect(result.rows[3].athlete).toBeNull();
+    expect(result.rows[3].errors).toContain(
+      'Sexo invalido. Use Masculino/Feminino ou M/F.',
+    );
   });
 });

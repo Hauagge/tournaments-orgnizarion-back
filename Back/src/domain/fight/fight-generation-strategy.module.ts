@@ -3,16 +3,19 @@ import { FourAthleteOlympicBracketFightGenerationStrategy } from '@/domain/key-g
 import { KeysFightGenerationStrategy } from '@/domain/key-group/application/strategies/keys-fight-generation.strategy';
 import { FightGenerationStrategyResolverService } from './application/services/fight-generation-strategy-resolver.service';
 import { AbsoluteGpFightGenerationStrategy } from './application/strategies/absolute-gp-fight-generation.strategy';
+import { CbjjFightGenerationStrategy } from './application/strategies/cbjj-fight-generation.strategy';
 
 @Module({
   providers: [
     AbsoluteGpFightGenerationStrategy,
+    CbjjFightGenerationStrategy,
     FourAthleteOlympicBracketFightGenerationStrategy,
     KeysFightGenerationStrategy,
     FightGenerationStrategyResolverService,
   ],
   exports: [
     AbsoluteGpFightGenerationStrategy,
+    CbjjFightGenerationStrategy,
     FourAthleteOlympicBracketFightGenerationStrategy,
     KeysFightGenerationStrategy,
     FightGenerationStrategyResolverService,

@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const UpdateCompetitionSettingsSchema = z
   .object({
     name: z.string().min(1).optional(),
-    mode: z.enum(['KEYS', 'ABSOLUTE_GP']).optional(),
+    mode: z.enum(['KEYS', 'ABSOLUTE_GP', 'CBJJ']).optional(),
     fightDurationSeconds: z.coerce.number().int().min(1).optional(),
     weighInMarginGrams: z.coerce.number().int().min(0).optional(),
     ageSplitYears: z.coerce.number().int().min(0).optional(),

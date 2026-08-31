@@ -99,6 +99,7 @@ export class ImportAthletesUseCase {
             documentNumber: row.athlete.documentNumber,
             birthDate: row.athlete.birthDate,
             belt: row.athlete.belt,
+            gender: row.athlete.gender,
             declaredWeight: row.athlete.declaredWeightGrams,
             academyId,
           }),

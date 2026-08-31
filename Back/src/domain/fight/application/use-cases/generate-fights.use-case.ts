@@ -10,7 +10,10 @@ import { IFightRepository } from '../../repository/IFightRepository.repository';
 import {
   AbsoluteGpFightGenerationInput,
 } from '../strategies/absolute-gp-fight-generation.strategy';
-import { FightGenerationMetadata } from '../strategies/fight-generation.strategy';
+import {
+  FightGenerationLink,
+  FightGenerationMetadata,
+} from '../strategies/fight-generation.strategy';
 import { FightGenerationStrategyResolverService } from '../services/fight-generation-strategy-resolver.service';
 
 @Injectable()
@@ -44,6 +47,7 @@ export class GenerateFightsUseCase {
 
     let fightsToCreate: FightEntity[] = [];
     let metadata: FightGenerationMetadata[] = [];
+    const links: FightGenerationLink[] = [];
 
     if (competition.mode === CompetitionMode.KEYS) {
       throw new ValidationError(
@@ -70,16 +74,31 @@ export class GenerateFightsUseCase {
         athletes,
       });
 
+      const offset = fightsToCreate.length;
       fightsToCreate.push(...generated.fights);
       metadata.push(...generated.metadata);
+
+      for (const link of generated.links ?? []) {
+        links.push({
+          fromIndex: link.fromIndex + offset,
+          winner: link.winner
+            ? { ...link.winner, toIndex: link.winner.toIndex + offset }
+            : undefined,
+          loser: link.loser
+            ? { ...link.loser, toIndex: link.loser.toIndex + offset }
+            : undefined,
+        });
+      }
     }
 
     const walkoverResolved = await this.fightRepository.withTransaction(
       async (txFightRepository) => {
         const createdFights = await txFightRepository.createMany(fightsToCreate);
-        const resolved = this.resolveInitialWalkovers(
-          this.linkBracketFights(createdFights),
-        );
+        const linkedFights =
+          links.length > 0
+            ? this.applyGenerationLinks(createdFights, links)
+            : this.linkBracketFights(createdFights);
+        const resolved = this.resolveInitialWalkovers(linkedFights);
 
         return txFightRepository.updateMany(resolved);
       },
@@ -89,6 +108,35 @@ export class GenerateFightsUseCase {
       fights: walkoverResolved.map((fight) => fight.toJSON()),
       metadata,
     };
+  }
+
+  /** Converte os indices do plano da estrategia nos ids ja persistidos. */
+  private applyGenerationLinks(
+    fights: FightEntity[],
+    links: FightGenerationLink[],
+  ): FightEntity[] {
+    const updated = new Map<number, FightEntity>();
+
+    for (const link of links) {
+      const origin = updated.get(fights[link.fromIndex].id as number) ??
+        fights[link.fromIndex];
+
+      updated.set(
+        origin.id as number,
+        origin.updateDetails({
+          nextFightId: link.winner
+            ? (fights[link.winner.toIndex].id as number)
+            : undefined,
+          nextFightSlot: link.winner ? link.winner.slot : undefined,
+          loserNextFightId: link.loser
+            ? (fights[link.loser.toIndex].id as number)
+            : undefined,
+          loserNextFightSlot: link.loser ? link.loser.slot : undefined,
+        }),
+      );
+    }
+
+    return fights.map((fight) => updated.get(fight.id as number) ?? fight);
   }
 
   private linkBracketFights(fights: FightEntity[]): FightEntity[] {

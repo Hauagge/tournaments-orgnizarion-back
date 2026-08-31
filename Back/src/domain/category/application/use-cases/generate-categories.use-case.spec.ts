@@ -8,13 +8,23 @@ import {
 } from '../../../../../test/repositories/in-memory';
 import { Category } from '../../domain/entities/category.entity';
 import { CategoryGenerationService } from '../services/category-generation.service';
+import { CategoryGenerationStrategyResolverService } from '../services/category-generation-strategy-resolver.service';
+import { AbsoluteGpCategoryGenerationStrategy } from '../strategies/absolute-gp-category-generation.strategy';
+import { CbjjCategoryGenerationStrategy } from '../strategies/cbjj-category-generation.strategy';
+import { TeamCategoryGenerationStrategy } from '../strategies/team-category-generation.strategy';
 import { GenerateCategoriesUseCase } from './generate-categories.use-case';
 
 class StubCategoryGenerationService extends CategoryGenerationService {
   constructor(
     private readonly assignments: { category: Category; athleteIds: number[] }[],
   ) {
-    super();
+    super(
+      new CategoryGenerationStrategyResolverService(
+        new TeamCategoryGenerationStrategy(),
+        new AbsoluteGpCategoryGenerationStrategy(),
+        new CbjjCategoryGenerationStrategy(),
+      ),
+    );
   }
 
   generate() {

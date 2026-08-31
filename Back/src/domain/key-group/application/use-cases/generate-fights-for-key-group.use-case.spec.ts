@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
+import { CbjjFightGenerationStrategy } from '@/domain/fight/application/strategies/cbjj-fight-generation.strategy';
 import { FightGenerationStrategyResolverService } from '@/domain/fight/application/services/fight-generation-strategy-resolver.service';
 import { AbsoluteGpFightGenerationStrategy } from '@/domain/fight/application/strategies/absolute-gp-fight-generation.strategy';
 import { makeCompetition } from '../../../../../test/factories';
@@ -68,6 +69,7 @@ describe('GenerateFightsForKeyGroupUseCase', () => {
         new KeysFightGenerationStrategy(
           new FourAthleteOlympicBracketFightGenerationStrategy(),
         ),
+        new CbjjFightGenerationStrategy(),
       ),
       distributeAreaFightsUseCase as any,
     );

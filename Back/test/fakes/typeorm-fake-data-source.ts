@@ -4,9 +4,12 @@ import { FightTypeOrmEntity } from '@/domain/fight/entities/fight.typeorm-entity
 import { KeyGroupTypeOrmEntity } from '@/domain/key-group/infra/persistence/entities/key-group.typeorm-entity';
 
 export class FakeRepository<T extends { id?: number }> {
-  private nextId = 1;
+  private nextId: number;
 
-  constructor(public rows: T[] = []) {}
+  constructor(public rows: T[] = []) {
+    this.nextId =
+      rows.reduce((max, row) => Math.max(max, row.id ?? 0), 0) + 1;
+  }
 
   create(data: Partial<T>): T {
     return { ...(data as T) };

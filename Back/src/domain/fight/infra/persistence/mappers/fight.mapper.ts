@@ -19,6 +19,8 @@ export class FightMapper {
       loserId: entity.loserId,
       nextFightId: entity.nextFightId,
       nextFightSlot: entity.nextFightSlot,
+      loserNextFightId: entity.loserNextFightId ?? null,
+      loserNextFightSlot: entity.loserNextFightSlot ?? null,
       createdManually: entity.createdManually,
       isWo: entity.isWo,
       winType: entity.winType,
@@ -45,6 +47,8 @@ export class FightMapper {
     entity.loserId = fight.loserId;
     entity.nextFightId = fight.nextFightId;
     entity.nextFightSlot = fight.nextFightSlot;
+    entity.loserNextFightId = fight.loserNextFightId;
+    entity.loserNextFightSlot = fight.loserNextFightSlot;
     entity.createdManually = fight.createdManually;
     entity.isWo = fight.isWo;
     entity.winType = fight.winType;

@@ -153,6 +153,37 @@ export class MarkFightWinnerUseCase {
         }
       }
 
+      if (fight.loserNextFightId && fight.loserNextFightSlot && loserId) {
+        const loserNextFight = await fightRepository.findOneBy({
+          id: fight.loserNextFightId,
+        });
+
+        if (loserNextFight) {
+          if (fight.loserNextFightSlot === 'A') {
+            loserNextFight.athleteAId = loserId;
+          } else {
+            loserNextFight.athleteBId = loserId;
+          }
+
+          if (
+            fight.areaId !== null &&
+            loserNextFight.areaId !== fight.areaId
+          ) {
+            loserNextFight.areaId = fight.areaId;
+          }
+
+          await fightRepository.save(loserNextFight);
+
+          if (loserNextFight.areaId !== null) {
+            await this.enqueueFightInArea({
+              fightId: loserNextFight.id,
+              areaId: loserNextFight.areaId,
+              areaQueueRepository,
+            });
+          }
+        }
+      }
+
       await fightRepository.save(fight);
 
       const thirdBestOfThreeFight =
@@ -176,16 +207,12 @@ export class MarkFightWinnerUseCase {
           keyGroupRepository,
           categoryRepository,
         });
-      } else if (nextFight === null && fight.categoryId !== null) {
-        const category = await categoryRepository.findOneBy({ id: fight.categoryId });
-        if (category) {
-          category.championAthleteId = input.winnerId;
-          await categoryRepository.save(category);
-          champion = {
-            categoryId: category.id,
-            athleteId: input.winnerId,
-          };
-        }
+      } else if (fight.categoryId !== null) {
+        champion = await this.persistCategoryChampion({
+          categoryId: fight.categoryId,
+          fightRepository,
+          categoryRepository,
+        });
       }
 
       const queueItem = await areaQueueRepository.findOneBy({ fightId: fight.id });
@@ -265,6 +292,42 @@ export class MarkFightWinnerUseCase {
   }
 
   /**
+   * Categoria sem chave (modos por categoria): o campeao e o vencedor da luta
+   * de maior rodada, e so quando todas as lutas da categoria terminaram — a
+   * disputa de terceiro e a final da Serie Prata nao valem titulo.
+   */
+  private async persistCategoryChampion(input: {
+    categoryId: number;
+    fightRepository: import('typeorm').Repository<FightTypeOrmEntity>;
+    categoryRepository: import('typeorm').Repository<CategoryTypeOrmEntity>;
+  }): Promise<Output['categoryChampion']> {
+    const categoryFights = await input.fightRepository.find({
+      where: { categoryId: input.categoryId },
+      order: { order: 'ASC', id: 'ASC' },
+    });
+    const championAthleteId = this.keyGroupChampionService.resolve(
+      categoryFights.map(FightMapper.toDomain),
+    );
+
+    const category = await input.categoryRepository.findOneBy({
+      id: input.categoryId,
+    });
+
+    if (!category || category.championAthleteId === championAthleteId) {
+      return championAthleteId === null || !category
+        ? null
+        : { categoryId: category.id, athleteId: championAthleteId };
+    }
+
+    category.championAthleteId = championAthleteId;
+    await input.categoryRepository.save(category);
+
+    return championAthleteId === null
+      ? null
+      : { categoryId: category.id, athleteId: championAthleteId };
+  }
+
+  /**
    * O campeao da chave e gravado em key_groups; quando a chave tem categoria,
    * a categoria tambem recebe o campeao (usado pelo relatorio de academias).
    */
@@ -320,12 +383,21 @@ export class MarkFightWinnerUseCase {
     fightRepository: import('typeorm').Repository<FightTypeOrmEntity>;
     areaQueueRepository: import('typeorm').Repository<AreaQueueItemTypeOrmEntity>;
   }): Promise<FightTypeOrmEntity | null> {
-    if (input.fight.keyGroupId === null) {
+    // O grupo do melhor de tres e a chave; nos modos por categoria (sem chave)
+    // o grupo e a propria categoria.
+    const groupWhere =
+      input.fight.keyGroupId !== null
+        ? { keyGroupId: input.fight.keyGroupId }
+        : input.fight.categoryId !== null
+          ? { categoryId: input.fight.categoryId }
+          : null;
+
+    if (groupWhere === null) {
       return null;
     }
 
     const keyGroupFights = await input.fightRepository.find({
-      where: { keyGroupId: input.fight.keyGroupId },
+      where: groupWhere,
       order: { order: 'ASC', id: 'ASC' },
     });
 

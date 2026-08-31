@@ -17,6 +17,8 @@ export type FightProps = {
   loserId?: number | null;
   nextFightId?: number | null;
   nextFightSlot?: 'A' | 'B' | null;
+  loserNextFightId?: number | null;
+  loserNextFightSlot?: 'A' | 'B' | null;
   createdManually?: boolean;
   isWo?: boolean;
   winType: string | null;
@@ -41,6 +43,8 @@ export class FightEntity {
       | 'loserId'
       | 'nextFightId'
       | 'nextFightSlot'
+      | 'loserNextFightId'
+      | 'loserNextFightSlot'
       | 'createdManually'
       | 'isWo'
       | 'winType'
@@ -66,6 +70,8 @@ export class FightEntity {
       loserId: null,
       nextFightId: null,
       nextFightSlot: null,
+      loserNextFightId: null,
+      loserNextFightSlot: null,
       createdManually: false,
       isWo: false,
       winType: null,
@@ -85,6 +91,8 @@ export class FightEntity {
       loserId: props.loserId ?? null,
       nextFightId: props.nextFightId ?? null,
       nextFightSlot: props.nextFightSlot ?? null,
+      loserNextFightId: props.loserNextFightId ?? null,
+      loserNextFightSlot: props.loserNextFightSlot ?? null,
       createdManually: props.createdManually ?? false,
       isWo: props.isWo ?? false,
     });
@@ -161,6 +169,8 @@ export class FightEntity {
     status?: FightStatus;
     nextFightId?: number | null;
     nextFightSlot?: 'A' | 'B' | null;
+    loserNextFightId?: number | null;
+    loserNextFightSlot?: 'A' | 'B' | null;
     createdManually?: boolean;
     isWo?: boolean;
     winType?: string | null;
@@ -195,6 +205,14 @@ export class FightEntity {
         input.nextFightSlot !== undefined
           ? input.nextFightSlot
           : this.props.nextFightSlot,
+      loserNextFightId:
+        input.loserNextFightId !== undefined
+          ? input.loserNextFightId
+          : this.props.loserNextFightId,
+      loserNextFightSlot:
+        input.loserNextFightSlot !== undefined
+          ? input.loserNextFightSlot
+          : this.props.loserNextFightSlot,
       createdManually:
         input.createdManually ?? this.props.createdManually,
       isWo: input.isWo ?? this.props.isWo,
@@ -261,6 +279,12 @@ export class FightEntity {
   }
   get nextFightSlot(): 'A' | 'B' | null {
     return this.props.nextFightSlot ?? null;
+  }
+  get loserNextFightId(): number | null {
+    return this.props.loserNextFightId ?? null;
+  }
+  get loserNextFightSlot(): 'A' | 'B' | null {
+    return this.props.loserNextFightSlot ?? null;
   }
   get createdManually(): boolean {
     return this.props.createdManually ?? false;

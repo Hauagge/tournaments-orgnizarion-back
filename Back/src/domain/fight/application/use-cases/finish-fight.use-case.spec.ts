@@ -308,6 +308,38 @@ describe('FinishFightUseCase', () => {
     expect((await manager.categories.findOneBy({ id: 7 }))?.championAthleteId).toBe(1);
   });
 
+  it('creates the third fight of a best of three inside a category', async () => {
+    const { useCase, manager } = setup({
+      fights: [
+        makeFightRow({
+          id: 1,
+          keyGroupId: null,
+          categoryId: 7,
+          order: 1,
+          status: FightStatus.FINISHED,
+          winnerId: 1,
+        }),
+        makeFightRow({
+          id: 2,
+          keyGroupId: null,
+          categoryId: 7,
+          order: 2,
+          status: FightStatus.IN_PROGRESS,
+        }),
+      ],
+      categories: [{ id: 7, championAthleteId: null } as CategoryTypeOrmEntity],
+    });
+
+    await useCase.execute({ id: 2, winnerAthleteId: 2, winType: 'POINTS' });
+
+    const thirdFight = await manager.fights.findOneBy({ id: 3 });
+    expect(thirdFight).not.toBeNull();
+    expect(thirdFight?.categoryId).toBe(7);
+    expect(thirdFight?.status).toBe(FightStatus.PENDING);
+    // com a chave em aberto, ninguem e campeao ainda
+    expect((await manager.categories.findOneBy({ id: 7 }))?.championAthleteId).toBeNull();
+  });
+
   it('rejects a winner that does not belong to the fight', async () => {
     const { useCase } = setup({
       fights: [makeFightRow({ status: FightStatus.IN_PROGRESS })],

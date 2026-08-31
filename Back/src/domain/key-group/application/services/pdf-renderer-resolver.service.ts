@@ -7,20 +7,24 @@ import { PdfRendererStrategy } from '../strategies/pdf-renderer.strategy';
 
 @Injectable()
 export class PdfRendererResolverService {
+  private readonly renderers: PdfRendererStrategy[];
+
   constructor(
-    private readonly keysRenderer: KeysPdfRendererStrategy,
-    private readonly absoluteGpRenderer: AbsoluteGpPdfRendererStrategy,
-  ) {}
+    keysRenderer: KeysPdfRendererStrategy,
+    absoluteGpRenderer: AbsoluteGpPdfRendererStrategy,
+  ) {
+    this.renderers = [keysRenderer, absoluteGpRenderer];
+  }
 
   resolve(mode: CompetitionMode): PdfRendererStrategy {
-    if (mode === CompetitionMode.KEYS) {
-      return this.keysRenderer;
+    const renderer = this.renderers.find(
+      (candidate) => candidate.mode === mode,
+    );
+
+    if (!renderer) {
+      throw new ValidationError(`Unsupported bracket PDF mode: ${mode}`);
     }
 
-    if (mode === CompetitionMode.ABSOLUTE_GP) {
-      return this.absoluteGpRenderer;
-    }
-
-    throw new ValidationError(`Unsupported bracket PDF mode: ${mode}`);
+    return renderer;
   }
 }
