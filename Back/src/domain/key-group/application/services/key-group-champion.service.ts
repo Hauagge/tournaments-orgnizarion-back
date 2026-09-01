@@ -28,14 +28,48 @@ export class KeyGroupChampionService {
     const lastRound = Math.max(...activeFights.map((fight) => fight.round));
 
     if (lastRound > 1) {
-      const finalFight = activeFights
-        .filter((fight) => fight.round === lastRound)
-        .sort((left, right) => left.order - right.order)[0];
+
+      const titleFight = this.resolveTitleFight(activeFights);
+      const finalFight =
+        titleFight !== null && titleFight.round === lastRound
+          ? titleFight
+          : activeFights
+              .filter((fight) => fight.round === lastRound)
+              .sort((left, right) => left.order - right.order)[0];
 
       return finalFight?.winnerId ?? null;
     }
 
     return this.resolveByWins(activeFights);
+  }
+
+  private resolveTitleFight(fights: FightEntity[]): FightEntity | null {
+    const fightsById = new Map(
+      fights.map((fight) => [fight.id as number, fight]),
+    );
+    let titleFight: FightEntity | null = null;
+
+    for (const firstRoundFight of fights.filter((fight) => fight.round === 1)) {
+      let current = firstRoundFight;
+      const visited = new Set<number>([current.id as number]);
+
+      while (current.nextFightId !== null) {
+        const next = fightsById.get(current.nextFightId);
+
+        if (!next || visited.has(next.id as number)) {
+          break;
+        }
+
+        visited.add(next.id as number);
+        current = next;
+      }
+
+      if (titleFight === null || current.round > titleFight.round) {
+        titleFight = current;
+      }
+    }
+
+    return titleFight;
   }
 
   private resolveByWins(fights: FightEntity[]): number | null {
