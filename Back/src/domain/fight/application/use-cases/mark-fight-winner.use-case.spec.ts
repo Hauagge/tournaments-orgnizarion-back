@@ -3,7 +3,6 @@ import { DomainEvent, DomainEventHandler, EventBus } from '@/core/events/event-b
 import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-queue-item-status.enum';
 import { AreaQueueItemTypeOrmEntity } from '@/domain/area/infra/persistence/entities/area-queue-item.typeorm-entity';
 import { CategoryTypeOrmEntity } from '@/domain/category/infra/persistence/entities/category.typeorm-entity';
-import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
 import { KeyGroupChampionService } from '@/domain/key-group/application/services/key-group-champion.service';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
@@ -68,13 +67,76 @@ describe('MarkFightWinnerUseCase', () => {
     const { manager, dataSource } = makeFakeDataSource({ fights, categories });
     const useCase = new MarkFightWinnerUseCase(
       dataSource as never,
-      {} as ICategoryRepository,
       eventBus,
       bestOfThreeProgressionService,
       new KeyGroupChampionService(),
     );
     return { useCase, manager };
   }
+
+  it('refuses to change the winner when the loser fight has already finished', async () => {
+    // Ouro/Prata: o perdedor da abertura ja lutou e venceu na Serie Prata.
+    // Corrigir o vencedor da abertura reescreveria uma luta encerrada.
+    const opening = makeFightRow({
+      id: 1,
+      status: FightStatus.FINISHED,
+      winnerId: 10,
+      loserId: 20,
+      nextFightId: 2,
+      nextFightSlot: 'A',
+      loserNextFightId: 3,
+      loserNextFightSlot: 'A',
+    });
+    const goldFight = makeFightRow({
+      id: 2,
+      round: 2,
+      order: 2,
+      athleteAId: 10,
+      athleteBId: 30,
+      status: FightStatus.PENDING,
+    });
+    const silverFight = makeFightRow({
+      id: 3,
+      round: 2,
+      order: 3,
+      athleteAId: 20,
+      athleteBId: 40,
+      status: FightStatus.FINISHED,
+      winnerId: 20,
+      loserId: 40,
+    });
+    const { useCase, manager } = setup([opening, goldFight, silverFight]);
+
+    await expect(
+      useCase.execute({ competitionId: 1, fightId: 1, winnerId: 20 }),
+    ).rejects.toBeInstanceOf(ValidationError);
+
+    const untouched = (await manager
+      .getRepository(FightTypeOrmEntity)
+      .findOneBy({ id: 3 })) as FightTypeOrmEntity | null;
+    expect(untouched?.athleteAId).toBe(20);
+  });
+
+  it('rejects the loser when the loser slot already holds another athlete', async () => {
+    const opening = makeFightRow({
+      id: 1,
+      loserNextFightId: 2,
+      loserNextFightSlot: 'A',
+    });
+    const consolation = makeFightRow({
+      id: 2,
+      round: 2,
+      order: 2,
+      athleteAId: 99,
+      athleteBId: 40,
+      status: FightStatus.PENDING,
+    });
+    const { useCase } = setup([opening, consolation]);
+
+    await expect(
+      useCase.execute({ competitionId: 1, fightId: 1, winnerId: 10 }),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
 
   it('marks the winner and sets the category champion when there is no next fight', async () => {
     const { useCase } = setup(
@@ -173,7 +235,6 @@ describe('MarkFightWinnerUseCase', () => {
     });
     const useCase = new MarkFightWinnerUseCase(
       dataSource as never,
-      {} as ICategoryRepository,
       eventBus,
       bestOfThreeProgressionService,
       new KeyGroupChampionService(),
@@ -228,7 +289,6 @@ describe('MarkFightWinnerUseCase', () => {
     });
     const useCase = new MarkFightWinnerUseCase(
       dataSource as never,
-      {} as ICategoryRepository,
       eventBus,
       bestOfThreeProgressionService,
       new KeyGroupChampionService(),
@@ -265,7 +325,6 @@ describe('MarkFightWinnerUseCase', () => {
     });
     const useCase = new MarkFightWinnerUseCase(
       dataSource as never,
-      {} as ICategoryRepository,
       eventBus,
       bestOfThreeProgressionService,
       new KeyGroupChampionService(),
@@ -295,7 +354,6 @@ describe('MarkFightWinnerUseCase', () => {
     });
     const useCase = new MarkFightWinnerUseCase(
       dataSource as never,
-      {} as ICategoryRepository,
       eventBus,
       bestOfThreeProgressionService,
       new KeyGroupChampionService(),

@@ -3,7 +3,6 @@ import { DataSource } from 'typeorm';
 import { EventBus } from '@/core/events/event-bus.interface';
 import { AreaQueueItemTypeOrmEntity } from '@/domain/area/infra/persistence/entities/area-queue-item.typeorm-entity';
 import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-queue-item-status.enum';
-import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
 import { KeyGroupChampionService } from '@/domain/key-group/application/services/key-group-champion.service';
 import { KeyGroupTypeOrmEntity } from '@/domain/key-group/infra/persistence/entities/key-group.typeorm-entity';
 import { CategoryTypeOrmEntity } from '@/domain/category/infra/persistence/entities/category.typeorm-entity';
@@ -49,8 +48,6 @@ type Output = {
 export class MarkFightWinnerUseCase {
   constructor(
     private readonly dataSource: DataSource,
-    @Inject(ICategoryRepository)
-    private readonly categoryRepository: ICategoryRepository,
     @Inject(EventBus)
     private readonly eventBus: EventBus,
     private readonly bestOfThreeProgressionService: BestOfThreeProgressionService,
@@ -84,12 +81,24 @@ export class MarkFightWinnerUseCase {
       let nextFight = fight.nextFightId
         ? await fightRepository.findOneBy({ id: fight.nextFightId })
         : null;
+      // O perdedor tambem avanca em formatos com repescagem (disputa de 3o,
+      // Serie Prata do CBJJ): esse destino recebe as mesmas travas do vencedor.
+      const loserNextFight = fight.loserNextFightId
+        ? await fightRepository.findOneBy({ id: fight.loserNextFightId })
+        : null;
       const previousWinnerId = fight.winnerId;
+      const previousLoserId = fight.loserId;
 
       if (fight.status === FightStatus.FINISHED && previousWinnerId !== null && previousWinnerId !== input.winnerId) {
         if (nextFight?.status === FightStatus.FINISHED) {
           throw new ValidationError(
             'Nao e possivel alterar o vencedor porque a proxima luta ja foi finalizada.',
+          );
+        }
+
+        if (loserNextFight?.status === FightStatus.FINISHED) {
+          throw new ValidationError(
+            'Nao e possivel alterar o vencedor porque a luta do perdedor ja foi finalizada.',
           );
         }
 
@@ -99,6 +108,15 @@ export class MarkFightWinnerUseCase {
           }
           if (fight.nextFightSlot === 'B' && nextFight.athleteBId === previousWinnerId) {
             nextFight.athleteBId = null;
+          }
+        }
+
+        if (loserNextFight && fight.loserNextFightSlot && previousLoserId !== null) {
+          if (fight.loserNextFightSlot === 'A' && loserNextFight.athleteAId === previousLoserId) {
+            loserNextFight.athleteAId = null;
+          }
+          if (fight.loserNextFightSlot === 'B' && loserNextFight.athleteBId === previousLoserId) {
+            loserNextFight.athleteBId = null;
           }
         }
       }
@@ -153,34 +171,39 @@ export class MarkFightWinnerUseCase {
         }
       }
 
-      if (fight.loserNextFightId && fight.loserNextFightSlot && loserId) {
-        const loserNextFight = await fightRepository.findOneBy({
-          id: fight.loserNextFightId,
-        });
+      if (loserNextFight && fight.loserNextFightSlot && loserId) {
+        const currentLoserSlotValue =
+          fight.loserNextFightSlot === 'A'
+            ? loserNextFight.athleteAId
+            : loserNextFight.athleteBId;
+        if (
+          currentLoserSlotValue !== null &&
+          currentLoserSlotValue !== previousLoserId &&
+          currentLoserSlotValue !== loserId
+        ) {
+          throw new ValidationError(
+            'O slot da proxima luta do perdedor ja esta ocupado por outro atleta',
+          );
+        }
 
-        if (loserNextFight) {
-          if (fight.loserNextFightSlot === 'A') {
-            loserNextFight.athleteAId = loserId;
-          } else {
-            loserNextFight.athleteBId = loserId;
-          }
+        if (fight.loserNextFightSlot === 'A') {
+          loserNextFight.athleteAId = loserId;
+        } else {
+          loserNextFight.athleteBId = loserId;
+        }
 
-          if (
-            fight.areaId !== null &&
-            loserNextFight.areaId !== fight.areaId
-          ) {
-            loserNextFight.areaId = fight.areaId;
-          }
+        if (fight.areaId !== null && loserNextFight.areaId !== fight.areaId) {
+          loserNextFight.areaId = fight.areaId;
+        }
 
-          await fightRepository.save(loserNextFight);
+        await fightRepository.save(loserNextFight);
 
-          if (loserNextFight.areaId !== null) {
-            await this.enqueueFightInArea({
-              fightId: loserNextFight.id,
-              areaId: loserNextFight.areaId,
-              areaQueueRepository,
-            });
-          }
+        if (loserNextFight.areaId !== null) {
+          await this.enqueueFightInArea({
+            fightId: loserNextFight.id,
+            areaId: loserNextFight.areaId,
+            areaQueueRepository,
+          });
         }
       }
 
