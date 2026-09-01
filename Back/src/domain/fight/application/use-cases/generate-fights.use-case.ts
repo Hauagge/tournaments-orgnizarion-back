@@ -48,6 +48,7 @@ export class GenerateFightsUseCase {
     let fightsToCreate: FightEntity[] = [];
     let metadata: FightGenerationMetadata[] = [];
     const links: FightGenerationLink[] = [];
+    const inferredIndexes = new Set<number>();
 
     if (competition.mode === CompetitionMode.KEYS) {
       throw new ValidationError(
@@ -78,7 +79,14 @@ export class GenerateFightsUseCase {
       fightsToCreate.push(...generated.fights);
       metadata.push(...generated.metadata);
 
-      for (const link of generated.links ?? []) {
+      if (generated.links === undefined) {
+        for (let index = offset; index < fightsToCreate.length; index += 1) {
+          inferredIndexes.add(index);
+        }
+        continue;
+      }
+
+      for (const link of generated.links) {
         links.push({
           fromIndex: link.fromIndex + offset,
           winner: link.winner
@@ -94,10 +102,11 @@ export class GenerateFightsUseCase {
     const walkoverResolved = await this.fightRepository.withTransaction(
       async (txFightRepository) => {
         const createdFights = await txFightRepository.createMany(fightsToCreate);
-        const linkedFights =
-          links.length > 0
-            ? this.applyGenerationLinks(createdFights, links)
-            : this.linkBracketFights(createdFights);
+        const linkedFights = this.linkFights(
+          createdFights,
+          links,
+          inferredIndexes,
+        );
         const resolved = this.resolveInitialWalkovers(linkedFights);
 
         return txFightRepository.updateMany(resolved);
@@ -110,7 +119,24 @@ export class GenerateFightsUseCase {
     };
   }
 
-  /** Converte os indices do plano da estrategia nos ids ja persistidos. */
+  private linkFights(
+    fights: FightEntity[],
+    links: FightGenerationLink[],
+    inferredIndexes: Set<number>,
+  ): FightEntity[] {
+    const explicitlyLinked = this.applyGenerationLinks(fights, links);
+    const inferredById = new Map(
+      this.linkBracketFights(
+        fights.filter((_, index) => inferredIndexes.has(index)),
+      ).map((fight) => [fight.id as number, fight]),
+    );
+
+    return explicitlyLinked.map(
+      (fight) => inferredById.get(fight.id as number) ?? fight,
+    );
+  }
+
+
   private applyGenerationLinks(
     fights: FightEntity[],
     links: FightGenerationLink[],
