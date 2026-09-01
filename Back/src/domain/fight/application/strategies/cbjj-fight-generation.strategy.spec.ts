@@ -96,9 +96,6 @@ describe('CbjjFightGenerationStrategy', () => {
     expect(generate(1).fights).toHaveLength(0);
   });
 
-  // Rede contra a classe de bug que existiu no AbsoluteGp (bye contra bye):
-  // toda vaga de toda luta precisa ser preenchida exatamente uma vez, seja por
-  // um atleta na geracao, seja por um unico link de avanco.
   it.each(Array.from({ length: 23 }, (_, index) => index + 2))(
     'builds a consistent bracket for %i athletes',
     (total) => {
@@ -128,8 +125,6 @@ describe('CbjjFightGenerationStrategy', () => {
         }
       });
 
-      // Um link so pode empurrar atleta para frente, nunca para uma luta que
-      // ja aconteceu — caso contrario a chave trava.
       for (const link of links) {
         for (const destination of [link.winner, link.loser]) {
           if (!destination) {
