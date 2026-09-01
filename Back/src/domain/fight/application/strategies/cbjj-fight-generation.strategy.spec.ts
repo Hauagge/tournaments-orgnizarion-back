@@ -95,4 +95,54 @@ describe('CbjjFightGenerationStrategy', () => {
   it('returns nothing for a category with a single athlete', () => {
     expect(generate(1).fights).toHaveLength(0);
   });
+
+  // Rede contra a classe de bug que existiu no AbsoluteGp (bye contra bye):
+  // toda vaga de toda luta precisa ser preenchida exatamente uma vez, seja por
+  // um atleta na geracao, seja por um unico link de avanco.
+  it.each(Array.from({ length: 23 }, (_, index) => index + 2))(
+    'builds a consistent bracket for %i athletes',
+    (total) => {
+      const { fights: plan, links = [] } = generate(total);
+
+      const incomingBySlot = new Map<string, number>();
+      for (const link of links) {
+        for (const destination of [link.winner, link.loser]) {
+          if (!destination) {
+            continue;
+          }
+          const slotKey = `${destination.toIndex}:${destination.slot}`;
+          incomingBySlot.set(slotKey, (incomingBySlot.get(slotKey) ?? 0) + 1);
+        }
+      }
+
+      plan.forEach((fight, index) => {
+        if (fight.round === 1) {
+          expect(fight.athleteAId).not.toBeNull();
+          expect(fight.athleteBId).not.toBeNull();
+        }
+
+        for (const slot of ['A', 'B'] as const) {
+          const seeded = slot === 'A' ? fight.athleteAId : fight.athleteBId;
+          const incoming = incomingBySlot.get(`${index}:${slot}`) ?? 0;
+          expect((seeded !== null ? 1 : 0) + incoming).toBe(1);
+        }
+      });
+
+      // Um link so pode empurrar atleta para frente, nunca para uma luta que
+      // ja aconteceu — caso contrario a chave trava.
+      for (const link of links) {
+        for (const destination of [link.winner, link.loser]) {
+          if (!destination) {
+            continue;
+          }
+          expect(plan[destination.toIndex].round).toBeGreaterThan(
+            plan[link.fromIndex].round,
+          );
+          expect(plan[destination.toIndex].order).toBeGreaterThan(
+            plan[link.fromIndex].order,
+          );
+        }
+      }
+    },
+  );
 });

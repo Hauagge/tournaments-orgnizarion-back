@@ -9,7 +9,6 @@ import { AreaQueueItemTypeOrmEntity } from '@/domain/area/infra/persistence/enti
 import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-queue-item-status.enum';
 import { CategoryTypeOrmEntity } from '@/domain/category/infra/persistence/entities/category.typeorm-entity';
 import { KeyGroupTypeOrmEntity } from '@/domain/key-group/infra/persistence/entities/key-group.typeorm-entity';
-import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
 import { KeyGroupChampionService } from '@/domain/key-group/application/services/key-group-champion.service';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
@@ -73,7 +72,6 @@ describe('FinishFightUseCase', () => {
     );
     const markFightWinnerUseCase = new MarkFightWinnerUseCase(
       dataSource as never,
-      {} as ICategoryRepository,
       eventBus,
       new BestOfThreeProgressionService(),
       new KeyGroupChampionService(),
