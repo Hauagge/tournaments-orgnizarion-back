@@ -8,6 +8,7 @@ import { AthleteProviderModule } from '../athlete/athlete-provider.module';
 import { CategoryProviderModule } from '../category/category-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
 import { KeyGroupChampionService } from '../key-group/application/services/key-group-champion.service';
+import { CategoryPodiumService } from './application/services/category-podium.service';
 import { KeyGroupProviderModule } from '../key-group/key-group-provider.module';
 import { FinishFightUseCase } from './application/use-cases/finish-fight.use-case';
 import { BestOfThreeProgressionService } from './application/services/best-of-three-progression.service';
@@ -49,6 +50,7 @@ import { FightProviderModule } from './fight-provider.module';
     DeleteFightUseCase,
     BestOfThreeProgressionService,
     KeyGroupChampionService,
+    CategoryPodiumService,
     CompetitionAccessGuard,
   ],
   exports: [

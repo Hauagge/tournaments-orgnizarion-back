@@ -42,35 +42,68 @@ describe('CbjjFightGenerationStrategy', () => {
     ]);
   });
 
-  it('adds a bronze fight for four athletes', () => {
+  it('gives both semifinal losers a medal on a four-athlete bracket', () => {
+    // Sem disputa de terceiro: os 4 atletas sobem ao podio (1o, 2o e dois 3os).
     const result = generate(4);
 
-    expect(result.fights).toHaveLength(4);
-    expect(result.metadata[0].format).toBe('OLYMPIC_WITH_BRONZE');
-    const bronze = (result.links ?? []).filter((link) => link.loser);
-    expect(bronze).toHaveLength(2);
-    expect(bronze[0].loser?.toIndex).toBe(3);
-    expect(bronze[1].loser?.toIndex).toBe(3);
+    expect(result.metadata[0].format).toBe('OLYMPIC');
+    expect(result.fights).toHaveLength(3);
+    expect(result.fights.filter((fight) => fight.round === 1)).toHaveLength(2);
+    expect((result.links ?? []).some((link) => link.loser)).toBe(false);
   });
 
   it('lets athletes without an opponent advance instead of creating a bye fight', () => {
-    const result = generate(6);
+    // 5 atletas no Ouro/Prata: 2 lutas de abertura e o 5o entra direto na Ouro,
+    // que fica com 3 atletas e resolve com um bye em vez de luta vazia.
+    const result = generate(5);
 
-    // 2 lutas na primeira rodada, 2 semis, final e disputa de terceiro
-    expect(result.fights).toHaveLength(6);
+    expect(result.metadata[0].format).toBe('GOLD_SILVER_SERIES');
+    expect(result.fights).toHaveLength(5);
+    expect(result.fights.filter((fight) => fight.round === 1)).toHaveLength(2);
     expect(
       result.fights.every(
-        (fight) =>
-          fight.athleteAId !== null || fight.athleteBId !== null || true,
+        (fight) => fight.round === 1 || fight.athleteAId === null || fight.athleteBId === null,
       ),
     ).toBe(true);
-    expect(result.fights.filter((fight) => fight.round === 1)).toHaveLength(2);
   });
 
-  it('splits eight athletes into gold and silver series with ten fights', () => {
+  it('switches to gold/silver series from five athletes on', () => {
+    // Chave de 4: uma eliminatoria simples ja medalha os quatro (1o, 2o e dois
+    // 3os). De 5 em diante so o Ouro/Prata consegue medalhar todos.
+    const formato = (total: number) => generate(total).metadata[0].format;
+
+    expect(formato(4)).toBe('OLYMPIC');
+    expect(formato(5)).toBe('GOLD_SILVER_SERIES');
+    expect(formato(6)).toBe('GOLD_SILVER_SERIES');
+    expect(formato(7)).toBe('GOLD_SILVER_SERIES');
+
+    expect(generate(4).fights).toHaveLength(3);
+    expect(generate(5).fights).toHaveLength(5);
+    expect(generate(6).fights).toHaveLength(7);
+    expect(generate(7).fights).toHaveLength(8);
+
+    // Ate 5 atletas a ultima rodada tem final + disputa de terceiro. De 6 em
+    // diante tem as duas finais (Ouro e Prata), sem disputa de terceiro.
+    const ultimaRodada = (total: number) => {
+      const fights = generate(total).fights;
+      const last = Math.max(...fights.map((fight) => fight.round));
+      return fights.filter((fight) => fight.round === last).length;
+    };
+
+    expect(ultimaRodada(4)).toBe(1); // so a final
+    // n=5: a Prata tem so 2 atletas, entao a final dela cai uma rodada antes da
+    // final da Ouro — a ultima rodada fica so com a final da Ouro.
+    expect(ultimaRodada(5)).toBe(1);
+    expect(ultimaRodada(6)).toBe(2); // as duas finais na mesma rodada
+    expect(ultimaRodada(7)).toBe(2);
+  });
+
+  it('splits eight athletes into gold and silver series, each with two thirds', () => {
     const result = generate(8);
 
     expect(result.metadata[0].format).toBe('GOLD_SILVER_SERIES');
+    // 4 de abertura + (2 semis + final) por serie. Sem disputa de terceiro:
+    // cada serie premia os dois perdedores de semifinal.
     expect(result.fights).toHaveLength(10);
     expect(result.fights.filter((fight) => fight.round === 1)).toHaveLength(4);
 
@@ -79,6 +112,18 @@ describe('CbjjFightGenerationStrategy', () => {
     );
     expect(openingLinks).toHaveLength(4);
     expect(openingLinks.every((link) => link.winner && link.loser)).toBe(true);
+
+    // As duas finais caem na mesma rodada e nada mais: nenhuma luta de bronze.
+    const lastRound = Math.max(...result.fights.map((fight) => fight.round));
+    expect(
+      result.fights.filter((fight) => fight.round === lastRound),
+    ).toHaveLength(2);
+
+    // Links de perdedor existem somente na abertura (Ouro -> Prata).
+    const loserLinksAfterOpening = (result.links ?? []).filter(
+      (link) => link.loser && link.fromIndex >= 4,
+    );
+    expect(loserLinksAfterOpening).toHaveLength(0);
   });
 
   it('sends the leftover athlete of an odd draw straight to the gold series', () => {

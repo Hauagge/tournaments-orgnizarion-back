@@ -13,6 +13,31 @@ function birthDateForAge(age: number) {
 describe('CbjjCategoryGenerationStrategy', () => {
   const strategy = new CbjjCategoryGenerationStrategy();
 
+  it('groups the same belt written in different cases into one category', () => {
+    // As planilhas trazem BRANCA/Branca/branca; sem normalizar, os tres atletas
+    // cairiam em categorias separadas e a chave nasceria fragmentada.
+    const generated = strategy.generate(
+      1,
+      ['BRANCA', 'Branca', 'branca'].map((belt, index) =>
+        makeAthlete({
+          id: index + 1,
+          fullName: `Atleta ${index + 1}`,
+          belt,
+          gender: AthleteGender.MALE,
+          birthDate: birthDateForAge(10),
+          declaredWeight: 35000,
+        }),
+      ),
+    );
+
+    expect(generated).toHaveLength(1);
+    expect(generated[0].category.belt).toBe('BRANCA');
+    expect(generated[0].category.name).toBe(
+      'Masculino - Infantil 1 - BRANCA - Leve',
+    );
+    expect(generated[0].athleteIds).toHaveLength(3);
+  });
+
   it('separates athletes by age division, gender, belt and weight class', () => {
     const generated = strategy.generate(1, [
       makeAthlete({
@@ -43,12 +68,12 @@ describe('CbjjCategoryGenerationStrategy', () => {
 
     expect(generated).toHaveLength(3);
     expect(generated[0].category.name).toBe(
-      'Masculino - Infantil 1 - branca - Leve',
+      'Masculino - Infantil 1 - BRANCA - Leve',
     );
     expect(generated[1].category.name).toBe(
-      'Feminino - Infantil 1 - branca - Leve',
+      'Feminino - Infantil 1 - BRANCA - Leve',
     );
-    expect(generated[2].category.name).toBe('Masculino - Adulto - azul - Pena');
+    expect(generated[2].category.name).toBe('Masculino - Adulto - AZUL - Pena');
     expect(generated[2].category.weightMaxGrams).toBe(70000);
   });
 

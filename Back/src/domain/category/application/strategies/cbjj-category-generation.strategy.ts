@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { normalizeTextToUppercase } from '@/core/helper/string.helper';
 import { Athlete } from '@/domain/athlete/domain/entities/athlete.entity';
 import { AthleteGender } from '@/domain/athlete/domain/value-objects/athlete-gender.enum';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
@@ -72,17 +73,18 @@ export class CbjjCategoryGenerationStrategy extends CategoryGenerationStrategy {
         continue;
       }
 
-      const key = [
-        athlete.belt,
-        athlete.gender,
-        division.name,
-        weightClass.name,
-      ].join('|');
+      // A faixa chega das planilhas em grafias variadas ("BRANCA", "Branca",
+      // "branca"); sem normalizar, a mesma faixa geraria categorias separadas.
+      const belt = normalizeTextToUppercase(athlete.belt);
+
+      const key = [belt, athlete.gender, division.name, weightClass.name].join(
+        '|',
+      );
 
       if (!grouped.has(key)) {
         grouped.set(key, {
-          name: `${GENDER_LABEL[athlete.gender]} - ${division.name} - ${athlete.belt} - ${weightClass.name}`,
-          belt: athlete.belt,
+          name: `${GENDER_LABEL[athlete.gender]} - ${division.name} - ${belt} - ${weightClass.name}`,
+          belt,
           gender: athlete.gender,
           ageMin: division.minAge,
           ageMax: division.maxAge,

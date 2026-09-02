@@ -30,9 +30,13 @@ type Builder = {
 
 /**
  * Formato oficial por quantidade de atletas na categoria:
- * 2 melhor de 3 | 3 playoff | 4 semis + final + 3o | 5-7 eliminatoria + 3o |
- * 8+ Serie Ouro (vencedores da 1a rodada) e Serie Prata (perdedores).
+ * 2 melhor de 3 | 3 playoff | 4 eliminatoria simples |
+ * 5+ Serie Ouro (vencedores da 1a rodada) e Serie Prata (perdedores).
  * Quem fica sem adversario na rodada avanca automaticamente.
+ *
+ * Nao ha disputa de terceiro em nenhum formato: os dois perdedores de
+ * semifinal sao ambos terceiros colocados, para que o maximo de atletas saia
+ * com medalha.
  */
 @Injectable()
 export class CbjjFightGenerationStrategy
@@ -88,8 +92,8 @@ export class CbjjFightGenerationStrategy
       return this.buildThreeAthletePlayoff(builder, athleteIds);
     }
 
-    if (athleteIds.length <= 7) {
-      return this.buildBracketWithBronze(builder, athleteIds);
+    if (athleteIds.length === 4) {
+      return this.buildSimpleBracket(builder, athleteIds);
     }
 
     return this.buildGoldSilverSeries(builder, athleteIds);
@@ -149,41 +153,29 @@ export class CbjjFightGenerationStrategy
     };
   }
 
-  /** 4 a 7 atletas: eliminatoria simples com disputa de terceiro. */
-  private buildBracketWithBronze(builder: Builder, athleteIds: number[]) {
+  /**
+   * 4 atletas: duas semifinais e a final. Sem disputa de terceiro — os dois
+   * perdedores de semifinal sao terceiros, entao os quatro sobem ao podio.
+   */
+  private buildSimpleBracket(builder: Builder, athleteIds: number[]) {
     const entrants: Entrant[] = athleteIds.map((athleteId) => ({
       kind: 'ATHLETE',
       athleteId,
     }));
-    const bracket = this.buildBracket(builder, entrants, 1);
 
-    if (bracket.semifinalIndexes.length === 2) {
-      this.addFight(builder, {
-        round: bracket.lastRound,
-        entrantA: {
-          kind: 'FIGHT',
-          fightIndex: bracket.semifinalIndexes[0],
-          role: 'LOSER',
-        },
-        entrantB: {
-          kind: 'FIGHT',
-          fightIndex: bracket.semifinalIndexes[1],
-          role: 'LOSER',
-        },
-      });
-    }
+    this.buildBracket(builder, entrants, 1);
 
     return {
-      format: 'OLYMPIC_WITH_BRONZE' as const,
+      format: 'OLYMPIC' as const,
       notes: [
         'Eliminatoria simples; quem fica sem adversario avanca automaticamente',
-        'Perdedores das semifinais disputam o terceiro lugar',
+        'Os dois perdedores de semifinal sao terceiros colocados',
       ],
     };
   }
 
   /**
-   * 8 ou mais: a primeira rodada emparelha o maximo de atletas; vencedores vao
+   * 5 ou mais: a primeira rodada emparelha o maximo de atletas; vencedores vao
    * para a Serie Ouro e perdedores para a Serie Prata. Sobrando um atleta, ele
    * avanca direto para a Ouro.
    */
@@ -210,6 +202,10 @@ export class CbjjFightGenerationStrategy
       });
     }
 
+    // Regulamento, item 9: chaves de 8+ premiam serie ouro e serie prata com
+    // "ate 02 terceiros lugares" cada — os dois perdedores de semifinal de cada
+    // serie, sem disputa entre eles. So o podio da Ouro define o campeao da
+    // categoria e alimenta o relatorio de academias.
     const gold = this.buildBracket(builder, goldEntrants, 2);
     this.buildBracket(builder, silverEntrants, 2);
 
@@ -222,9 +218,12 @@ export class CbjjFightGenerationStrategy
           ? 'Atleta sem adversario na primeira rodada avanca direto para a Serie Ouro'
           : 'Series com o mesmo numero de atletas',
         `Serie Ouro decidida na rodada ${gold.lastRound}`,
+        'Cada serie premia dois terceiros: os perdedores das suas semifinais',
+        'Somente o podio da Serie Ouro conta para o campeao da categoria',
       ],
     };
   }
+
 
   /**
    * Monta uma chave eliminatoria sobre os participantes informados. Quem fica

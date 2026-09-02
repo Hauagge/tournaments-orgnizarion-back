@@ -6,7 +6,10 @@ import { AuthModule } from '../auth/auth.module';
 import { CategoryProviderModule } from '../category/category-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
 import { KeyGroupProviderModule } from '../key-group/key-group-provider.module';
+import { FightProviderModule } from '../fight/fight-provider.module';
+import { CategoryPodiumService } from '../fight/application/services/category-podium.service';
 import { ChampionAcademiesReportUseCase } from './application/use-cases/champion-academies-report.use-case';
+import { CompetitionResultsUseCase } from './application/use-cases/competition-results.use-case';
 import { ReportsController } from './infra/http/reports.controller';
 
 @Module({
@@ -17,9 +20,15 @@ import { ReportsController } from './infra/http/reports.controller';
     AthleteProviderModule,
     AcademyProviderModule,
     KeyGroupProviderModule,
+    FightProviderModule,
   ],
   controllers: [ReportsController],
-  providers: [ChampionAcademiesReportUseCase, CompetitionAccessGuard],
-  exports: [ChampionAcademiesReportUseCase],
+  providers: [
+    ChampionAcademiesReportUseCase,
+    CompetitionResultsUseCase,
+    CategoryPodiumService,
+    CompetitionAccessGuard,
+  ],
+  exports: [ChampionAcademiesReportUseCase, CompetitionResultsUseCase],
 })
 export class ReportsModule {}

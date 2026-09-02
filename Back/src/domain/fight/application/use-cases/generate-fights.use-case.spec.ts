@@ -69,12 +69,12 @@ describe('GenerateFightsUseCase', () => {
     expect(bestOfThree).toHaveLength(2);
     expect(bestOfThree.every((fight) => fight.nextFightId === null)).toBe(true);
 
-    // Chave de 4: as duas semis avancam para a final e mandam o perdedor para
-    // a disputa de terceiro.
+    // Chave de 4: as duas semis avancam para a final. Sem disputa de terceiro —
+    // os dois perdedores de semifinal ja sao terceiros colocados.
     const semifinals = bracket.filter((fight) => fight.round === 1);
     expect(semifinals).toHaveLength(2);
     expect(semifinals.every((fight) => fight.nextFightId !== null)).toBe(true);
-    expect(semifinals.every((fight) => fight.loserNextFightId !== null)).toBe(true);
+    expect(semifinals.every((fight) => fight.loserNextFightId === null)).toBe(true);
   });
 
   it('still infers round-by-round links for strategies that do not declare them', async () => {

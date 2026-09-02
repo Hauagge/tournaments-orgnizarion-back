@@ -30,7 +30,7 @@ export class PdfRendererService {
       return Buffer.from(pdf);
     } catch (error) {
       throw new ValidationError(
-        'Unable to render PDF. Ensure Playwright Chromium is installed with "npx playwright install chromium".',
+        'Unable to render PDF. Install the Playwright browser with "npx playwright install chromium-headless-shell" (enough for PDF, ~257MB) or "npx playwright install chromium" for the full build.',
         error instanceof Error ? error.message : error,
       );
     } finally {

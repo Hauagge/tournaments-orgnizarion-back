@@ -6,6 +6,7 @@ export enum AthleteGender {
 const GENDER_ALIASES: Record<string, AthleteGender> = {
   M: AthleteGender.MALE,
   MALE: AthleteGender.MALE,
+  MAS: AthleteGender.MALE,
   MASC: AthleteGender.MALE,
   MASCULINO: AthleteGender.MALE,
   H: AthleteGender.MALE,
