@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { AreaDistributionStrategy } from '../strategies/area-distribution.strategy';
+import { CbjjAreaDistributionStrategy } from '../strategies/cbjj-area-distribution.strategy';
 import { KeysAreaDistributionStrategy } from '../strategies/keys-area-distribution.strategy';
 import { SplitByAgeStrategy } from '../strategies/split-by-age.strategy';
 
@@ -12,8 +13,13 @@ export class AreaDistributionStrategyResolverService {
   constructor(
     splitByAgeStrategy: SplitByAgeStrategy,
     keysAreaDistributionStrategy: KeysAreaDistributionStrategy,
+    cbjjAreaDistributionStrategy: CbjjAreaDistributionStrategy,
   ) {
-    this.strategies = [splitByAgeStrategy, keysAreaDistributionStrategy];
+    this.strategies = [
+      splitByAgeStrategy,
+      keysAreaDistributionStrategy,
+      cbjjAreaDistributionStrategy,
+    ];
   }
 
   resolve(mode: CompetitionMode): AreaDistributionStrategy {

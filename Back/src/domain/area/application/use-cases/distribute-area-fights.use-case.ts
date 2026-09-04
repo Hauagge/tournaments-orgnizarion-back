@@ -15,7 +15,6 @@ import { DistributionMode } from '../value-objects/distribution-mode.enum';
 export type DistributeAreaFightsInput = {
   competitionId: number;
   mode: DistributionMode;
-  ageSplitYears?: number;
   restGapFights: number;
   fightIds?: number[];
 };
@@ -111,11 +110,28 @@ export class DistributeAreaFightsUseCase {
       athletes.map((athlete) => [athlete.id as number, athlete.birthDate]),
     );
 
+    const distributableFightIds = new Set(
+      distributableFights.map((fight) => fight.id),
+    );
+    const anchoredAreaIdByCategoryId = new Map<number, number>();
+
+    for (const fight of fights) {
+      if (
+        distributableFightIds.has(fight.id) ||
+        fight.categoryId === null ||
+        fight.areaId === null ||
+        anchoredAreaIdByCategoryId.has(fight.categoryId)
+      ) {
+        continue;
+      }
+
+      anchoredAreaIdByCategoryId.set(fight.categoryId, fight.areaId);
+    }
+
     const plan = this.fightQueuePlannerService.plan({
       competitionId: input.competitionId,
       competitionMode: competition.mode,
       distributionMode: input.mode,
-      ageSplitYears: input.ageSplitYears ?? competition.ageSplitYears,
       areas: areas.map((area) => ({
         id: area.id as number,
         order: area.order,
@@ -126,6 +142,7 @@ export class DistributeAreaFightsUseCase {
       ),
       restGapFights: input.restGapFights,
       athleteBirthDatesById,
+      anchoredAreaIdByCategoryId,
       existingQueueItemsByArea:
         input.mode === DistributionMode.INCREMENTAL
           ? new Map(

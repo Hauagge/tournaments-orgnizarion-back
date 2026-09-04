@@ -21,6 +21,7 @@ import { AreaDistributionStrategyResolverService } from '../services/area-distri
 import { FightQueuePlannerService } from '../services/fight-queue-planner.service';
 import { FightQueueWriterService } from '../services/fight-queue-writer.service';
 import { RestPolicyService } from '../services/rest-policy.service';
+import { CbjjAreaDistributionStrategy } from '../strategies/cbjj-area-distribution.strategy';
 import { KeysAreaDistributionStrategy } from '../strategies/keys-area-distribution.strategy';
 import { SplitByAgeStrategy } from '../strategies/split-by-age.strategy';
 import { DistributionMode } from '../value-objects/distribution-mode.enum';
@@ -197,6 +198,7 @@ describe('DistributeAreaFightsUseCase', () => {
       new AreaDistributionStrategyResolverService(
         new SplitByAgeStrategy(),
         new KeysAreaDistributionStrategy(),
+        new CbjjAreaDistributionStrategy(),
       ),
       new RestPolicyService(),
     );

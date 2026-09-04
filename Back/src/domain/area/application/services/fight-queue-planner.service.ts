@@ -20,12 +20,12 @@ export class FightQueuePlannerService {
     competitionId: number;
     competitionMode: CompetitionMode;
     distributionMode: DistributionMode;
-    ageSplitYears: number;
     restGapFights: number;
     areas: Array<{ id: number; order: number }>;
     distributableFights: FightEntity[];
     recentFinishedFights: FightEntity[];
     athleteBirthDatesById: Map<number, Date>;
+    anchoredAreaIdByCategoryId: Map<number, number>;
     existingQueueItemsByArea?: Map<number, AreaQueueItem[]>;
   }): FightQueuePlan {
     const areaDistributionStrategy = this.areaDistributionStrategyResolver.resolve(
@@ -38,10 +38,10 @@ export class FightQueuePlannerService {
 
     const distributed = areaDistributionStrategy.distribute({
       competitionId: input.competitionId,
-      ageSplitYears: input.ageSplitYears,
       areas: input.areas,
       fights: fightsForDistribution,
       athleteBirthDatesById: input.athleteBirthDatesById,
+      anchoredAreaIdByCategoryId: input.anchoredAreaIdByCategoryId,
     });
     const plannedDistributions =
       input.distributionMode === DistributionMode.INCREMENTAL

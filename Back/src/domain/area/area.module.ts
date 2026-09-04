@@ -15,6 +15,7 @@ import { AreaDistributionStrategyResolverService } from './application/services/
 import { FightQueuePlannerService } from './application/services/fight-queue-planner.service';
 import { FightQueueWriterService } from './application/services/fight-queue-writer.service';
 import { RestPolicyService } from './application/services/rest-policy.service';
+import { CbjjAreaDistributionStrategy } from './application/strategies/cbjj-area-distribution.strategy';
 import { KeysAreaDistributionStrategy } from './application/strategies/keys-area-distribution.strategy';
 import { SplitByAgeStrategy } from './application/strategies/split-by-age.strategy';
 import { AreaController } from './infra/http/area.controller';
@@ -42,6 +43,7 @@ import { AreaProviderModule } from './area-provider.module';
     FightQueueWriterService,
     SplitByAgeStrategy,
     KeysAreaDistributionStrategy,
+    CbjjAreaDistributionStrategy,
     AreaDistributionStrategyResolverService,
     CompetitionAccessGuard,
   ],

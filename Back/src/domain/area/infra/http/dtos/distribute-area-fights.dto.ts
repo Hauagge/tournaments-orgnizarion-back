@@ -3,7 +3,6 @@ import { DistributionMode } from '../../../application/value-objects/distributio
 
 export const DistributeAreaFightsSchema = z.object({
   mode: z.nativeEnum(DistributionMode).optional().default(DistributionMode.FULL),
-  ageSplitYears: z.coerce.number().int().positive().optional(),
   restGapFights: z.coerce.number().int().min(0).optional().default(2),
   fightIds: z.array(z.coerce.number().int().positive()).optional(),
 });

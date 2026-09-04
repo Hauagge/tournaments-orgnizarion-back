@@ -11,10 +11,16 @@ export type FightQueueGroup = {
 
 export type AreaDistributionContext = {
   competitionId: number;
-  ageSplitYears: number;
   areas: Array<{ id: number; order: number }>;
   fights: FightEntity[];
   athleteBirthDatesById: Map<number, Date>;
+  /**
+   * Categoria -> area onde ela ja aconteceu. Vem das lutas que nao entram na
+   * redistribuicao (encerradas ou canceladas) mas continuam presas a um tatame.
+   * Sem isso, uma redistribuicao total move a parte pendente de uma chave para
+   * outra area e parte a categoria em duas.
+   */
+  anchoredAreaIdByCategoryId: Map<number, number>;
 };
 
 export type AreaDistributionResult = Array<{
