@@ -6,9 +6,9 @@ export type AreaListFightView = {
   position?: number;
   queueStatus?: AreaQueueItemStatus;
   fightStatus: string;
-  athleteAId: number;
+  athleteAId: number | null;
   athleteAName: string | null;
-  athleteBId: number;
+  athleteBId: number | null;
   athleteBName: string | null;
   keyGroupId: number | null;
   orderIndex: number;

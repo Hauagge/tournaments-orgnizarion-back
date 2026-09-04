@@ -8,12 +8,9 @@ import { AreaQueueItemStatus } from '../../domain/value-objects/area-queue-item-
 import { IAreaRepository } from '../../repository/IAreaRepository.repository';
 import { IAreaQueueItemRepository } from '../../repository/IAreaQueueItemRepository.repository';
 import { AreaListFightView, AreaListItemView } from './area-list-item.view';
-import { Logger } from '@/configuration/logger.configuration';
 
 @Injectable()
 export class ListAreasByCompetitionUseCase {
-  private readonly logger = new Logger(ListAreasByCompetitionUseCase.name);
-
   constructor(
     @Inject(ICompetitionRepository)
     private readonly competitionRepository: ICompetitionRepository,
@@ -57,15 +54,12 @@ export class ListAreasByCompetitionUseCase {
           items.map((item) => [item.fightId, item]),
         );
 
-        const fightViews: AreaListFightView[] = fights
-          .map((fight): AreaListFightView | null => {
-            if (fight.athleteAId === null || fight.athleteBId === null) {
-              this.logger.warn(
-                `Fight with id ${fight.id} has invalid athlete ids: A=${fight.athleteAId}, B=${fight.athleteBId}`,
-              );
-              return null;
-            }
-
+        // Luta de rodada futura nasce sem atleta: ela so recebe os nomes quando
+        // as anteriores terminam. Mesmo assim ja tem area e posicao na fila, e
+        // some daqui a fila desta tela passa a divergir do dashboard e do total
+        // de lutas da area. Sai como "A definir", que e o que o front desenha.
+        const fightViews: AreaListFightView[] = fights.map(
+          (fight): AreaListFightView => {
             const queueItem = queueItemByFightId.get(fight.id as number);
 
             return {
@@ -75,14 +69,20 @@ export class ListAreasByCompetitionUseCase {
               queueStatus: queueItem?.status,
               fightStatus: fight.status,
               athleteAId: fight.athleteAId,
-              athleteAName: athleteNamesById.get(fight.athleteAId) ?? null,
+              athleteAName:
+                fight.athleteAId === null
+                  ? null
+                  : (athleteNamesById.get(fight.athleteAId) ?? null),
               athleteBId: fight.athleteBId,
-              athleteBName: athleteNamesById.get(fight.athleteBId) ?? null,
+              athleteBName:
+                fight.athleteBId === null
+                  ? null
+                  : (athleteNamesById.get(fight.athleteBId) ?? null),
               keyGroupId: fight.keyGroupId,
               orderIndex: fight.orderIndex,
             };
-          })
-          .filter((fight): fight is AreaListFightView => fight !== null);
+          },
+        );
 
         const orderedFightViews = this.sortByQueuePosition(fightViews);
 
@@ -93,11 +93,15 @@ export class ListAreasByCompetitionUseCase {
               fight.queueStatus === AreaQueueItemStatus.CALLED,
           ) ?? null;
 
+        // A luta sem atleta conta na fila, mas nao pode ser anunciada como a
+        // proxima chamada: nao ha quem chamar ate a rodada anterior terminar.
         const nextFight =
           orderedFightViews.find(
             (fight) =>
               fight.queueStatus === AreaQueueItemStatus.QUEUED &&
-              fight.fightStatus === FightStatus.WAITING,
+              fight.fightStatus === FightStatus.WAITING &&
+              fight.athleteAId !== null &&
+              fight.athleteBId !== null,
           ) ?? null;
 
         const queue = orderedFightViews.filter(

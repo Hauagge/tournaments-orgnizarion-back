@@ -125,6 +125,66 @@ describe('ListAreasByCompetitionUseCase', () => {
     expect(area.next?.fightId).toBe(2);
   });
 
+  it('counts the fights whose athletes are not defined yet, as "A definir"', async () => {
+    // Rodada 2 do CBJJ nasce sem atleta: ja tem area e posicao, mas so recebe
+    // os nomes quando a rodada 1 termina. Some daqui e a fila desta tela passa
+    // a divergir do dashboard.
+    const useCase = buildUseCase({
+      fights: [
+        makeFight({ id: 1, order: 1 }),
+        makeFight({ id: 2, order: 2, athleteAId: 30, athleteBId: 40 }),
+        makeFight({
+          id: 3,
+          order: 3,
+          round: 2,
+          athleteAId: null,
+          athleteBId: null,
+        }),
+      ],
+      queueItems: [
+        makeQueueItem({ id: 1, fightId: 1, position: 1 }),
+        makeQueueItem({ id: 2, fightId: 2, position: 2 }),
+        makeQueueItem({ id: 3, fightId: 3, position: 3 }),
+      ],
+    });
+
+    const [area] = await useCase.execute(1);
+
+    expect(area.queueCount).toBe(3);
+    expect(area.fightCount).toBe(3);
+    expect(area.queue?.map((fight) => fight.fightId)).toEqual([1, 2, 3]);
+    expect(area.queue?.[2]).toMatchObject({
+      athleteAId: null,
+      athleteAName: null,
+      athleteBId: null,
+      athleteBName: null,
+    });
+  });
+
+  it('never announces a fight without athletes as the next call', async () => {
+    const useCase = buildUseCase({
+      fights: [
+        makeFight({
+          id: 1,
+          order: 1,
+          round: 2,
+          athleteAId: null,
+          athleteBId: null,
+        }),
+        makeFight({ id: 2, order: 2, athleteAId: 30, athleteBId: 40 }),
+      ],
+      queueItems: [
+        makeQueueItem({ id: 1, fightId: 1, position: 1 }),
+        makeQueueItem({ id: 2, fightId: 2, position: 2 }),
+      ],
+    });
+
+    const [area] = await useCase.execute(1);
+
+    expect(area.queueCount).toBe(2);
+    expect(area.next?.fightId).toBe(2);
+  });
+
   it('puts fights without a queue item at the end', async () => {
     const useCase = buildUseCase({
       fights: [
