@@ -1,11 +1,31 @@
 import { PaymentStatus } from '../../domain/value-objects/payment-status.enum';
 import { WeighInStatus } from '@/domain/weighin/domain/value-objects/weigh-in-status.enum';
+import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeAthlete } from '../../../../../test/factories';
+import {
+  InMemoryAthleteRepository,
+  InMemoryAuthRepository,
+} from '../../../../../test/repositories/in-memory';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
+import { CompetitionAccessRole } from '@/domain/auth/competition-access-role.enum';
 import { CreateAthleteUseCase } from '../../application/use-cases/create-athlete.use-case';
 import { SearchAthletesUseCase } from '../../application/use-cases/search-athletes.use-case';
 import { UpdateAthleteUseCase } from '../../application/use-cases/update-athlete.use-case';
 import { AthleteController } from './athlete.controller';
+
+function buildExecutionContext(
+  handler: (...args: unknown[]) => unknown,
+  target: unknown,
+  request: unknown,
+): ExecutionContext {
+  return {
+    getHandler: () => handler,
+    getClass: () => target,
+    switchToHttp: () => ({ getRequest: () => request }),
+  } as unknown as ExecutionContext;
+}
 
 describe('AthleteController', () => {
   const createAthleteUseCase = {
@@ -124,5 +144,73 @@ describe('AthleteController', () => {
       data: makeAthlete({ id: 5, fullName: 'Julia Costa' }).toJSON(),
       error: null,
     });
+  });
+});
+
+describe('AthleteController authorization (CompetitionAccessGuard)', () => {
+  it('denies updating an athlete that belongs to a competition the user has no access to', async () => {
+    const userCompetitionRepository = new InMemoryAuthRepository();
+    await userCompetitionRepository.grantAccess({
+      userId: 1,
+      competitionId: 1,
+      role: CompetitionAccessRole.MEMBER,
+    });
+
+    const athleteRepository = new InMemoryAthleteRepository([
+      makeAthlete({ id: 5, competitionId: 99 }),
+    ]);
+
+    const guard = new CompetitionAccessGuard(
+      new Reflector(),
+      userCompetitionRepository,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      athleteRepository,
+      undefined,
+    );
+
+    const context = buildExecutionContext(
+      AthleteController.prototype.update,
+      AthleteController,
+      { params: { id: '5' }, user: { sub: 1 } },
+    );
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('allows updating an athlete that belongs to a competition the user has access to', async () => {
+    const userCompetitionRepository = new InMemoryAuthRepository();
+    await userCompetitionRepository.grantAccess({
+      userId: 1,
+      competitionId: 99,
+      role: CompetitionAccessRole.MEMBER,
+    });
+
+    const athleteRepository = new InMemoryAthleteRepository([
+      makeAthlete({ id: 5, competitionId: 99 }),
+    ]);
+
+    const guard = new CompetitionAccessGuard(
+      new Reflector(),
+      userCompetitionRepository,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      athleteRepository,
+      undefined,
+    );
+
+    const context = buildExecutionContext(
+      AthleteController.prototype.update,
+      AthleteController,
+      { params: { id: '5' }, user: { sub: 1 } },
+    );
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
   });
 });

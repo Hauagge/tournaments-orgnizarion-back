@@ -1,11 +1,31 @@
+import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeAthlete, makeAcademy } from '../../../../../test/factories';
+import {
+  InMemoryAcademyRepository,
+  InMemoryAuthRepository,
+} from '../../../../../test/repositories/in-memory';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
+import { CompetitionAccessRole } from '@/domain/auth/competition-access-role.enum';
 import { LinkAthleteToAcademyUseCase } from '../../application/use-cases/link-athlete-to-academy.use-case';
 import { CreateAcademyUseCase } from '../../application/use-cases/create-academy.use-case';
 import { ListAcademiesByCompetitionUseCase } from '../../application/use-cases/list-academies-by-competition.use-case';
 import { UnlinkAthleteFromAcademyUseCase } from '../../application/use-cases/unlink-athlete-from-academy.use-case';
 import { UpdateAcademyUseCase } from '../../application/use-cases/update-academy.use-case';
 import { AcademyController } from './academy.controller';
+
+function buildExecutionContext(
+  handler: (...args: unknown[]) => unknown,
+  target: unknown,
+  request: unknown,
+): ExecutionContext {
+  return {
+    getHandler: () => handler,
+    getClass: () => target,
+    switchToHttp: () => ({ getRequest: () => request }),
+  } as unknown as ExecutionContext;
+}
 
 describe('AcademyController', () => {
   const createTeamUseCase = {
@@ -101,5 +121,73 @@ describe('AcademyController', () => {
       data: makeAthlete({ id: 9, academyId: null }).toJSON(),
       error: null,
     });
+  });
+});
+
+describe('AcademyController authorization (CompetitionAccessGuard)', () => {
+  it('denies updating an academy that belongs to a competition the user has no access to', async () => {
+    const userCompetitionRepository = new InMemoryAuthRepository();
+    await userCompetitionRepository.grantAccess({
+      userId: 1,
+      competitionId: 1,
+      role: CompetitionAccessRole.MEMBER,
+    });
+
+    const academyRepository = new InMemoryAcademyRepository([
+      makeAcademy({ id: 4, competitionId: 99 }),
+    ]);
+
+    const guard = new CompetitionAccessGuard(
+      new Reflector(),
+      userCompetitionRepository,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      academyRepository,
+    );
+
+    const context = buildExecutionContext(
+      AcademyController.prototype.update,
+      AcademyController,
+      { params: { id: '4' }, user: { sub: 1 } },
+    );
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('allows updating an academy that belongs to a competition the user has access to', async () => {
+    const userCompetitionRepository = new InMemoryAuthRepository();
+    await userCompetitionRepository.grantAccess({
+      userId: 1,
+      competitionId: 99,
+      role: CompetitionAccessRole.MEMBER,
+    });
+
+    const academyRepository = new InMemoryAcademyRepository([
+      makeAcademy({ id: 4, competitionId: 99 }),
+    ]);
+
+    const guard = new CompetitionAccessGuard(
+      new Reflector(),
+      userCompetitionRepository,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      academyRepository,
+    );
+
+    const context = buildExecutionContext(
+      AcademyController.prototype.update,
+      AcademyController,
+      { params: { id: '4' }, user: { sub: 1 } },
+    );
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
   });
 });

@@ -8,7 +8,9 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IUserCompetitionRepository } from '@/domain/auth/repository/IUserCompetitionRepository.repository';
+import { IAcademyRepository } from '@/domain/academy/repository/IAcademyRepository.repository';
 import { IAreaRepository } from '@/domain/area/repository/IAreaRepository.repository';
+import { IAthleteRepository } from '@/domain/athlete/repository/IAthleteRepository.repository';
 import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
 import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
 import { IKeyGroupRepository } from '@/domain/key-group/repository/IKeyGroupRepository.repository';
@@ -37,6 +39,12 @@ export class CompetitionAccessGuard implements CanActivate {
     @Optional()
     @Inject(IAreaRepository)
     private readonly areaRepository?: IAreaRepository,
+    @Optional()
+    @Inject(IAthleteRepository)
+    private readonly athleteRepository?: IAthleteRepository,
+    @Optional()
+    @Inject(IAcademyRepository)
+    private readonly academyRepository?: IAcademyRepository,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -115,6 +123,16 @@ export class CompetitionAccessGuard implements CanActivate {
       case 'area': {
         const area = await this.areaRepository?.findById(rawId);
         return area ? area.competitionId : null;
+      }
+
+      case 'athlete': {
+        const athlete = await this.athleteRepository?.findById(rawId);
+        return athlete ? athlete.competitionId : null;
+      }
+
+      case 'academy': {
+        const academy = await this.academyRepository?.findById(rawId);
+        return academy ? academy.competitionId : null;
       }
     }
   }

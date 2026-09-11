@@ -2,6 +2,8 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it } from 'vitest';
 import { CoreAuthModule } from '@/core/auth/core-auth.module';
+import { User } from '@/domain/auth/entities/user.typeorm-entity';
+import { UserCompetitionTypeOrmEntity } from '@/domain/auth/entities/user-competition.typeorm-entity';
 import { AcademyTypeOrmEntity } from '../academy/infra/persistence/entities/academy.typeorm-entity';
 import { WeighInTypeOrmEntity } from '../weighin/infra/persistence/entities/weigh-in.typeorm-entity';
 import { AthleteModule } from './athlete.module';
@@ -41,6 +43,21 @@ describe('AthleteModule', () => {
         findOneBy: async () => null,
         find: async () => [],
         create: () => undefined,
+      })
+      .overrideProvider(getRepositoryToken(User))
+      .useValue({
+        create: () => undefined,
+        save: async () => undefined,
+        findOneBy: async () => null,
+        find: async () => [],
+      })
+      .overrideProvider(getRepositoryToken(UserCompetitionTypeOrmEntity))
+      .useValue({
+        create: () => undefined,
+        save: async () => undefined,
+        findOneBy: async () => null,
+        find: async () => [],
+        delete: async () => undefined,
       })
       .compile();
 

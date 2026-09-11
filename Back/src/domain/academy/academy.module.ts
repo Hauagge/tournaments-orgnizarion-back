@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
+import { AuthModule } from '../auth/auth.module';
 import { AthleteProviderModule } from '../athlete/athlete-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
 import { CreateAcademyUseCase } from './application/use-cases/create-academy.use-case';
@@ -14,6 +16,7 @@ import { AcademyProviderModule } from './academy-provider.module';
     AcademyProviderModule,
     CompetitionProviderModule,
     AthleteProviderModule,
+    AuthModule,
   ],
   controllers: [AcademyController],
   providers: [
@@ -22,6 +25,7 @@ import { AcademyProviderModule } from './academy-provider.module';
     ListAcademiesByCompetitionUseCase,
     LinkAthleteToAcademyUseCase,
     UnlinkAthleteFromAcademyUseCase,
+    CompetitionAccessGuard,
   ],
   exports: [
     CreateAcademyUseCase,

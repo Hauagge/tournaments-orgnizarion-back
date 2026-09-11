@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
+import { AuthModule } from '../auth/auth.module';
 import { AcademyProviderModule } from '../academy/academy-provider.module';
 import { WeighInProviderModule } from '../weighin/weighin-provider.module';
 import { CreateAthleteUseCase } from './application/use-cases/create-athlete.use-case';
@@ -9,13 +11,19 @@ import { AthleteController } from './infra/http/athlete.controller';
 import { AthleteProviderModule } from './athlete-provider.module';
 
 @Module({
-  imports: [AthleteProviderModule, AcademyProviderModule, WeighInProviderModule],
+  imports: [
+    AthleteProviderModule,
+    AcademyProviderModule,
+    WeighInProviderModule,
+    AuthModule,
+  ],
   controllers: [AthleteController],
   providers: [
     CreateAthleteUseCase,
     UpdateAthleteUseCase,
     GetAthleteUseCase,
     SearchAthletesUseCase,
+    CompetitionAccessGuard,
   ],
   exports: [
     CreateAthleteUseCase,

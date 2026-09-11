@@ -3,6 +3,7 @@ import {
   AthleteGender,
   parseAthleteGender,
 } from '@/domain/athlete/domain/value-objects/athlete-gender.enum';
+import { ValidationError } from '@/shared/errors/validation.error';
 import {
   buildHeaderAliasMap,
   getColumnValueByHeader,
@@ -13,6 +14,8 @@ import {
 import { parseDateFromText } from '../../../../core/helper/date.helper';
 import { parseMassToGrams } from '../../../../core/helper/measurement.helper';
 import { normalizeWhitespace } from '../../../../core/helper/string.helper';
+
+export const MAX_IMPORT_CSV_ROWS = 10_000;
 
 export type ParsedAthleteImportRow = {
   lineNumber: number;
@@ -50,6 +53,14 @@ export class AthleteImportCsvService {
 
     if (rows.length === 0) {
       return [];
+    }
+
+    const dataRowCount = rows.length - 1;
+    if (dataRowCount > MAX_IMPORT_CSV_ROWS) {
+      throw new ValidationError(
+        `CSV excede o limite de ${MAX_IMPORT_CSV_ROWS} linhas.`,
+        { maxRows: MAX_IMPORT_CSV_ROWS, rows: dataRowCount },
+      );
     }
 
     const headers = normalizeCsvHeaders(rows[0]);

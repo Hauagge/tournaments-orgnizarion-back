@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
 import { AuthModule } from '../auth/auth.module';
 import { AcademyProviderModule } from '../academy/academy-provider.module';
 import { AthleteProviderModule } from '../athlete/athlete-provider.module';
@@ -40,6 +41,7 @@ import { CompetitionProviderModule } from './competition-provider.module';
     AthleteImportCsvService,
     CompetitionTeamsHydratorService,
     CompetitionAccessService,
+    CompetitionAccessGuard,
   ],
   exports: [
     CreateCompetitionUseCase,

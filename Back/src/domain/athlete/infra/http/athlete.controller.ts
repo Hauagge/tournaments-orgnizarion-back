@@ -8,8 +8,10 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { CompetitionAccess } from '@/core/auth/infra/decorators/competition-access.decorator';
 import { Public } from '@/core/auth/infra/decorators/public.decorator';
 import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
 import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
 import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
 import { AuthRole } from '@/domain/auth/auth-role.enum';
@@ -43,7 +45,7 @@ import {
 } from './dtos/update-athlete.dto';
 
 @Controller()
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, CompetitionAccessGuard)
 @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class AthleteController {
   constructor(
@@ -62,6 +64,7 @@ export class AthleteController {
   }
 
   @Post('competitions/:id/athletes')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async create(
     @Param(new ZodValidationPipe(CompetitionAthleteParamSchema))
     params: CompetitionAthleteParamDto,
@@ -80,6 +83,7 @@ export class AthleteController {
   }
 
   @Get('competitions/:id/athletes')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async search(
     @Param(new ZodValidationPipe(CompetitionAthleteParamSchema))
     params: CompetitionAthleteParamDto,
@@ -99,6 +103,7 @@ export class AthleteController {
   }
 
   @Patch('athletes/:id')
+  @CompetitionAccess({ type: 'athlete', param: 'id' })
   async update(
     @Param(new ZodValidationPipe(AthleteIdParamSchema))
     params: AthleteIdParamDto,

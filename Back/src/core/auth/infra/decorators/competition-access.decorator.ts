@@ -5,7 +5,9 @@ export type CompetitionAccessResolver =
   | { type: 'category'; param: string }
   | { type: 'keyGroup'; param: string }
   | { type: 'fight'; param: string }
-  | { type: 'area'; param: string };
+  | { type: 'area'; param: string }
+  | { type: 'athlete'; param: string }
+  | { type: 'academy'; param: string };
 
 export const COMPETITION_ACCESS_KEY = 'competitionAccessResolver';
 

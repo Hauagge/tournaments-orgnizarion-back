@@ -1,7 +1,24 @@
+import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeAthlete, makeCompetition } from '../../../../../test/factories';
+import { InMemoryAuthRepository } from '../../../../../test/repositories/in-memory';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
+import { CompetitionAccessRole } from '@/domain/auth/competition-access-role.enum';
 import { AuthRole } from '@/domain/auth/auth-role.enum';
 import { CompetitionController } from './competition.controller';
+
+function buildExecutionContext(
+  handler: (...args: unknown[]) => unknown,
+  target: unknown,
+  request: unknown,
+): ExecutionContext {
+  return {
+    getHandler: () => handler,
+    getClass: () => target,
+    switchToHttp: () => ({ getRequest: () => request }),
+  } as unknown as ExecutionContext;
+}
 import { AddUserToCompetitionUseCase } from '../../application/use-cases/add-user-to-competition.use-case';
 import { CreateCompetitionUseCase } from '../../application/use-cases/create-competition.use-case';
 import { GetCompetitionUseCase } from '../../application/use-cases/get-competition.use-case';
@@ -323,5 +340,53 @@ describe('CompetitionController', () => {
       },
       error: null,
     });
+  });
+});
+
+describe('CompetitionController authorization (CompetitionAccessGuard)', () => {
+  it('denies updating settings of a competition the user has no access to', async () => {
+    const userCompetitionRepository = new InMemoryAuthRepository();
+    await userCompetitionRepository.grantAccess({
+      userId: 1,
+      competitionId: 1,
+      role: CompetitionAccessRole.MEMBER,
+    });
+
+    const guard = new CompetitionAccessGuard(
+      new Reflector(),
+      userCompetitionRepository,
+    );
+
+    const context = buildExecutionContext(
+      CompetitionController.prototype.update,
+      CompetitionController,
+      { params: { id: '99' }, user: { sub: 1 } },
+    );
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('allows updating settings of a competition the user has access to', async () => {
+    const userCompetitionRepository = new InMemoryAuthRepository();
+    await userCompetitionRepository.grantAccess({
+      userId: 1,
+      competitionId: 99,
+      role: CompetitionAccessRole.MEMBER,
+    });
+
+    const guard = new CompetitionAccessGuard(
+      new Reflector(),
+      userCompetitionRepository,
+    );
+
+    const context = buildExecutionContext(
+      CompetitionController.prototype.update,
+      CompetitionController,
+      { params: { id: '99' }, user: { sub: 1 } },
+    );
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
   });
 });

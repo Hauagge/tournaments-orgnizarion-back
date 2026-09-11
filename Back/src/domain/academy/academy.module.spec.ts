@@ -2,6 +2,8 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it } from 'vitest';
 import { CoreAuthModule } from '@/core/auth/core-auth.module';
+import { User } from '@/domain/auth/entities/user.typeorm-entity';
+import { UserCompetitionTypeOrmEntity } from '@/domain/auth/entities/user-competition.typeorm-entity';
 import { AthleteTypeOrmEntity } from '../athlete/infra/persistence/entities/athlete.typeorm-entity';
 import { CompetitionTypeOrmEntity } from '../competition/infra/persistence/entities/competition.typeorm-entity';
 import { LinkAthleteToAcademyUseCase } from './application/use-cases/link-athlete-to-academy.use-case';
@@ -43,6 +45,21 @@ describe('AcademyModule', () => {
         update: async () => undefined,
         findOneBy: async () => null,
         findAndCount: async () => [[], 0],
+      })
+      .overrideProvider(getRepositoryToken(User))
+      .useValue({
+        create: () => undefined,
+        save: async () => undefined,
+        findOneBy: async () => null,
+        find: async () => [],
+      })
+      .overrideProvider(getRepositoryToken(UserCompetitionTypeOrmEntity))
+      .useValue({
+        create: () => undefined,
+        save: async () => undefined,
+        findOneBy: async () => null,
+        find: async () => [],
+        delete: async () => undefined,
       })
       .compile();
 

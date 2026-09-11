@@ -14,6 +14,8 @@ import {
 } from '@nestjs/common';
 import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
 import { CurrentUser } from '@/core/auth/infra/decorators/current-user.decorator';
+import { CompetitionAccess } from '@/core/auth/infra/decorators/competition-access.decorator';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
 import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
 import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
 import { AuthenticatedUser } from '@/core/auth/infra/types/authenticated-user.type';
@@ -70,8 +72,10 @@ type UploadedCsvFile = {
   buffer: Buffer;
 };
 
+const MAX_IMPORT_CSV_BYTES = 5 * 1024 * 1024; // 5MB
+
 @Controller('competitions')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, CompetitionAccessGuard)
 @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class CompetitionController {
   constructor(
@@ -218,6 +222,7 @@ export class CompetitionController {
 
   @Patch(':id')
   @Roles(AuthRole.STAFF, AuthRole.ORGANIZATION)
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async update(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
@@ -240,6 +245,7 @@ export class CompetitionController {
   }
 
   @Get(':id')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async getById(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
@@ -254,6 +260,7 @@ export class CompetitionController {
 
   @Post(':id/import/athletes/preview')
   @Roles(AuthRole.STAFF, AuthRole.ORGANIZATION)
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async previewAthletesImport(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     _params: CompetitionIdParamDto,
@@ -272,7 +279,10 @@ export class CompetitionController {
 
   @Post(':id/import/athletes')
   @Roles(AuthRole.STAFF, AuthRole.ORGANIZATION)
-  @UseInterceptors(FileInterceptor('file'))
+  @CompetitionAccess({ type: 'competition', param: 'id' })
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: MAX_IMPORT_CSV_BYTES } }),
+  )
   async importAthletes(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,

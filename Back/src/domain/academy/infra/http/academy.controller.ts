@@ -8,6 +8,8 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { CompetitionAccess } from '@/core/auth/infra/decorators/competition-access.decorator';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
 import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
 import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
 import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
@@ -43,7 +45,7 @@ import {
 } from './dtos/update-academy.dto';
 
 @Controller()
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, CompetitionAccessGuard)
 @Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class AcademyController {
   constructor(
@@ -55,6 +57,7 @@ export class AcademyController {
   ) {}
 
   @Post('competitions/:id/academies')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async create(
     @Param(new ZodValidationPipe(CompetitionAcademyParamSchema))
     params: CompetitionAcademyParamDto,
@@ -73,6 +76,7 @@ export class AcademyController {
   }
 
   @Get('competitions/:id/academies')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async listByCompetition(
     @Param(new ZodValidationPipe(CompetitionAcademyParamSchema))
     params: CompetitionAcademyParamDto,
@@ -88,6 +92,7 @@ export class AcademyController {
   }
 
   @Patch('academies/:id')
+  @CompetitionAccess({ type: 'academy', param: 'id' })
   async update(
     @Param(new ZodValidationPipe(AcademyIdParamSchema))
     params: AcademyIdParamDto,
@@ -106,6 +111,7 @@ export class AcademyController {
   }
 
   @Post('academies/:id/athletes/:athleteId')
+  @CompetitionAccess({ type: 'academy', param: 'id' })
   async linkAthlete(
     @Param(new ZodValidationPipe(AcademyAthleteParamSchema))
     params: AcademyAthleteParamDto,
@@ -122,6 +128,7 @@ export class AcademyController {
   }
 
   @Delete('academies/:id/athletes/:athleteId')
+  @CompetitionAccess({ type: 'academy', param: 'id' })
   async unlinkAthlete(
     @Param(new ZodValidationPipe(AcademyAthleteParamSchema))
     params: AcademyAthleteParamDto,
