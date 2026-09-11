@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
+import { AuthModule } from '../auth/auth.module';
 import { AthleteProviderModule } from '../athlete/athlete-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
 import { ConfirmWeighInUseCase } from './application/use-cases/confirm-weigh-in.use-case';
@@ -13,6 +15,7 @@ import { WeighInProviderModule } from './weighin-provider.module';
     WeighInProviderModule,
     CompetitionProviderModule,
     AthleteProviderModule,
+    AuthModule,
   ],
   controllers: [WeighInController],
   providers: [
@@ -20,6 +23,7 @@ import { WeighInProviderModule } from './weighin-provider.module';
     ResetWeighInUseCase,
     GetWeighInStatusUseCase,
     SearchWeighInByAthleteNameUseCase,
+    CompetitionAccessGuard,
   ],
   exports: [
     ConfirmWeighInUseCase,

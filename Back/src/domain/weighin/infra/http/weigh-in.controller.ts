@@ -2,13 +2,19 @@ import {
   Body,
   Controller,
   Get,
-  Headers,
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { CompetitionAccess } from '@/core/auth/infra/decorators/competition-access.decorator';
 import { CurrentUser } from '@/core/auth/infra/decorators/current-user.decorator';
+import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
+import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
+import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
 import { AuthenticatedUser } from '@/core/auth/infra/types/authenticated-user.type';
+import { AuthRole } from '@/domain/auth/auth-role.enum';
 import {
   CompetitionIdParamDto,
   CompetitionIdParamSchema,
@@ -32,6 +38,8 @@ import {
 } from './dtos/search-weigh-in.dto';
 
 @Controller()
+@UseGuards(JwtAuthGuard, RolesGuard, CompetitionAccessGuard)
+@Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class WeighInController {
   constructor(
     private readonly confirmWeighInUseCase: ConfirmWeighInUseCase,
@@ -41,21 +49,21 @@ export class WeighInController {
   ) {}
 
   @Post('competitions/:id/weighin/confirm')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async confirm(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
     @Body(new ZodValidationPipe(ConfirmWeighInSchema))
     body: ConfirmWeighInDto,
-    @CurrentUser() currentUser?: AuthenticatedUser,
-    @Headers('x-performed-by') performedBy?: string,
+    @CurrentUser() currentUser: AuthenticatedUser,
   ): Promise<ApiResponse<ReturnType<WeighIn['toJSON']>>> {
     const weighIn = await this.confirmWeighInUseCase.execute({
       competitionId: params.id,
       athleteId: body.athleteId,
       measuredWeightGrams: body.realWeightGrams,
       weighInStatus: body.weighInStatus,
-      performedById: currentUser?.sub ?? null,
-      performedBy: currentUser?.username ?? performedBy,
+      performedById: currentUser.sub,
+      performedBy: currentUser.username,
       observation: body.observation,
     });
 
@@ -66,6 +74,7 @@ export class WeighInController {
   }
 
   @Post('competitions/:id/weighin/reset')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async reset(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
@@ -84,6 +93,7 @@ export class WeighInController {
   }
 
   @Get('competitions/:id/weighin')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async search(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
