@@ -1,5 +1,18 @@
-import { Controller, Get, Param, Query, StreamableFile } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  StreamableFile,
+  UseGuards,
+} from '@nestjs/common';
 import { ZodValidationPipe } from '@/core/pipe/zod-validation.pipe';
+import { CompetitionAccess } from '@/core/auth/infra/decorators/competition-access.decorator';
+import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
+import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
+import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
+import { AuthRole } from '@/domain/auth/auth-role.enum';
 import {
   CompetitionIdParamDto,
   CompetitionIdParamSchema,
@@ -12,6 +25,8 @@ import {
 import { ExportFightsByAreaPdfUseCase } from '../../application/use-cases/export-fights-by-area-pdf.use-case';
 
 @Controller()
+@UseGuards(JwtAuthGuard, RolesGuard, CompetitionAccessGuard)
+@Roles(AuthRole.STAFF, AuthRole.DESK, AuthRole.ORGANIZATION)
 export class ReportsPdfController {
   constructor(
     private readonly exportBracketsReportPdfUseCase: ExportBracketsReportPdfUseCase,
@@ -19,6 +34,7 @@ export class ReportsPdfController {
   ) {}
 
   @Get('competitions/:id/reports/pdf/brackets')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async exportBrackets(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
@@ -39,6 +55,7 @@ export class ReportsPdfController {
   }
 
   @Get('competitions/:id/reports/pdf/fights-by-area')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
   async exportFightsByArea(
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,

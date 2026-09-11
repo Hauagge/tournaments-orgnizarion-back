@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
+import { AuthModule } from '../auth/auth.module';
 import { AcademyProviderModule } from '../academy/academy-provider.module';
 import { AreaProviderModule } from '../area/area-provider.module';
 import { AthleteProviderModule } from '../athlete/athlete-provider.module';
@@ -16,6 +18,7 @@ import { ReportsPdfController } from './infra/http/reports-pdf.controller';
 
 @Module({
   imports: [
+    AuthModule,
     CompetitionProviderModule,
     KeyGroupProviderModule,
     AreaProviderModule,
@@ -32,6 +35,7 @@ import { ReportsPdfController } from './infra/http/reports-pdf.controller';
     PdfRendererService,
     ExportBracketsReportPdfUseCase,
     ExportFightsByAreaPdfUseCase,
+    CompetitionAccessGuard,
   ],
 })
 export class ReportsPdfModule {}
