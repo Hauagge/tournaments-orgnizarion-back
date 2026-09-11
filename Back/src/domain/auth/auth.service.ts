@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { createHmac } from 'crypto';
+import { JwtTokenService } from '../../core/auth/infra/services/jwt-token.service';
 import { LoginDto } from './dto/login.dto';
 import { IUserRepository } from './repository/IUserRepository.repository';
 import { IPasswordHasher } from './services/IPasswordHasher.service';
@@ -9,6 +9,7 @@ export class AuthService {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly passwordHasher: IPasswordHasher,
+    private readonly jwtTokenService: JwtTokenService,
   ) {}
 
   async login(data: LoginDto) {
@@ -21,10 +22,12 @@ export class AuthService {
       throw new UnauthorizedException('Usuário ou senha inválidos');
     }
 
+    await this.rehashPasswordIfNeeded(user.id, data.password, user.passwordHash);
+
     const competitionIds = this.extractCompetitionIds(user);
     const academyId = user.academyId ?? null;
 
-    const token = this.signToken({
+    const token = this.jwtTokenService.sign({
       sub: user.id,
       username: user.username,
       role: user.role,
@@ -45,6 +48,24 @@ export class AuthService {
     };
   }
 
+  private async rehashPasswordIfNeeded(
+    userId: number,
+    plainPassword: string,
+    currentPasswordHash: string,
+  ): Promise<void> {
+    if (!this.passwordHasher.needsRehash(currentPasswordHash)) {
+      return;
+    }
+
+    try {
+      const newPasswordHash = this.passwordHasher.hash(plainPassword);
+      await this.userRepository.updatePasswordHash(userId, newPasswordHash);
+    } catch {
+      // Best-effort: a falha ao persistir o novo hash não deve impedir o login,
+      // já que o usuário foi autenticado com sucesso.
+    }
+  }
+
   private extractCompetitionIds(user: {
     competitionLinks?: Array<{ competitionId: number }>;
   }): number[] {
@@ -52,24 +73,5 @@ export class AuthService {
       user.competitionLinks?.map((link) => link.competitionId) ?? [];
 
     return Array.from(new Set(linkedCompetitionIds)).sort((a, b) => a - b);
-  }
-
-  private signToken(payload: Record<string, unknown>): string {
-    const secret = process.env.AUTH_SECRET || 'dev-auth-secret';
-    const header = { alg: 'HS256', typ: 'JWT' };
-
-    const encodedHeader = this.base64UrlEncode(JSON.stringify(header));
-    const encodedPayload = this.base64UrlEncode(JSON.stringify(payload));
-    const unsigned = `${encodedHeader}.${encodedPayload}`;
-
-    const signature = createHmac('sha256', secret)
-      .update(unsigned)
-      .digest('base64url');
-
-    return `${unsigned}.${signature}`;
-  }
-
-  private base64UrlEncode(value: string): string {
-    return Buffer.from(value).toString('base64url');
   }
 }

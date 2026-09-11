@@ -7,6 +7,7 @@ export default defineConfig(async () => {
   return {
     test: {
       globals: true,
+      setupFiles: ['./test/vitest-setup.ts'],
       alias: {
         '@': '/src',
       },

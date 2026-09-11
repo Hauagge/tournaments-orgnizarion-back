@@ -42,4 +42,8 @@ export class UserRepository implements IUserRepository {
       },
     });
   }
+
+  async updatePasswordHash(userId: number, passwordHash: string): Promise<void> {
+    await this.repository.update(userId, { passwordHash });
+  }
 }

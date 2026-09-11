@@ -33,6 +33,12 @@ export class InMemoryAuthRepository
     return user;
   }
 
+  async updatePasswordHash(userId: number, passwordHash: string): Promise<void> {
+    this.users = this.users.map((user) =>
+      user.id === userId ? { ...user, passwordHash } : user,
+    );
+  }
+
   async list(input: { term?: string }): Promise<User[]> {
     const term = input.term?.trim().toLowerCase();
 

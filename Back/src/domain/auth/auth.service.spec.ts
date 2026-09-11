@@ -1,12 +1,15 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { createHmac, randomBytes } from 'crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { makeUser } from '../../../test/factories';
 import { InMemoryAuthRepository } from '../../../test/repositories/in-memory';
+import { JwtTokenService } from '../../core/auth/infra/services/jwt-token.service';
 import { AuthRole } from './auth-role.enum';
 import { AuthService } from './auth.service';
 import { IUserRepository } from './repository/IUserRepository.repository';
 import { IPasswordHasher } from './services/IPasswordHasher.service';
+import { PasswordHasherService } from './services/password-hasher.service';
 
 class FakePasswordHasher implements IPasswordHasher {
   hash(plainPassword: string): string {
@@ -15,6 +18,10 @@ class FakePasswordHasher implements IPasswordHasher {
 
   compare(plainPassword: string, hashedPassword: string): boolean {
     return hashedPassword === this.hash(plainPassword);
+  }
+
+  needsRehash(): boolean {
+    return false;
   }
 }
 
@@ -30,6 +37,7 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        JwtTokenService,
         {
           provide: IUserRepository,
           useValue: authRepository,
@@ -95,4 +103,58 @@ describe('AuthService', () => {
       service.login({ username: 'desk', password: 'wrong-password' }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
+
+  it('should rehash a legacy password hash to the new format after a successful login', async () => {
+    const realPasswordHasher = new PasswordHasherService();
+    const legacyPasswordHash = legacyHash('staff123');
+
+    const migrationAuthRepository = new InMemoryAuthRepository();
+    migrationAuthRepository.setUsers([
+      makeUser({
+        id: 3,
+        username: 'legacy-staff',
+        passwordHash: legacyPasswordHash,
+        role: AuthRole.STAFF,
+      }),
+    ]);
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        JwtTokenService,
+        {
+          provide: IUserRepository,
+          useValue: migrationAuthRepository,
+        },
+        {
+          provide: IPasswordHasher,
+          useValue: realPasswordHasher,
+        },
+      ],
+    }).compile();
+
+    const migrationService = module.get<AuthService>(AuthService);
+
+    const result = await migrationService.login({
+      username: 'legacy-staff',
+      password: 'staff123',
+    });
+
+    expect(result.accessToken).toBeDefined();
+
+    const updatedUser =
+      await migrationAuthRepository.findByUsername('legacy-staff');
+
+    expect(updatedUser?.passwordHash).not.toBe(legacyPasswordHash);
+    expect(updatedUser?.passwordHash.startsWith('scrypt:')).toBe(true);
+    expect(realPasswordHasher.compare('staff123', updatedUser!.passwordHash)).toBe(
+      true,
+    );
+  });
 });
+
+function legacyHash(plainPassword: string): string {
+  const salt = randomBytes(16).toString('hex');
+  const hash = createHmac('sha256', salt).update(plainPassword).digest('hex');
+  return `${salt}:${hash}`;
+}
