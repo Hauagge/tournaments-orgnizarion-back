@@ -160,6 +160,7 @@ export class FightsByAreaReportDataBuilderService {
       number,
       {
         categoryName: string | null;
+        keyGroupName: string;
       }
     >();
 
@@ -167,6 +168,7 @@ export class FightsByAreaReportDataBuilderService {
       for (const fight of group.fights) {
         reportFightById.set(fight.id, {
           categoryName: group.categoryName,
+          keyGroupName: group.name ?? `Chave ${group.id}`,
         });
       }
     }
@@ -188,6 +190,7 @@ export class FightsByAreaReportDataBuilderService {
       number,
       {
         categoryName: string | null;
+        keyGroupName: string;
       }
     >;
   }): FightsByAreaReportFightView {
@@ -207,6 +210,8 @@ export class FightsByAreaReportDataBuilderService {
         (input.fight.categoryId !== null
           ? input.categoryById.get(input.fight.categoryId)?.name
           : undefined) ??
+        // Modo chave: a luta nao tem categoria, entao identifica pela chave.
+        reportFight?.keyGroupName ??
         'Categoria não informada',
       athleteAName:
         athleteA?.fullName ??

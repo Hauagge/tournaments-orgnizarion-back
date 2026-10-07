@@ -7,6 +7,7 @@ import { ICompetitionRepository } from '@/domain/competition/repository/ICompeti
 import { CategoryPodiumService } from '@/domain/fight/application/services/category-podium.service';
 import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
+import { IKeyGroupRepository } from '@/domain/key-group/repository/IKeyGroupRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import {
   CategoryResultView,
@@ -19,6 +20,18 @@ export type CompetitionResultsInput = {
   belt?: string;
   onlyDecided?: boolean;
 };
+
+/** Cabecalho de um podio: uma categoria ou, no modo chave, uma chave. */
+type ResultSource = Pick<
+  CategoryResultView,
+  | 'categoryId'
+  | 'keyGroupId'
+  | 'categoryName'
+  | 'belt'
+  | 'ageDivision'
+  | 'weightDivision'
+  | 'totalAthletes'
+>;
 
 @Injectable()
 export class CompetitionResultsUseCase {
@@ -33,6 +46,8 @@ export class CompetitionResultsUseCase {
     private readonly academyRepository: IAcademyRepository,
     @Inject(IFightRepository)
     private readonly fightRepository: IFightRepository,
+    @Inject(IKeyGroupRepository)
+    private readonly keyGroupRepository: IKeyGroupRepository,
     private readonly categoryPodiumService: CategoryPodiumService,
   ) {}
 
@@ -49,39 +64,61 @@ export class CompetitionResultsUseCase {
       );
     }
 
-    const [categories, fights] = await Promise.all([
+    const [categories, keyGroups, fights] = await Promise.all([
       this.categoryRepository.listByCompetitionId(input.competitionId),
+      this.keyGroupRepository.listByCompetitionId({
+        competitionId: input.competitionId,
+      }),
       this.fightRepository.listByCompetitionId({
         competitionId: input.competitionId,
       }),
     ]);
 
+    // No modo chave as lutas nao tem categoria: o podio sai da chave.
     const fightsByCategoryId = new Map<number, FightEntity[]>();
+    const fightsByKeyGroupId = new Map<number, FightEntity[]>();
     for (const fight of fights) {
-      if (fight.categoryId === null) {
-        continue;
+      if (fight.categoryId !== null) {
+        this.pushTo(fightsByCategoryId, fight.categoryId, fight);
+      } else if (fight.keyGroupId !== null) {
+        this.pushTo(fightsByKeyGroupId, fight.keyGroupId, fight);
       }
-      fightsByCategoryId.set(fight.categoryId, [
-        ...(fightsByCategoryId.get(fight.categoryId) ?? []),
-        fight,
-      ]);
     }
 
-    // Categoria sem luta nao tem podio; nem entra na listagem.
-    const podiums = categories
+    const categorySources = categories
       .filter((category) => this.matchesBelt(category, input.belt))
       .map((category) => ({
-        category,
-        podiums: this.categoryPodiumService.resolveAll(
-          fightsByCategoryId.get(category.id as number) ?? [],
-        ),
+        source: this.categorySource(category),
+        fights: fightsByCategoryId.get(category.id as number) ?? [],
+      }));
+    // Chave nao tem faixa propria (mistura faixas); o filtro de faixa a exclui,
+    // como ja faz o relatorio de academias campeas.
+    const keyGroupSources =
+      input.belt !== undefined
+        ? []
+        : keyGroups.map((keyGroup) => ({
+            source: {
+              categoryId: null,
+              keyGroupId: keyGroup.id,
+              categoryName: keyGroup.name ?? `Chave ${keyGroup.id}`,
+              belt: null,
+              ageDivision: null,
+              weightDivision: null,
+              totalAthletes: keyGroup.membersCount,
+            },
+            fights: fightsByKeyGroupId.get(keyGroup.id) ?? [],
+          }));
+
+    // Categoria ou chave sem luta nao tem podio; nem entra na listagem.
+    const podiums = [...categorySources, ...keyGroupSources]
+      .filter(({ fights }) => fights.length > 0)
+      .map(({ source, fights }) => ({
+        source,
+        podiums: this.categoryPodiumService.resolveAll(fights),
       }))
-      .filter(({ podiums, category }) => {
-        if ((fightsByCategoryId.get(category.id as number) ?? []).length === 0) {
-          return false;
-        }
-        return input.onlyDecided ? podiums.main.decided : true;
-      });
+      .filter(({ podiums }) =>
+        input.onlyDecided ? podiums.main.decided : true,
+      );
 
     const athleteIds = Array.from(
       new Set(
@@ -132,20 +169,13 @@ export class CompetitionResultsUseCase {
         athleteName: athlete.fullName,
         academyId,
         academyName:
-          academyId === null
-            ? null
-            : (academyNamesById.get(academyId) ?? null),
+          academyId === null ? null : (academyNamesById.get(academyId) ?? null),
       };
     };
 
     const categoryResults: CategoryResultView[] = podiums
-      .map(({ category, podiums }) => ({
-        categoryId: category.id as number,
-        categoryName: category.name,
-        belt: category.belt || null,
-        ageDivision: this.buildAgeDivision(category),
-        weightDivision: this.buildWeightDivision(category),
-        totalAthletes: category.totalAthletes ?? 0,
+      .map(({ source, podiums }) => ({
+        ...source,
         decided: podiums.main.decided,
         first: toAthleteView(podiums.main.firstAthleteId),
         second: toAthleteView(podiums.main.secondAthleteId),
@@ -166,13 +196,35 @@ export class CompetitionResultsUseCase {
             }
           : null,
       }))
-      .sort((left, right) => left.categoryName.localeCompare(right.categoryName));
+      .sort((left, right) =>
+        left.categoryName.localeCompare(right.categoryName),
+      );
 
     return {
       competitionId: input.competitionId,
       totalCategories: categoryResults.length,
       decidedCategories: categoryResults.filter((item) => item.decided).length,
       categories: categoryResults,
+    };
+  }
+
+  private pushTo(
+    map: Map<number, FightEntity[]>,
+    id: number,
+    fight: FightEntity,
+  ): void {
+    map.set(id, [...(map.get(id) ?? []), fight]);
+  }
+
+  private categorySource(category: Category): ResultSource {
+    return {
+      categoryId: category.id as number,
+      keyGroupId: null,
+      categoryName: category.name,
+      belt: category.belt || null,
+      ageDivision: this.buildAgeDivision(category),
+      weightDivision: this.buildWeightDivision(category),
+      totalAthletes: category.totalAthletes ?? 0,
     };
   }
 

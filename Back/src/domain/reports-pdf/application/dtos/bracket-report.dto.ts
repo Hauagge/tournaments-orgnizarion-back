@@ -28,11 +28,18 @@ export type BracketStageLineDto = {
   isPlaceholder: boolean;
 };
 
+/** Linha do podio; atleta nulo vira linha em branco para preencher a mao. */
+export type BracketPodiumLineDto = {
+  place: string;
+  athleteName: string | null;
+};
+
 export type BracketReportDto = {
   categoryName: string;
   bracketName: string;
   athletes: BracketReportAthleteDto[];
   fights: FightLineDto[];
+  podium: BracketPodiumLineDto[];
   stage: {
     size: number;
     final: BracketStageLineDto;

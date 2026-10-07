@@ -8,6 +8,7 @@ import { CategoryProviderModule } from '../category/category-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
 import { FightProviderModule } from '../fight/fight-provider.module';
 import { KeyGroupProviderModule } from '../key-group/key-group-provider.module';
+import { CategoryPodiumService } from '../fight/application/services/category-podium.service';
 import { FightsByAreaReportDataBuilderService } from './application/services/fights-by-area-report-data-builder.service';
 import { ReportDataBuilderService } from './application/services/report-data-builder.service';
 import { PdfRendererService } from './application/services/pdf-renderer.service';
@@ -31,6 +32,7 @@ import { ReportsPdfController } from './infra/http/reports-pdf.controller';
   providers: [
     ReportDataBuilderService,
     FightsByAreaReportDataBuilderService,
+    CategoryPodiumService,
     TemplateRendererService,
     PdfRendererService,
     ExportBracketsReportPdfUseCase,

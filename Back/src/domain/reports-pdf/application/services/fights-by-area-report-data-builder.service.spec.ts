@@ -270,6 +270,77 @@ describe('FightsByAreaReportDataBuilderService', () => {
     await expect(service.build(999)).rejects.toBeInstanceOf(NotFoundError);
   });
 
+  it('should name the key group when the fight has no category (keys mode)', async () => {
+    fightRepository = new InMemoryFightRepository([
+      makeFight({
+        id: 25,
+        competitionId: 1,
+        categoryId: null,
+        areaId: null,
+        athleteAId: 1,
+        athleteBId: 2,
+        orderIndex: 1,
+      }),
+      makeFight({
+        id: 26,
+        competitionId: 1,
+        categoryId: null,
+        areaId: null,
+        athleteAId: 3,
+        athleteBId: 4,
+        orderIndex: 2,
+      }),
+    ]);
+    keyGroupRepository.setReportViews(
+      [
+        { id: 3, name: null, fightId: 25 },
+        { id: 4, name: 'Chave Leve', fightId: 26 },
+      ].map((group) => ({
+        id: group.id,
+        competitionId: 1,
+        categoryId: null,
+        categoryName: null,
+        name: group.name,
+        status: 'OPEN',
+        createdAt: new Date('2026-01-10T00:00:00.000Z'),
+        members: [],
+        fights: [
+          {
+            id: group.fightId,
+            keyGroupId: group.id,
+            areaId: null,
+            areaName: null,
+            athleteAId: 1,
+            athleteAName: null,
+            academyAName: null,
+            athleteBId: 2,
+            athleteBName: null,
+            academyBName: null,
+            status: FightStatus.WAITING,
+            winnerAthleteId: null,
+            winType: null,
+            orderIndex: 1,
+          },
+        ],
+      })),
+    );
+
+    const service = new FightsByAreaReportDataBuilderService(
+      competitionRepository,
+      areaRepository,
+      fightRepository,
+      athleteRepository,
+      categoryRepository,
+      keyGroupRepository,
+    );
+
+    const result = await service.build(1);
+
+    expect(
+      result.unassignedSection?.fights.map((fight) => fight.categoryName),
+    ).toEqual(['Chave 3', 'Chave Leve']);
+  });
+
   it('should throw ValidationError when competition has no fights', async () => {
     const service = new FightsByAreaReportDataBuilderService(
       competitionRepository,

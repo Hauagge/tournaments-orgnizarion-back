@@ -14,7 +14,9 @@ export type SeriesResultView = {
 };
 
 export type CategoryResultView = {
-  categoryId: number;
+  /** Nulo no modo chave, onde o podio e da chave e nao de uma categoria. */
+  categoryId: number | null;
+  keyGroupId: number | null;
   categoryName: string;
   belt: string | null;
   ageDivision: string | null;

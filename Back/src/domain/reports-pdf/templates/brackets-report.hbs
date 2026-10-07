@@ -300,24 +300,10 @@
             </div>
           </div>
 
-          <div class="fight-card single-card">
-            <div class="fight-title">Disputa do 3º lugar</div>
-            <div class="fight-lines">
-              <div class="fight-line">
-                <div class="fight-athlete">Eliminado Luta 1</div>
-              </div>
-              <div class="fight-vs">VS</div>
-              <div class="fight-line">
-                <div class="fight-athlete">Eliminado Luta 2</div>
-              </div>
-            </div>
-          </div>
-
           <div class="podium">
-            <div class="podium-line">1: _________________________________</div>
-            <div class="podium-line">2: _________________________________</div>
-            <div class="podium-line">3: _________________________________</div>
-            <div class="podium-line">4: _________________________________</div>
+            {{#each podium}}
+              <div class="podium-line">{{place}}: {{#if athleteName}}{{athleteName}}{{else}}_________________________________{{/if}}</div>
+            {{/each}}
           </div>
 
           <div class="generated-fights">
