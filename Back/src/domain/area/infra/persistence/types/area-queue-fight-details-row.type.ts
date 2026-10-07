@@ -7,9 +7,9 @@ export type AreaQueueFightDetailsRow = {
   position: string;
   queueStatus: AreaQueueItemStatus;
   fightStatus: FightStatus;
-  athleteAId: string;
+  athleteAId: string | null;
   athleteAName: string | null;
-  athleteBId: string;
+  athleteBId: string | null;
   athleteBName: string | null;
   keyGroupId: string | null;
   orderIndex: string;

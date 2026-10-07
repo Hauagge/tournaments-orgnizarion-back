@@ -15,7 +15,9 @@ import { AreaMapper } from './mappers/area.mapper';
 import { AreaQueueFightDetailsRow } from './types/area-queue-fight-details-row.type';
 
 @Injectable()
-export class AreaRepository implements IAreaRepository, IAreaQueueItemRepository {
+export class AreaRepository
+  implements IAreaRepository, IAreaQueueItemRepository
+{
   constructor(
     @InjectRepository(AreaTypeOrmEntity)
     private readonly areaRepository: Repository<AreaTypeOrmEntity>,
@@ -25,7 +27,9 @@ export class AreaRepository implements IAreaRepository, IAreaQueueItemRepository
 
   async createMany(areas: Area[]): Promise<Area[]> {
     const saved = await this.areaRepository.save(
-      areas.map((area) => this.areaRepository.create(AreaMapper.toPersistence(area))),
+      areas.map((area) =>
+        this.areaRepository.create(AreaMapper.toPersistence(area)),
+      ),
     );
 
     return saved.map(AreaMapper.toDomain);
@@ -58,7 +62,9 @@ export class AreaRepository implements IAreaRepository, IAreaQueueItemRepository
 
     const saved = await this.areaQueueItemRepository.save(
       input.items.map((item) =>
-        this.areaQueueItemRepository.create(AreaMapper.queueItemToPersistence(item)),
+        this.areaQueueItemRepository.create(
+          AreaMapper.queueItemToPersistence(item),
+        ),
       ),
     );
 
@@ -72,7 +78,9 @@ export class AreaRepository implements IAreaRepository, IAreaQueueItemRepository
 
     const saved = await this.areaQueueItemRepository.save(
       items.map((item) =>
-        this.areaQueueItemRepository.create(AreaMapper.queueItemToPersistence(item)),
+        this.areaQueueItemRepository.create(
+          AreaMapper.queueItemToPersistence(item),
+        ),
       ),
     );
 
@@ -113,19 +121,31 @@ export class AreaRepository implements IAreaRepository, IAreaQueueItemRepository
 
     const saved = await this.areaQueueItemRepository.save(
       input.items.map((item) =>
-        this.areaQueueItemRepository.create(AreaMapper.queueItemToPersistence(item)),
+        this.areaQueueItemRepository.create(
+          AreaMapper.queueItemToPersistence(item),
+        ),
       ),
     );
 
     return saved.map(AreaMapper.queueItemToDomain);
   }
 
-  async listFightDetailsByAreaId(areaId: number): Promise<AreaQueueFightDetails[]> {
+  async listFightDetailsByAreaId(
+    areaId: number,
+  ): Promise<AreaQueueFightDetails[]> {
     const rows = await this.areaQueueItemRepository
       .createQueryBuilder('queue_item')
       .innerJoin(FightTypeOrmEntity, 'fight', 'fight.id = queue_item.fight_id')
-      .leftJoin(AthleteTypeOrmEntity, 'athlete_a', 'athlete_a.id = fight.athlete_a_id')
-      .leftJoin(AthleteTypeOrmEntity, 'athlete_b', 'athlete_b.id = fight.athlete_b_id')
+      .leftJoin(
+        AthleteTypeOrmEntity,
+        'athlete_a',
+        'athlete_a.id = fight.athlete_a_id',
+      )
+      .leftJoin(
+        AthleteTypeOrmEntity,
+        'athlete_b',
+        'athlete_b.id = fight.athlete_b_id',
+      )
       .where('queue_item.area_id = :areaId', { areaId })
       .orderBy('queue_item.position', 'ASC')
       .addOrderBy('queue_item.id', 'ASC')
@@ -144,19 +164,7 @@ export class AreaRepository implements IAreaRepository, IAreaQueueItemRepository
       ])
       .getRawMany<AreaQueueFightDetailsRow>();
 
-    return rows.map((row) => ({
-      queueItemId: Number(row.queueItemId),
-      fightId: Number(row.fightId),
-      position: Number(row.position),
-      queueStatus: row.queueStatus,
-      fightStatus: row.fightStatus,
-      athleteAId: Number(row.athleteAId),
-      athleteAName: row.athleteAName,
-      athleteBId: Number(row.athleteBId),
-      athleteBName: row.athleteBName,
-      keyGroupId: row.keyGroupId === null ? null : Number(row.keyGroupId),
-      orderIndex: Number(row.orderIndex),
-    }));
+    return rows.map(AreaMapper.queueFightDetailsToDomain);
   }
 
   async findByFightId(fightId: number): Promise<AreaQueueItem | null> {
@@ -175,7 +183,9 @@ export class AreaRepository implements IAreaRepository, IAreaQueueItemRepository
     );
 
     if (!result.affected) {
-      throw new NotFoundError(`AreaQueueItem with id ${item.id as number} not found`);
+      throw new NotFoundError(
+        `AreaQueueItem with id ${item.id as number} not found`,
+      );
     }
 
     return item;

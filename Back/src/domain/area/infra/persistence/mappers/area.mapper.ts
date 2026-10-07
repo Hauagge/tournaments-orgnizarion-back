@@ -2,6 +2,11 @@ import { Area } from '../../../domain/entities/area.entity';
 import { AreaQueueItem } from '../../../domain/entities/area-queue-item.entity';
 import { AreaTypeOrmEntity } from '../entities/area.typeorm-entity';
 import { AreaQueueItemTypeOrmEntity } from '../entities/area-queue-item.typeorm-entity';
+import { AreaQueueFightDetails } from '../../../repository/area-queue-fight-details.type';
+import { AreaQueueFightDetailsRow } from '../types/area-queue-fight-details-row.type';
+
+const toNullableNumber = (value: string | null) =>
+  value === null ? null : Number(value);
 
 export class AreaMapper {
   static toDomain(entity: AreaTypeOrmEntity): Area {
@@ -34,7 +39,9 @@ export class AreaMapper {
     });
   }
 
-  static queueItemToPersistence(item: AreaQueueItem): AreaQueueItemTypeOrmEntity {
+  static queueItemToPersistence(
+    item: AreaQueueItem,
+  ): AreaQueueItemTypeOrmEntity {
     const entity = new AreaQueueItemTypeOrmEntity();
     entity.id = item.id as number;
     entity.areaId = item.areaId;
@@ -42,5 +49,25 @@ export class AreaMapper {
     entity.position = item.position;
     entity.status = item.status;
     return entity;
+  }
+
+  // Luta de rodada futura ainda nao tem atleta: o id fica nulo. Number(null)
+  // viraria 0 e o cliente trataria como um atleta de verdade.
+  static queueFightDetailsToDomain(
+    row: AreaQueueFightDetailsRow,
+  ): AreaQueueFightDetails {
+    return {
+      queueItemId: Number(row.queueItemId),
+      fightId: Number(row.fightId),
+      position: Number(row.position),
+      queueStatus: row.queueStatus,
+      fightStatus: row.fightStatus,
+      athleteAId: toNullableNumber(row.athleteAId),
+      athleteAName: row.athleteAName,
+      athleteBId: toNullableNumber(row.athleteBId),
+      athleteBName: row.athleteBName,
+      keyGroupId: toNullableNumber(row.keyGroupId),
+      orderIndex: Number(row.orderIndex),
+    };
   }
 }
