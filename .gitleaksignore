@@ -1,0 +1,3 @@
+# False positives reviewed and confirmed safe to ignore.
+# Format: <commit>:<file>:<rule-id>:<start-line>
+3a2bc1baf0410e3b04703addb6d5955e780782c0:Back/README.md:generic-api-key:5
