@@ -12,10 +12,12 @@ import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { FightStatus } from '@/domain/fight/domain/value-objects/fight-status.enum';
 import { makeAthlete, makeCompetition } from '../../../../../test/factories';
 import {
+  InMemoryAreaQueueTransaction,
   InMemoryAthleteRepository,
   InMemoryCompetitionRepository,
   InMemoryFightRepository,
 } from '../../../../../test/repositories/in-memory';
+import { vi } from 'vitest';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { AreaDistributionStrategyResolverService } from '../services/area-distribution-strategy-resolver.service';
 import { FightQueuePlannerService } from '../services/fight-queue-planner.service';
@@ -51,6 +53,13 @@ class InMemoryAreaRepository
   async createManyQueueItems(items: AreaQueueItem[]): Promise<AreaQueueItem[]> {
     this.queueItems = [...this.queueItems, ...items];
     return items;
+  }
+
+  snapshot(): () => void {
+    const queueItems = [...this.queueItems];
+    return () => {
+      this.queueItems = queueItems;
+    };
   }
 
   async replaceForCompetition(input: {
@@ -202,7 +211,9 @@ describe('DistributeAreaFightsUseCase', () => {
       ),
       new RestPolicyService(),
     );
-    const writer = new FightQueueWriterService(fightRepository, areaRepository);
+    const writer = new FightQueueWriterService(
+      new InMemoryAreaQueueTransaction(areaRepository, fightRepository),
+    );
 
     const useCase = new DistributeAreaFightsUseCase(
       competitionRepository,
@@ -217,6 +228,86 @@ describe('DistributeAreaFightsUseCase', () => {
 
     return { useCase, areaRepository, fightRepository };
   }
+
+  function makeTwoWaitingFightsSut() {
+    return makeSut({
+      fights: [
+        makeFight({
+          id: 1,
+          status: FightStatus.WAITING,
+          areaId: 2,
+          athleteAId: 1,
+          athleteBId: 2,
+          orderIndex: 1,
+        }),
+        makeFight({
+          id: 2,
+          status: FightStatus.WAITING,
+          areaId: null,
+          athleteAId: 3,
+          athleteBId: 4,
+          orderIndex: 2,
+        }),
+      ],
+      areas: [makeArea(1, 1, 1), makeArea(2, 1, 2)],
+      queueItems: [
+        AreaQueueItem.restore({
+          id: 900,
+          areaId: 2,
+          fightId: 1,
+          position: 1,
+          status: AreaQueueItemStatus.QUEUED,
+        }),
+      ],
+      athletes: [
+        makeAthlete({ id: 1, competitionId: 1, fullName: 'A1' }),
+        makeAthlete({ id: 2, competitionId: 1, fullName: 'A2' }),
+        makeAthlete({ id: 3, competitionId: 1, fullName: 'A3' }),
+        makeAthlete({ id: 4, competitionId: 1, fullName: 'A4' }),
+      ],
+    });
+  }
+
+  it('desfaz a area das lutas quando a gravacao da fila falha na distribuicao FULL', async () => {
+    const { useCase, areaRepository, fightRepository } =
+      makeTwoWaitingFightsSut();
+    vi.spyOn(areaRepository, 'replaceForCompetition').mockRejectedValueOnce(
+      new Error('conexao caiu'),
+    );
+
+    await expect(
+      useCase.execute({
+        competitionId: 1,
+        mode: DistributionMode.FULL,
+        restGapFights: 2,
+      }),
+    ).rejects.toThrow('conexao caiu');
+
+    expect((await fightRepository.findById(1))?.areaId).toBe(2);
+    expect((await fightRepository.findById(2))?.areaId).toBeNull();
+    expect(
+      (await areaRepository.listByAreaId(2)).map((item) => item.fightId),
+    ).toEqual([1]);
+  });
+
+  it('desfaz a area da luta quando a gravacao da fila falha na distribuicao INCREMENTAL', async () => {
+    const { useCase, areaRepository, fightRepository } =
+      makeTwoWaitingFightsSut();
+    vi.spyOn(areaRepository, 'createManyQueueItems').mockRejectedValueOnce(
+      new Error('conexao caiu'),
+    );
+
+    await expect(
+      useCase.execute({
+        competitionId: 1,
+        mode: DistributionMode.INCREMENTAL,
+        restGapFights: 2,
+        fightIds: [2],
+      }),
+    ).rejects.toThrow('conexao caiu');
+
+    expect((await fightRepository.findById(2))?.areaId).toBeNull();
+  });
 
   it('should reject FULL distribution when there is a CALLED fight', async () => {
     const { useCase } = makeSut({

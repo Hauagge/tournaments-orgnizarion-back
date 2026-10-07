@@ -14,6 +14,17 @@ export class InMemoryAreaQueueItemRepository
     this.items = items.map((item) => this.withId(item));
   }
 
+  // Fotografa o estado para o fake de transacao conseguir desfazer.
+  snapshot(): () => void {
+    const items = [...this.items];
+    const nextId = this.nextId;
+
+    return () => {
+      this.items = items;
+      this.nextId = nextId;
+    };
+  }
+
   async createManyQueueItems(items: AreaQueueItem[]): Promise<AreaQueueItem[]> {
     const created = items.map((item) => this.withId(item));
     this.items = [...this.items, ...created];

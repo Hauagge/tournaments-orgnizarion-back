@@ -9,9 +9,11 @@ import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { FightStatus } from '@/domain/fight/domain/value-objects/fight-status.enum';
 import { makeCompetition } from '../../../../../test/factories';
 import {
+  InMemoryAreaQueueTransaction,
   InMemoryCompetitionRepository,
   InMemoryFightRepository,
 } from '../../../../../test/repositories/in-memory';
+import { vi } from 'vitest';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { GetAreaQueueUseCase } from './get-area-queue.use-case';
 import { MoveKeyGroupAreaDistributionUseCase } from './move-key-group-area-distribution.use-case';
@@ -69,7 +71,17 @@ class InMemoryAreaRepository
     const allowedIds = new Set(areaIds);
     return this.queueItems
       .filter((item) => allowedIds.has(item.areaId))
-      .sort((left, right) => left.areaId - right.areaId || left.position - right.position);
+      .sort(
+        (left, right) =>
+          left.areaId - right.areaId || left.position - right.position,
+      );
+  }
+
+  snapshot(): () => void {
+    const queueItems = [...this.queueItems];
+    return () => {
+      this.queueItems = queueItems;
+    };
   }
 
   async replaceForAreas(input: {
@@ -123,7 +135,8 @@ class InMemoryAreaRepository
 }
 
 class RecordingEventBus implements EventBus {
-  readonly events: Array<{ name: string; payload: Record<string, unknown> }> = [];
+  readonly events: Array<{ name: string; payload: Record<string, unknown> }> =
+    [];
 
   async publish(event: {
     name: string;
@@ -213,10 +226,44 @@ describe('MoveKeyGroupAreaDistributionUseCase', () => {
       fightRepository,
       getAreaQueueUseCase,
       eventBus,
+      new InMemoryAreaQueueTransaction(areaRepository, fightRepository),
     );
 
     return { useCase, areaRepository, fightRepository, eventBus };
   }
+
+  it('desfaz a fila quando a gravacao da area das lutas falha (lutas nao ficam sem area)', async () => {
+    const { useCase, areaRepository, fightRepository, eventBus } = makeSut({
+      fights: [
+        makeFight({ id: 1, keyGroupId: 10, areaId: 1, orderIndex: 1 }),
+        makeFight({ id: 2, keyGroupId: 10, areaId: 1, orderIndex: 2 }),
+      ],
+      queueItems: [
+        makeQueueItem({ id: 101, areaId: 1, fightId: 1, position: 1 }),
+        makeQueueItem({ id: 102, areaId: 1, fightId: 2, position: 2 }),
+      ],
+    });
+    vi.spyOn(fightRepository, 'assignAreas').mockRejectedValueOnce(
+      new Error('conexao caiu'),
+    );
+
+    await expect(
+      useCase.execute({
+        competitionId: 1,
+        keyGroupId: 10,
+        fromAreaId: 1,
+        toAreaId: 2,
+        orderIndex: 0,
+      }),
+    ).rejects.toThrow('conexao caiu');
+
+    expect(
+      (await areaRepository.listByAreaId(1)).map((item) => item.fightId),
+    ).toEqual([1, 2]);
+    expect(await areaRepository.listByAreaId(2)).toEqual([]);
+    expect((await fightRepository.findById(1))?.areaId).toBe(1);
+    expect(eventBus.events).toEqual([]);
+  });
 
   it('moves every queued fight from the key group to the destination area at the requested position', async () => {
     const groupFightA = makeFight({
@@ -267,22 +314,18 @@ describe('MoveKeyGroupAreaDistributionUseCase', () => {
       orderIndex: 1,
     });
 
-    expect((await areaRepository.listByAreaId(1)).map((item) => item.fightId)).toEqual([
-      3,
-    ]);
-    expect((await areaRepository.listByAreaId(1)).map((item) => item.position)).toEqual([
-      1,
-    ]);
-    expect((await areaRepository.listByAreaId(2)).map((item) => item.fightId)).toEqual([
-      4,
-      1,
-      2,
-    ]);
-    expect((await areaRepository.listByAreaId(2)).map((item) => item.position)).toEqual([
-      1,
-      2,
-      3,
-    ]);
+    expect(
+      (await areaRepository.listByAreaId(1)).map((item) => item.fightId),
+    ).toEqual([3]);
+    expect(
+      (await areaRepository.listByAreaId(1)).map((item) => item.position),
+    ).toEqual([1]);
+    expect(
+      (await areaRepository.listByAreaId(2)).map((item) => item.fightId),
+    ).toEqual([4, 1, 2]);
+    expect(
+      (await areaRepository.listByAreaId(2)).map((item) => item.position),
+    ).toEqual([1, 2, 3]);
     expect((await fightRepository.findById(1))?.areaId).toBe(2);
     expect((await fightRepository.findById(2))?.areaId).toBe(2);
     expect(result.areas.map((area) => area.area.id)).toEqual([1, 2]);
@@ -319,7 +362,9 @@ describe('MoveKeyGroupAreaDistributionUseCase', () => {
         orderIndex: 0,
       }),
     ).rejects.toThrow(
-      new ValidationError('Key group is not fully allocated in the source area'),
+      new ValidationError(
+        'Key group is not fully allocated in the source area',
+      ),
     );
   });
 
@@ -333,7 +378,9 @@ describe('MoveKeyGroupAreaDistributionUseCase', () => {
           status: FightStatus.CALLED,
         }),
       ],
-      queueItems: [makeQueueItem({ id: 101, areaId: 1, fightId: 1, position: 1 })],
+      queueItems: [
+        makeQueueItem({ id: 101, areaId: 1, fightId: 1, position: 1 }),
+      ],
     });
 
     await expect(

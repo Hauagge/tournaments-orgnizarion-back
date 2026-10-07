@@ -8,6 +8,7 @@ import { ValidationError } from '@/shared/errors/validation.error';
 import { AreaQueueItem } from '../../domain/entities/area-queue-item.entity';
 import { IAreaRepository } from '../../repository/IAreaRepository.repository';
 import { IAreaQueueItemRepository } from '../../repository/IAreaQueueItemRepository.repository';
+import { IAreaQueueTransaction } from '../../repository/IAreaQueueTransaction.repository';
 import { AreaQueueView } from './area-queue.view';
 import { GetAreaQueueUseCase } from './get-area-queue.use-case';
 
@@ -37,6 +38,8 @@ export class MoveKeyGroupAreaDistributionUseCase {
     private readonly getAreaQueueUseCase: GetAreaQueueUseCase,
     @Inject(EventBus)
     private readonly eventBus: EventBus,
+    @Inject(IAreaQueueTransaction)
+    private readonly areaQueueTransaction: IAreaQueueTransaction,
   ) {}
 
   async execute(
@@ -131,16 +134,18 @@ export class MoveKeyGroupAreaDistributionUseCase {
       input.toAreaId,
     );
 
-    await this.areaQueueItemRepository.replaceForAreas({
-      areaIds: [input.fromAreaId, input.toAreaId],
-      items: [...nextSourceQueue, ...nextDestinationQueue],
+    await this.areaQueueTransaction.run(async ({ areaQueueItems, fights }) => {
+      await areaQueueItems.replaceForAreas({
+        areaIds: [input.fromAreaId, input.toAreaId],
+        items: [...nextSourceQueue, ...nextDestinationQueue],
+      });
+      await fights.assignAreas(
+        Array.from(movableFightIds).map((fightId) => ({
+          fightId,
+          areaId: input.toAreaId,
+        })),
+      );
     });
-    await this.fightRepository.assignAreas(
-      Array.from(movableFightIds).map((fightId) => ({
-        fightId,
-        areaId: input.toAreaId,
-      })),
-    );
     await this.eventBus.publish({
       name: 'queue.updated',
       payload: {
@@ -161,7 +166,8 @@ export class MoveKeyGroupAreaDistributionUseCase {
 
   private sortQueueItems(items: AreaQueueItem[]): AreaQueueItem[] {
     return [...items].sort(
-      (left, right) => left.position - right.position || (left.id ?? 0) - (right.id ?? 0),
+      (left, right) =>
+        left.position - right.position || (left.id ?? 0) - (right.id ?? 0),
     );
   }
 

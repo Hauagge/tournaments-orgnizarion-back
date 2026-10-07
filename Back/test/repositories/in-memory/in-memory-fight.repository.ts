@@ -10,6 +10,16 @@ export class InMemoryFightRepository implements IFightRepository {
     this.setFights(seed);
   }
 
+  snapshot(): () => void {
+    const fights = [...this.fights];
+    const nextId = this.nextId;
+
+    return () => {
+      this.fights = fights;
+      this.nextId = nextId;
+    };
+  }
+
   setFights(fights: FightEntity[]) {
     this.fights = [...fights];
     this.nextId =

@@ -3,6 +3,7 @@ import { EventBus } from '@/core/events/event-bus.interface';
 import { AreaQueueItem } from '@/domain/area/domain/entities/area-queue-item.entity';
 import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-queue-item-status.enum';
 import { IAreaQueueItemRepository } from '@/domain/area/repository/IAreaQueueItemRepository.repository';
+import { IAreaQueueTransaction } from '@/domain/area/repository/IAreaQueueTransaction.repository';
 import { IUserCompetitionRepository } from '@/domain/auth/repository/IUserCompetitionRepository.repository';
 import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
@@ -36,10 +37,10 @@ export class UpdateFightOrderUseCase {
     private readonly userCompetitionRepository: IUserCompetitionRepository,
     @Inject(IFightRepository)
     private readonly fightRepository: IFightRepository,
-    @Inject(IAreaQueueItemRepository)
-    private readonly areaQueueItemRepository: IAreaQueueItemRepository,
     @Inject(EventBus)
     private readonly eventBus: EventBus,
+    @Inject(IAreaQueueTransaction)
+    private readonly areaQueueTransaction: IAreaQueueTransaction,
   ) {}
 
   async execute(input: UpdateFightOrderInput): Promise<UpdateFightOrderView> {
@@ -93,12 +94,19 @@ export class UpdateFightOrderUseCase {
       (left, right) => left.orderIndex - right.orderIndex,
     );
 
-    await this.fightRepository.updateOrder(normalizedItems);
+    // Ordem das lutas e fila das areas mudam juntas: a fila e regravada
+    // (apaga e insere), e uma falha no meio nao pode deixar luta fora dela.
+    const resequencedAreaIds = await this.areaQueueTransaction.run(
+      async ({ areaQueueItems, fights }) => {
+        await fights.updateOrder(normalizedItems);
 
-    const resequencedAreaIds = await this.resequenceAreaQueues({
-      competitionFights,
-      normalizedItems,
-    });
+        return this.resequenceAreaQueues({
+          areaQueueItems,
+          competitionFights,
+          normalizedItems,
+        });
+      },
+    );
 
     const result = {
       competitionId: input.competitionId,
@@ -134,6 +142,7 @@ export class UpdateFightOrderUseCase {
    * concluidos ficam na frente, na ordem em que aconteceram.
    */
   private async resequenceAreaQueues(input: {
+    areaQueueItems: IAreaQueueItemRepository;
     competitionFights: Awaited<
       ReturnType<IFightRepository['listByCompetitionId']>
     >;
@@ -159,7 +168,7 @@ export class UpdateFightOrderUseCase {
       return [];
     }
 
-    const queueItems = await this.areaQueueItemRepository.listByAreaIds(areaIds);
+    const queueItems = await input.areaQueueItems.listByAreaIds(areaIds);
 
     if (queueItems.length === 0) {
       return [];
@@ -213,7 +222,7 @@ export class UpdateFightOrderUseCase {
       return [];
     }
 
-    await this.areaQueueItemRepository.replaceForAreas({
+    await input.areaQueueItems.replaceForAreas({
       areaIds,
       items: nextItems,
     });

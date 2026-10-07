@@ -11,6 +11,7 @@ import { AreaQueueItem } from '@/domain/area/domain/entities/area-queue-item.ent
 import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-queue-item-status.enum';
 import {
   InMemoryAreaQueueItemRepository,
+  InMemoryAreaQueueTransaction,
   InMemoryAuthRepository,
   InMemoryCompetitionRepository,
   InMemoryFightRepository,
@@ -84,8 +85,8 @@ describe('UpdateFightOrderUseCase', () => {
       competitionRepository,
       userCompetitionRepository,
       fightRepository,
-      areaQueueItemRepository,
       eventBus,
+      new InMemoryAreaQueueTransaction(areaQueueItemRepository, fightRepository),
     );
   });
 
@@ -126,6 +127,58 @@ describe('UpdateFightOrderUseCase', () => {
     expect(eventBus.events[0].occurredAt).toBeInstanceOf(Date);
   });
 
+  it('desfaz a nova ordem quando a regravacao da fila falha (luta nao sai da fila)', async () => {
+    fightRepository = new InMemoryFightRepository([
+      makeFight({ id: 1, competitionId: 1, orderIndex: 1, areaId: 5 }),
+      makeFight({ id: 2, competitionId: 1, orderIndex: 2, areaId: 5 }),
+    ]);
+    areaQueueItemRepository = new InMemoryAreaQueueItemRepository([
+      AreaQueueItem.restore({
+        id: 1,
+        areaId: 5,
+        fightId: 1,
+        position: 1,
+        status: AreaQueueItemStatus.QUEUED,
+      }),
+      AreaQueueItem.restore({
+        id: 2,
+        areaId: 5,
+        fightId: 2,
+        position: 2,
+        status: AreaQueueItemStatus.QUEUED,
+      }),
+    ]);
+    vi.spyOn(areaQueueItemRepository, 'replaceForAreas').mockRejectedValueOnce(
+      new Error('conexao caiu'),
+    );
+    useCase = new UpdateFightOrderUseCase(
+      competitionRepository,
+      userCompetitionRepository,
+      fightRepository,
+      eventBus,
+      new InMemoryAreaQueueTransaction(areaQueueItemRepository, fightRepository),
+    );
+
+    await expect(
+      useCase.execute({
+        currentUserId: 10,
+        competitionId: 1,
+        items: [
+          { fightId: 2, orderIndex: 1 },
+          { fightId: 1, orderIndex: 2 },
+        ],
+      }),
+    ).rejects.toThrow('conexao caiu');
+
+    expect((await fightRepository.findById(1))?.orderIndex).toBe(1);
+    expect((await fightRepository.findById(2))?.orderIndex).toBe(2);
+    expect(
+      (await areaQueueItemRepository.listByAreaId(5)).map(
+        (item) => item.fightId,
+      ),
+    ).toEqual([1, 2]);
+  });
+
   it('resequences the area queue to follow the new fight order', async () => {
     fightRepository = new InMemoryFightRepository([
       makeFight({ id: 1, competitionId: 1, orderIndex: 1, areaId: 5 }),
@@ -159,8 +212,8 @@ describe('UpdateFightOrderUseCase', () => {
       competitionRepository,
       userCompetitionRepository,
       fightRepository,
-      areaQueueItemRepository,
       eventBus,
+      new InMemoryAreaQueueTransaction(areaQueueItemRepository, fightRepository),
     );
 
     await useCase.execute({
@@ -217,8 +270,8 @@ describe('UpdateFightOrderUseCase', () => {
       competitionRepository,
       userCompetitionRepository,
       fightRepository,
-      areaQueueItemRepository,
       eventBus,
+      new InMemoryAreaQueueTransaction(areaQueueItemRepository, fightRepository),
     );
 
     await useCase.execute({
@@ -265,8 +318,8 @@ describe('UpdateFightOrderUseCase', () => {
       competitionRepository,
       userCompetitionRepository,
       fightRepository,
-      areaQueueItemRepository,
       eventBus,
+      new InMemoryAreaQueueTransaction(areaQueueItemRepository, fightRepository),
     );
 
     await useCase.execute({
@@ -299,8 +352,8 @@ describe('UpdateFightOrderUseCase', () => {
       competitionRepository,
       userCompetitionRepository,
       fightRepository,
-      areaQueueItemRepository,
       eventBus,
+      new InMemoryAreaQueueTransaction(areaQueueItemRepository, fightRepository),
     );
 
     await expect(() =>
