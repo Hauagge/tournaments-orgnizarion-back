@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
 import { CurrentUser } from '@/core/auth/infra/decorators/current-user.decorator';
 import { CompetitionAccess } from '@/core/auth/infra/decorators/competition-access.decorator';
@@ -17,6 +27,7 @@ import { CreateManualFightUseCase } from '../../application/use-cases/create-man
 import { DeleteFightUseCase } from '../../application/use-cases/delete-fight.use-case';
 import { MarkFightWinnerUseCase } from '../../application/use-cases/mark-fight-winner.use-case';
 import { StartFightUseCase } from '../../application/use-cases/start-fight.use-case';
+import { SetFightCalledUseCase } from '../../application/use-cases/set-fight-called.use-case';
 import { UpdateFightUseCase } from '../../application/use-cases/update-fight.use-case';
 import { UpdateFightOrderUseCase } from '../../application/use-cases/update-fight-order.use-case';
 import {
@@ -55,6 +66,7 @@ export class FightController {
   constructor(
     private readonly generateFightsUseCase: GenerateFightsUseCase,
     private readonly startFightUseCase: StartFightUseCase,
+    private readonly setFightCalledUseCase: SetFightCalledUseCase,
     private readonly finishFightUseCase: FinishFightUseCase,
     private readonly listFightsUseCase: ListFightsUseCase,
     private readonly updateFightOrderUseCase: UpdateFightOrderUseCase,
@@ -69,7 +81,9 @@ export class FightController {
   async generate(
     @Param(new ZodValidationPipe(CompetitionFightParamSchema))
     params: CompetitionFightParamDto,
-  ): Promise<ApiResponse<Awaited<ReturnType<GenerateFightsUseCase['execute']>>>> {
+  ): Promise<
+    ApiResponse<Awaited<ReturnType<GenerateFightsUseCase['execute']>>>
+  > {
     const result = await this.generateFightsUseCase.execute(params.id);
 
     return {
@@ -85,6 +99,40 @@ export class FightController {
     params: FightIdParamDto,
   ) {
     const fight = await this.startFightUseCase.execute(params.id);
+
+    return {
+      data: fight.toJSON(),
+      error: null,
+    };
+  }
+
+  @Post('fights/:id/call')
+  @CompetitionAccess({ type: 'fight', param: 'id' })
+  async call(
+    @Param(new ZodValidationPipe(FightIdParamSchema))
+    params: FightIdParamDto,
+  ) {
+    const fight = await this.setFightCalledUseCase.execute({
+      fightId: params.id,
+      called: true,
+    });
+
+    return {
+      data: fight.toJSON(),
+      error: null,
+    };
+  }
+
+  @Post('fights/:id/uncall')
+  @CompetitionAccess({ type: 'fight', param: 'id' })
+  async uncall(
+    @Param(new ZodValidationPipe(FightIdParamSchema))
+    params: FightIdParamDto,
+  ) {
+    const fight = await this.setFightCalledUseCase.execute({
+      fightId: params.id,
+      called: false,
+    });
 
     return {
       data: fight.toJSON(),
@@ -176,6 +224,29 @@ export class FightController {
     };
   }
 
+  // Precisa vir antes das rotas PATCH/DELETE com :fightId: o Express casa por
+  // ordem de declaracao e ":fightId" tambem bate com o literal "order".
+  @Patch('competitions/:id/fights/order')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
+  async updateOrder(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param(new ZodValidationPipe(CompetitionFightParamSchema))
+    params: CompetitionFightParamDto,
+    @Body(new ZodValidationPipe(UpdateFightOrderSchema))
+    body: UpdateFightOrderDto,
+  ) {
+    const result = await this.updateFightOrderUseCase.execute({
+      currentUserId: currentUser.sub,
+      competitionId: params.id,
+      items: body.items,
+    });
+
+    return {
+      data: result,
+      error: null,
+    };
+  }
+
   @Patch('competitions/:competitionId/fights/:fightId/winner')
   @CompetitionAccess({ type: 'competition', param: 'competitionId' })
   async markWinner(
@@ -190,6 +261,7 @@ export class FightController {
       competitionId: params.competitionId,
       fightId: params.fightId,
       winnerId: body.winnerId,
+      winType: body.winType,
     });
 
     return {
@@ -231,27 +303,6 @@ export class FightController {
       currentUserId: currentUser.sub,
       competitionId: params.competitionId,
       fightId: params.fightId,
-    });
-
-    return {
-      data: result,
-      error: null,
-    };
-  }
-
-  @Patch('competitions/:id/fights/order')
-  @CompetitionAccess({ type: 'competition', param: 'id' })
-  async updateOrder(
-    @CurrentUser() currentUser: AuthenticatedUser,
-    @Param(new ZodValidationPipe(CompetitionFightParamSchema))
-    params: CompetitionFightParamDto,
-    @Body(new ZodValidationPipe(UpdateFightOrderSchema))
-    body: UpdateFightOrderDto,
-  ) {
-    const result = await this.updateFightOrderUseCase.execute({
-      currentUserId: currentUser.sub,
-      competitionId: params.id,
-      items: body.items,
     });
 
     return {

@@ -36,6 +36,17 @@ export class AreaQueueItem {
     });
   }
 
+  requeue(): AreaQueueItem {
+    if (this.props.status !== AreaQueueItemStatus.CALLED) {
+      throw new ValidationError('Only called items can go back to the queue');
+    }
+
+    return new AreaQueueItem({
+      ...this.props,
+      status: AreaQueueItemStatus.QUEUED,
+    });
+  }
+
   markDone(): AreaQueueItem {
     return new AreaQueueItem({
       ...this.props,

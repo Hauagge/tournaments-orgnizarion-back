@@ -122,6 +122,17 @@ export class FightEntity {
     });
   }
 
+  uncall(): FightEntity {
+    if (this.props.status !== FightStatus.CALLED) {
+      throw new ValidationError('Only called fights can go back to pending');
+    }
+
+    return new FightEntity({
+      ...this.props,
+      status: FightStatus.PENDING,
+    });
+  }
+
   start(startedAt: Date): FightEntity {
     if (this.props.status === FightStatus.CANCELED) {
       throw new ValidationError('Canceled fights cannot be started');
@@ -213,14 +224,12 @@ export class FightEntity {
         input.loserNextFightSlot !== undefined
           ? input.loserNextFightSlot
           : this.props.loserNextFightSlot,
-      createdManually:
-        input.createdManually ?? this.props.createdManually,
+      createdManually: input.createdManually ?? this.props.createdManually,
       isWo: input.isWo ?? this.props.isWo,
       winType: input.winType !== undefined ? input.winType : this.props.winType,
       winnerId:
         input.winnerId !== undefined ? input.winnerId : this.props.winnerId,
-      loserId:
-        input.loserId !== undefined ? input.loserId : this.props.loserId,
+      loserId: input.loserId !== undefined ? input.loserId : this.props.loserId,
       startedAt:
         input.startedAt !== undefined ? input.startedAt : this.props.startedAt,
       finishedAt:
