@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
 import { CompetitionAccess } from '@/core/auth/infra/decorators/competition-access.decorator';
 import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
@@ -12,6 +20,7 @@ import { CreateAreasUseCase } from '../../application/use-cases/create-areas.use
 import { DistributeAreaFightsUseCase } from '../../application/use-cases/distribute-area-fights.use-case';
 import { GetAreaQueueUseCase } from '../../application/use-cases/get-area-queue.use-case';
 import { ListAreasByCompetitionUseCase } from '../../application/use-cases/list-areas-by-competition.use-case';
+import { MoveFightAreaUseCase } from '../../application/use-cases/move-fight-area.use-case';
 import { MoveKeyGroupAreaDistributionUseCase } from '../../application/use-cases/move-key-group-area-distribution.use-case';
 import { Area } from '../../domain/entities/area.entity';
 import { AreaIdParamDto, AreaIdParamSchema } from './dtos/area-id-param.dto';
@@ -24,6 +33,12 @@ import {
   DistributeAreaFightsDto,
   DistributeAreaFightsSchema,
 } from './dtos/distribute-area-fights.dto';
+import {
+  MoveFightAreaDto,
+  MoveFightAreaParamDto,
+  MoveFightAreaParamSchema,
+  MoveFightAreaSchema,
+} from './dtos/move-fight-area.dto';
 import {
   MoveKeyGroupAreaDistributionDto,
   MoveKeyGroupAreaDistributionSchema,
@@ -40,6 +55,7 @@ export class AreaController {
     private readonly getAreaQueueUseCase: GetAreaQueueUseCase,
     private readonly callNextAreaFightUseCase: CallNextAreaFightUseCase,
     private readonly moveKeyGroupAreaDistributionUseCase: MoveKeyGroupAreaDistributionUseCase,
+    private readonly moveFightAreaUseCase: MoveFightAreaUseCase,
   ) {}
 
   @Post('competitions/:id/areas')
@@ -123,6 +139,27 @@ export class AreaController {
       competitionId: params.id,
       keyGroupId: body.keyGroupId,
       fromAreaId: body.fromAreaId,
+      toAreaId: body.toAreaId,
+      orderIndex: body.orderIndex,
+    });
+
+    return {
+      data: result,
+      error: null,
+    };
+  }
+
+  @Patch('competitions/:id/areas/distribution/fights/:fightId')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
+  async moveFight(
+    @Param(new ZodValidationPipe(MoveFightAreaParamSchema))
+    params: MoveFightAreaParamDto,
+    @Body(new ZodValidationPipe(MoveFightAreaSchema))
+    body: MoveFightAreaDto,
+  ) {
+    const result = await this.moveFightAreaUseCase.execute({
+      competitionId: params.id,
+      fightId: params.fightId,
       toAreaId: body.toAreaId,
       orderIndex: body.orderIndex,
     });
