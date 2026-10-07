@@ -33,20 +33,30 @@ export class InMemoryAuthRepository
     return user;
   }
 
-  async updatePasswordHash(userId: number, passwordHash: string): Promise<void> {
+  async updatePasswordHash(
+    userId: number,
+    passwordHash: string,
+  ): Promise<void> {
     this.users = this.users.map((user) =>
       user.id === userId ? { ...user, passwordHash } : user,
     );
   }
 
-  async list(input: { term?: string }): Promise<User[]> {
+  async list(input: {
+    term?: string;
+    page: number;
+    limit: number;
+  }): Promise<User[]> {
     const term = input.term?.trim().toLowerCase();
 
-    return [...this.users]
+    const filtered = [...this.users]
       .filter((user) =>
         term ? user.username.toLowerCase().includes(term) : true,
       )
       .sort((left, right) => left.username.localeCompare(right.username));
+
+    const start = (input.page - 1) * input.limit;
+    return filtered.slice(start, start + input.limit);
   }
 
   async listByCompetitionId(input: {

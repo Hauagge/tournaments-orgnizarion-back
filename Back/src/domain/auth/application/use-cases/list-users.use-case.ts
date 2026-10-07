@@ -3,6 +3,8 @@ import { IUserRepository } from '../../repository/IUserRepository.repository';
 
 export type ListUsersInput = {
   term?: string;
+  page: number;
+  limit: number;
 };
 
 export type ListUsersOutput = Array<{
@@ -20,7 +22,11 @@ export class ListUsersUseCase {
   ) {}
 
   async execute(input: ListUsersInput): Promise<ListUsersOutput> {
-    const users = await this.userRepository.list(input);
+    const users = await this.userRepository.list({
+      term: input.term,
+      page: input.page,
+      limit: input.limit,
+    });
 
     return users.map((user) => ({
       id: user.id,

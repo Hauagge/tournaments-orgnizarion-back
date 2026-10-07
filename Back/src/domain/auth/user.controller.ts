@@ -24,6 +24,8 @@ export class UserController {
   ): Promise<ApiResponse<Awaited<ReturnType<ListUsersUseCase['execute']>>>> {
     const users = await this.listUsersUseCase.execute({
       term: query.search,
+      page: query.page,
+      limit: query.limit,
     });
 
     return {

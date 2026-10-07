@@ -29,7 +29,11 @@ export class UserRepository implements IUserRepository {
     });
   }
 
-  async list(input: { term?: string }): Promise<User[]> {
+  async list(input: {
+    term?: string;
+    page: number;
+    limit: number;
+  }): Promise<User[]> {
     const term = input.term?.trim();
 
     return this.repository.find({
@@ -40,10 +44,15 @@ export class UserRepository implements IUserRepository {
         username: 'ASC',
         id: 'ASC',
       },
+      skip: (input.page - 1) * input.limit,
+      take: input.limit,
     });
   }
 
-  async updatePasswordHash(userId: number, passwordHash: string): Promise<void> {
+  async updatePasswordHash(
+    userId: number,
+    passwordHash: string,
+  ): Promise<void> {
     await this.repository.update(userId, { passwordHash });
   }
 }

@@ -1,4 +1,6 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CoreAuthModule } from './core/auth/core-auth.module';
@@ -19,6 +21,7 @@ import { WeighInModule } from './domain/weighin/weighin.module';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 100 }]),
     CoreAuthModule,
     DatabaseModule,
     AuthModule,
@@ -35,7 +38,7 @@ import { WeighInModule } from './domain/weighin/weighin.module';
     WeighInModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
