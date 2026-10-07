@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { DomainEvent, DomainEventHandler, EventBus } from '@/core/events/event-bus.interface';
+import {
+  DomainEvent,
+  DomainEventHandler,
+  EventBus,
+} from '@/core/events/event-bus.interface';
 import { AreaQueueItemStatus } from '@/domain/area/domain/value-objects/area-queue-item-status.enum';
 import { AreaQueueItemTypeOrmEntity } from '@/domain/area/infra/persistence/entities/area-queue-item.typeorm-entity';
 import { CategoryTypeOrmEntity } from '@/domain/category/infra/persistence/entities/category.typeorm-entity';
@@ -24,7 +28,9 @@ class RecordingEventBus implements EventBus {
   }
 }
 
-function makeFightRow(overrides: Partial<FightTypeOrmEntity> = {}): FightTypeOrmEntity {
+function makeFightRow(
+  overrides: Partial<FightTypeOrmEntity> = {},
+): FightTypeOrmEntity {
   return {
     id: 1,
     competitionId: 1,
@@ -63,7 +69,10 @@ describe('MarkFightWinnerUseCase', () => {
     bestOfThreeProgressionService = new BestOfThreeProgressionService();
   });
 
-  function setup(fights: FightTypeOrmEntity[], categories: CategoryTypeOrmEntity[] = []) {
+  function setup(
+    fights: FightTypeOrmEntity[],
+    categories: CategoryTypeOrmEntity[] = [],
+  ) {
     const { manager, dataSource } = makeFakeDataSource({ fights, categories });
     const useCase = new MarkFightWinnerUseCase(
       dataSource as never,
@@ -115,6 +124,78 @@ describe('MarkFightWinnerUseCase', () => {
       .getRepository(FightTypeOrmEntity)
       .findOneBy({ id: 3 })) as FightTypeOrmEntity | null;
     expect(untouched?.athleteAId).toBe(20);
+  });
+
+  it('refuses to change the winner when the next fight has already been called', async () => {
+    const opening = makeFightRow({
+      id: 1,
+      status: FightStatus.FINISHED,
+      winnerId: 10,
+      loserId: 20,
+      nextFightId: 2,
+      nextFightSlot: 'A',
+    });
+    const goldFight = makeFightRow({
+      id: 2,
+      round: 2,
+      order: 2,
+      athleteAId: 10,
+      athleteBId: 30,
+      status: FightStatus.CALLED,
+    });
+    const { useCase } = setup([opening, goldFight]);
+
+    await expect(
+      useCase.execute({ competitionId: 1, fightId: 1, winnerId: 20 }),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it('refuses to change the winner when the next fight is already in progress', async () => {
+    const opening = makeFightRow({
+      id: 1,
+      status: FightStatus.FINISHED,
+      winnerId: 10,
+      loserId: 20,
+      nextFightId: 2,
+      nextFightSlot: 'A',
+    });
+    const goldFight = makeFightRow({
+      id: 2,
+      round: 2,
+      order: 2,
+      athleteAId: 10,
+      athleteBId: 30,
+      status: FightStatus.IN_PROGRESS,
+    });
+    const { useCase } = setup([opening, goldFight]);
+
+    await expect(
+      useCase.execute({ competitionId: 1, fightId: 1, winnerId: 20 }),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it('refuses to change the winner when the loser fight has already been called', async () => {
+    const opening = makeFightRow({
+      id: 1,
+      status: FightStatus.FINISHED,
+      winnerId: 10,
+      loserId: 20,
+      loserNextFightId: 3,
+      loserNextFightSlot: 'A',
+    });
+    const silverFight = makeFightRow({
+      id: 3,
+      round: 2,
+      order: 3,
+      athleteAId: 20,
+      athleteBId: 40,
+      status: FightStatus.CALLED,
+    });
+    const { useCase } = setup([opening, silverFight]);
+
+    await expect(
+      useCase.execute({ competitionId: 1, fightId: 1, winnerId: 20 }),
+    ).rejects.toBeInstanceOf(ValidationError);
   });
 
   it('rejects the loser when the loser slot already holds another athlete', async () => {
@@ -334,7 +415,9 @@ describe('MarkFightWinnerUseCase', () => {
 
     const nextFightRow = await manager.fights.findOneBy({ id: 2 });
     expect(nextFightRow?.areaId).toBe(2);
-    const nextQueueItem = await manager.areaQueueItems.findOneBy({ fightId: 2 });
+    const nextQueueItem = await manager.areaQueueItems.findOneBy({
+      fightId: 2,
+    });
     expect(nextQueueItem?.areaId).toBe(2);
     expect(nextQueueItem?.position).toBe(2);
   });
@@ -377,7 +460,12 @@ describe('MarkFightWinnerUseCase', () => {
     const { useCase } = setup([]);
 
     await expect(
-      useCase.execute({ currentUserId: 1, competitionId: 1, fightId: 999, winnerId: 10 }),
+      useCase.execute({
+        currentUserId: 1,
+        competitionId: 1,
+        fightId: 999,
+        winnerId: 10,
+      }),
     ).rejects.toBeInstanceOf(NotFoundError);
   });
 
@@ -385,7 +473,12 @@ describe('MarkFightWinnerUseCase', () => {
     const { useCase } = setup([makeFightRow({ status: FightStatus.CANCELED })]);
 
     await expect(
-      useCase.execute({ currentUserId: 1, competitionId: 1, fightId: 1, winnerId: 10 }),
+      useCase.execute({
+        currentUserId: 1,
+        competitionId: 1,
+        fightId: 1,
+        winnerId: 10,
+      }),
     ).rejects.toBeInstanceOf(ValidationError);
   });
 
@@ -393,7 +486,12 @@ describe('MarkFightWinnerUseCase', () => {
     const { useCase } = setup([makeFightRow()]);
 
     await expect(
-      useCase.execute({ currentUserId: 1, competitionId: 1, fightId: 1, winnerId: 999 }),
+      useCase.execute({
+        currentUserId: 1,
+        competitionId: 1,
+        fightId: 1,
+        winnerId: 999,
+      }),
     ).rejects.toBeInstanceOf(ValidationError);
   });
 });

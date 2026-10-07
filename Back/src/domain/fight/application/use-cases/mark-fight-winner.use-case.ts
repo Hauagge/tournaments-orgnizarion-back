@@ -58,7 +58,9 @@ export class MarkFightWinnerUseCase {
     const result = await this.dataSource.transaction(async (manager) => {
       const fightRepository = manager.getRepository(FightTypeOrmEntity);
       const categoryRepository = manager.getRepository(CategoryTypeOrmEntity);
-      const areaQueueRepository = manager.getRepository(AreaQueueItemTypeOrmEntity);
+      const areaQueueRepository = manager.getRepository(
+        AreaQueueItemTypeOrmEntity,
+      );
       const keyGroupRepository = manager.getRepository(KeyGroupTypeOrmEntity);
 
       const fight = await fightRepository.findOneBy({ id: input.fightId });
@@ -67,7 +69,9 @@ export class MarkFightWinnerUseCase {
       }
 
       if (fight.status === FightStatus.CANCELED) {
-        throw new ValidationError('Nao e possivel marcar vencedor de luta cancelada');
+        throw new ValidationError(
+          'Nao e possivel marcar vencedor de luta cancelada',
+        );
       }
 
       const participants = [fight.athleteAId, fight.athleteBId].filter(
@@ -77,7 +81,8 @@ export class MarkFightWinnerUseCase {
         throw new ValidationError('O vencedor informado nao pertence a luta');
       }
 
-      const loserId = participants.find((athleteId) => athleteId !== input.winnerId) ?? null;
+      const loserId =
+        participants.find((athleteId) => athleteId !== input.winnerId) ?? null;
       let nextFight = fight.nextFightId
         ? await fightRepository.findOneBy({ id: fight.nextFightId })
         : null;
@@ -89,10 +94,23 @@ export class MarkFightWinnerUseCase {
       const previousWinnerId = fight.winnerId;
       const previousLoserId = fight.loserId;
 
-      if (fight.status === FightStatus.FINISHED && previousWinnerId !== null && previousWinnerId !== input.winnerId) {
+      if (
+        fight.status === FightStatus.FINISHED &&
+        previousWinnerId !== null &&
+        previousWinnerId !== input.winnerId
+      ) {
         if (nextFight?.status === FightStatus.FINISHED) {
           throw new ValidationError(
             'Nao e possivel alterar o vencedor porque a proxima luta ja foi finalizada.',
+          );
+        }
+
+        if (
+          nextFight?.status === FightStatus.CALLED ||
+          nextFight?.status === FightStatus.IN_PROGRESS
+        ) {
+          throw new ValidationError(
+            'Nao e possivel alterar o vencedor porque a proxima luta ja foi chamada ou esta em andamento.',
           );
         }
 
@@ -102,20 +120,45 @@ export class MarkFightWinnerUseCase {
           );
         }
 
+        if (
+          loserNextFight?.status === FightStatus.CALLED ||
+          loserNextFight?.status === FightStatus.IN_PROGRESS
+        ) {
+          throw new ValidationError(
+            'Nao e possivel alterar o vencedor porque a luta do perdedor ja foi chamada ou esta em andamento.',
+          );
+        }
+
         if (nextFight && fight.nextFightSlot) {
-          if (fight.nextFightSlot === 'A' && nextFight.athleteAId === previousWinnerId) {
+          if (
+            fight.nextFightSlot === 'A' &&
+            nextFight.athleteAId === previousWinnerId
+          ) {
             nextFight.athleteAId = null;
           }
-          if (fight.nextFightSlot === 'B' && nextFight.athleteBId === previousWinnerId) {
+          if (
+            fight.nextFightSlot === 'B' &&
+            nextFight.athleteBId === previousWinnerId
+          ) {
             nextFight.athleteBId = null;
           }
         }
 
-        if (loserNextFight && fight.loserNextFightSlot && previousLoserId !== null) {
-          if (fight.loserNextFightSlot === 'A' && loserNextFight.athleteAId === previousLoserId) {
+        if (
+          loserNextFight &&
+          fight.loserNextFightSlot &&
+          previousLoserId !== null
+        ) {
+          if (
+            fight.loserNextFightSlot === 'A' &&
+            loserNextFight.athleteAId === previousLoserId
+          ) {
             loserNextFight.athleteAId = null;
           }
-          if (fight.loserNextFightSlot === 'B' && loserNextFight.athleteBId === previousLoserId) {
+          if (
+            fight.loserNextFightSlot === 'B' &&
+            loserNextFight.athleteBId === previousLoserId
+          ) {
             loserNextFight.athleteBId = null;
           }
         }
@@ -125,7 +168,8 @@ export class MarkFightWinnerUseCase {
       fight.loserId = loserId;
       fight.status = FightStatus.FINISHED;
       fight.isWo = loserId === null;
-      fight.winType = input.winType ?? (loserId === null ? 'WO' : fight.winType);
+      fight.winType =
+        input.winType ?? (loserId === null ? 'WO' : fight.winType);
       fight.finishedAt = new Date();
       if (!fight.startedAt) {
         fight.startedAt = new Date();
@@ -136,17 +180,23 @@ export class MarkFightWinnerUseCase {
 
       if (nextFight) {
         if (!fight.nextFightSlot) {
-          throw new ValidationError('A luta atual nao possui slot configurado para a proxima luta');
+          throw new ValidationError(
+            'A luta atual nao possui slot configurado para a proxima luta',
+          );
         }
 
         const currentSlotValue =
-          fight.nextFightSlot === 'A' ? nextFight.athleteAId : nextFight.athleteBId;
+          fight.nextFightSlot === 'A'
+            ? nextFight.athleteAId
+            : nextFight.athleteBId;
         if (
           currentSlotValue !== null &&
           currentSlotValue !== previousWinnerId &&
           currentSlotValue !== input.winnerId
         ) {
-          throw new ValidationError('O slot da proxima luta ja esta ocupado por outro atleta');
+          throw new ValidationError(
+            'O slot da proxima luta ja esta ocupado por outro atleta',
+          );
         }
 
         if (fight.nextFightSlot === 'A') {
@@ -238,7 +288,9 @@ export class MarkFightWinnerUseCase {
         });
       }
 
-      const queueItem = await areaQueueRepository.findOneBy({ fightId: fight.id });
+      const queueItem = await areaQueueRepository.findOneBy({
+        fightId: fight.id,
+      });
       if (queueItem) {
         queueItem.status = AreaQueueItemStatus.DONE;
         await areaQueueRepository.save(queueItem);
