@@ -121,7 +121,11 @@ contrato: quem chamar a API por fora também recebe o `409`.
 
 `AddMemberToKeyGroupUseCase`:
 
-- `add-member-to-key-group.use-case.ts:61` — remover o teto de 4 atletas.
+- `add-member-to-key-group.use-case.ts:61` — o teto de 4 atletas **permanece
+  para competição `KEYS`** (é o tamanho que a geração automática exige). Só
+  cai para `CBJJ`, que não tem esse limite. Como o use case hoje não carrega a
+  competição, precisa buscar `competition.mode` (via `group.competitionId`) e
+  só aplicar o `throw` quando `mode === KEYS`.
 - `add-member-to-key-group.use-case.ts:65` — atleta já em outra chave deixa de
   ser erro. Sem `confirmMove`, responde `409` nomeando a chave de origem. Com
   `confirmMove: true`, executa o movimento.
@@ -249,7 +253,8 @@ Backend, por use case:
   sem aviso quando a chave não tem luta; sem aviso quando as lutas da chave
   estão todas canceladas; com aviso e contagem certa no caso positivo.
 - `create-key-group`: aceita `CBJJ`; segue recusando `ABSOLUTE_GP`.
-- `add-member-to-key-group`: aceita o quinto atleta; devolve `409` sem
+- `add-member-to-key-group`: recusa o quinto atleta em competição `KEYS`;
+  aceita o quinto atleta em `CBJJ`; devolve `409` sem
   `confirmMove`; move com `confirmMove`; **exclui** a chave de origem quando
   ela fica vazia; **mantém** a chave de origem, em `DRAFT`, quando sobra um
   único atleta; segue recusando destino `LOCKED` e destino com lutas geradas;

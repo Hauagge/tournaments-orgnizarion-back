@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { IAthleteRepository } from '@/domain/athlete/repository/IAthleteRepository.repository';
+import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
+import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { FightStatus } from '@/domain/fight/domain/value-objects/fight-status.enum';
 import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
@@ -21,6 +23,8 @@ export class AddMemberToKeyGroupUseCase {
     private readonly athleteRepository: IAthleteRepository,
     @Inject(IFightRepository)
     private readonly fightRepository: IFightRepository,
+    @Inject(ICompetitionRepository)
+    private readonly competitionRepository: ICompetitionRepository,
   ) {}
 
   async execute(input: AddMemberToKeyGroupInput) {
@@ -30,7 +34,9 @@ export class AddMemberToKeyGroupUseCase {
     ]);
 
     if (!group) {
-      throw new NotFoundError(`Key group with id ${input.keyGroupId} not found`);
+      throw new NotFoundError(
+        `Key group with id ${input.keyGroupId} not found`,
+      );
     }
 
     if (!athlete) {
@@ -42,7 +48,9 @@ export class AddMemberToKeyGroupUseCase {
     }
 
     if (athlete.competitionId !== group.competitionId) {
-      throw new ValidationError('Athlete does not belong to the same competition');
+      throw new ValidationError(
+        'Athlete does not belong to the same competition',
+      );
     }
 
     const [currentMembers, existingGroup] = await Promise.all([
@@ -57,18 +65,39 @@ export class AddMemberToKeyGroupUseCase {
       throw new ValidationError('Athlete is already in this key group');
     }
 
-    if (currentMembers.length >= 4) {
+    const competition = await this.competitionRepository.findById(
+      group.competitionId,
+    );
+
+    if (!competition) {
+      throw new NotFoundError(
+        `Competition with id ${group.competitionId} not found`,
+      );
+    }
+
+    if (
+      competition.mode === CompetitionMode.KEYS &&
+      currentMembers.length >= 4
+    ) {
       throw new ValidationError('A key group can have at most 4 athletes');
     }
 
     if (existingGroup && existingGroup.id !== group.id) {
-      throw new ValidationError('Athlete is already assigned to another key group in this competition');
+      throw new ValidationError(
+        'Athlete is already assigned to another key group in this competition',
+      );
     }
 
-    const fights = await this.fightRepository.listByKeyGroupId(group.id as number);
-    const hasActiveFights = fights.some((fight) => fight.status !== FightStatus.CANCELED);
+    const fights = await this.fightRepository.listByKeyGroupId(
+      group.id as number,
+    );
+    const hasActiveFights = fights.some(
+      (fight) => fight.status !== FightStatus.CANCELED,
+    );
     if (hasActiveFights) {
-      throw new ValidationError('Cannot add members after fights have already been generated');
+      throw new ValidationError(
+        'Cannot add members after fights have already been generated',
+      );
     }
 
     const member = await this.keyGroupRepository.addMember(
