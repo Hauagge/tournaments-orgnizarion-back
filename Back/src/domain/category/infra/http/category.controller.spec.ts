@@ -50,12 +50,15 @@ describe('CategoryController', () => {
       athleteName: makeAthlete({ id: 7 }).fullName,
     });
 
-    const result = await controller.addAthlete({
-      competitionId: 1,
-      categoryId: 10,
-    }, {
-      athleteId: 7,
-    });
+    const result = await controller.addAthlete(
+      {
+        competitionId: 1,
+        categoryId: 10,
+      },
+      {
+        athleteId: 7,
+      },
+    );
 
     expect(addAthleteToCategoryUseCase.execute).toHaveBeenCalledWith({
       competitionId: 1,

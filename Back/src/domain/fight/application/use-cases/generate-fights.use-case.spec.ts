@@ -19,11 +19,14 @@ import { AbsoluteGpFightGenerationStrategy } from '../strategies/absolute-gp-fig
 import { CbjjFightGenerationStrategy } from '../strategies/cbjj-fight-generation.strategy';
 import { GenerateFightsUseCase } from './generate-fights.use-case';
 
-
 function setup(mode: CompetitionMode, athletesPerCategory: number[]) {
   const competition = makeCompetition({ id: 1, mode });
   const categories = athletesPerCategory.map((_, index) =>
-    makeCategory({ id: index + 1, competitionId: 1, name: `Categoria ${index + 1}` }),
+    makeCategory({
+      id: index + 1,
+      competitionId: 1,
+      name: `Categoria ${index + 1}`,
+    }),
   );
 
   let nextAthleteId = 1;
@@ -61,7 +64,9 @@ describe('GenerateFightsUseCase', () => {
 
     await useCase.execute(1);
 
-    const stored = await fightRepository.listByCompetitionId({ competitionId: 1 });
+    const stored = await fightRepository.listByCompetitionId({
+      competitionId: 1,
+    });
     const bestOfThree = stored.filter((fight) => fight.categoryId === 1);
     const bracket = stored.filter((fight) => fight.categoryId === 2);
 
@@ -74,16 +79,22 @@ describe('GenerateFightsUseCase', () => {
     const semifinals = bracket.filter((fight) => fight.round === 1);
     expect(semifinals).toHaveLength(2);
     expect(semifinals.every((fight) => fight.nextFightId !== null)).toBe(true);
-    expect(semifinals.every((fight) => fight.loserNextFightId === null)).toBe(true);
+    expect(semifinals.every((fight) => fight.loserNextFightId === null)).toBe(
+      true,
+    );
   });
 
   it('still infers round-by-round links for strategies that do not declare them', async () => {
     // AbsoluteGp nao devolve a chave `links`, entao segue no encadeamento padrao.
-    const { useCase, fightRepository } = setup(CompetitionMode.ABSOLUTE_GP, [4]);
+    const { useCase, fightRepository } = setup(CompetitionMode.ABSOLUTE_GP, [
+      4,
+    ]);
 
     await useCase.execute(1);
 
-    const stored = await fightRepository.listByCompetitionId({ competitionId: 1 });
+    const stored = await fightRepository.listByCompetitionId({
+      competitionId: 1,
+    });
     const firstRound = stored.filter((fight) => fight.round === 1);
     const final = stored.find((fight) => fight.round === 2);
 
@@ -93,7 +104,10 @@ describe('GenerateFightsUseCase', () => {
       final?.id,
       final?.id,
     ]);
-    expect(firstRound.map((fight) => fight.nextFightSlot).sort()).toEqual(['A', 'B']);
+    expect(firstRound.map((fight) => fight.nextFightSlot).sort()).toEqual([
+      'A',
+      'B',
+    ]);
   });
 
   it('does not infer links for a strategy that declares an empty link plan', async () => {
@@ -103,19 +117,37 @@ describe('GenerateFightsUseCase', () => {
     // segunda pode ser encadeada.
     const twoRoundFights = (categoryId: number) => [
       FightEntity.create({
-        competitionId: 1, categoryId, keyGroupId: null, round: 1, order: 1,
-        areaId: null, areaName: null, athleteAId: 10, athleteBId: 20,
+        competitionId: 1,
+        categoryId,
+        keyGroupId: null,
+        round: 1,
+        order: 1,
+        areaId: null,
+        areaName: null,
+        athleteAId: 10,
+        athleteBId: 20,
       }),
       FightEntity.create({
-        competitionId: 1, categoryId, keyGroupId: null, round: 2, order: 2,
-        areaId: null, areaName: null, athleteAId: null, athleteBId: null,
+        competitionId: 1,
+        categoryId,
+        keyGroupId: null,
+        round: 2,
+        order: 2,
+        areaId: null,
+        areaName: null,
+        athleteAId: null,
+        athleteBId: null,
       }),
     ];
 
     const resolver = {
       resolve: () => ({
         mode: CompetitionMode.CBJJ,
-        generate: ({ categoryId }: { categoryId: number }): FightGenerationResult => ({
+        generate: ({
+          categoryId,
+        }: {
+          categoryId: number;
+        }): FightGenerationResult => ({
           fights: twoRoundFights(categoryId),
           metadata: [],
           // categoria 1 declara plano vazio; categoria 2 nao declara nada
@@ -129,20 +161,37 @@ describe('GenerateFightsUseCase', () => {
     const useCase = new GenerateFightsUseCase(
       new InMemoryCompetitionRepository([competition]),
       new InMemoryCategoryRepository(
-        [makeCategory({ id: 1, competitionId: 1 }), makeCategory({ id: 2, competitionId: 1 })],
-        [{ categoryId: 1, athleteId: 10 }, { categoryId: 2, athleteId: 20 }],
+        [
+          makeCategory({ id: 1, competitionId: 1 }),
+          makeCategory({ id: 2, competitionId: 1 }),
+        ],
+        [
+          { categoryId: 1, athleteId: 10 },
+          { categoryId: 2, athleteId: 20 },
+        ],
       ),
-      new InMemoryAthleteRepository([makeAthlete({ id: 10 }), makeAthlete({ id: 20 })]),
+      new InMemoryAthleteRepository([
+        makeAthlete({ id: 10 }),
+        makeAthlete({ id: 20 }),
+      ]),
       fightRepository,
       resolver as unknown as FightGenerationStrategyResolverService,
     );
 
     await useCase.execute(1);
 
-    const stored = await fightRepository.listByCompetitionId({ competitionId: 1 });
-    const declaredEmpty = stored.find((fight) => fight.categoryId === 1 && fight.round === 1);
-    const inferred = stored.find((fight) => fight.categoryId === 2 && fight.round === 1);
-    const inferredTarget = stored.find((fight) => fight.categoryId === 2 && fight.round === 2);
+    const stored = await fightRepository.listByCompetitionId({
+      competitionId: 1,
+    });
+    const declaredEmpty = stored.find(
+      (fight) => fight.categoryId === 1 && fight.round === 1,
+    );
+    const inferred = stored.find(
+      (fight) => fight.categoryId === 2 && fight.round === 1,
+    );
+    const inferredTarget = stored.find(
+      (fight) => fight.categoryId === 2 && fight.round === 2,
+    );
 
     expect(declaredEmpty?.nextFightId).toBeNull();
     expect(inferred?.nextFightId).toBe(inferredTarget?.id);

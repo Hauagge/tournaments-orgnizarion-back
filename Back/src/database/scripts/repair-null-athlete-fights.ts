@@ -67,7 +67,10 @@ function parseArgs(argv: string[]): Options {
     }
   }
 
-  if (options.competitionId !== undefined && !Number.isInteger(options.competitionId)) {
+  if (
+    options.competitionId !== undefined &&
+    !Number.isInteger(options.competitionId)
+  ) {
     throw new Error(`Invalid competition id: ${options.competitionId}`);
   }
 
@@ -140,7 +143,10 @@ function legacyAbsoluteGpPairs(athleteIds: number[], fightCount: number) {
     ];
   }
 
-  if (athleteIds.length >= 4 && fightCount === Math.floor(athleteIds.length / 2)) {
+  if (
+    athleteIds.length >= 4 &&
+    fightCount === Math.floor(athleteIds.length / 2)
+  ) {
     const pairs: Array<[number, number]> = [];
 
     for (let index = 0; index < athleteIds.length - 1; index += 2) {
@@ -173,7 +179,9 @@ function isWinnerCompatible(
 
 async function loadAffectedFights(client: Client, options: Options) {
   const params: Array<number> = [];
-  const where: string[] = ['(f.athlete_a_id IS NULL OR f.athlete_b_id IS NULL)'];
+  const where: string[] = [
+    '(f.athlete_a_id IS NULL OR f.athlete_b_id IS NULL)',
+  ];
 
   if (options.competitionId !== undefined) {
     params.push(options.competitionId);
@@ -259,7 +267,8 @@ async function buildKeysPlans(client: Client, fights: FightRow[]) {
 
   const fightsByGroup = groupBy(
     keysFights.filter(
-      (fight): fight is FightRow & { keyGroupId: number } => fight.keyGroupId !== null,
+      (fight): fight is FightRow & { keyGroupId: number } =>
+        fight.keyGroupId !== null,
     ),
     (fight) => fight.keyGroupId,
   );
@@ -320,7 +329,9 @@ async function buildKeysPlans(client: Client, fights: FightRow[]) {
 async function buildAbsoluteGpPlans(client: Client, fights: FightRow[]) {
   const plans: RepairPlan[] = [];
   const skipped: SkipItem[] = [];
-  const absoluteGpFights = fights.filter((fight) => fight.mode === 'ABSOLUTE_GP');
+  const absoluteGpFights = fights.filter(
+    (fight) => fight.mode === 'ABSOLUTE_GP',
+  );
   const categoryIds = Array.from(
     new Set(
       absoluteGpFights
@@ -378,7 +389,8 @@ async function buildAbsoluteGpPlans(client: Client, fights: FightRow[]) {
       continue;
     }
 
-    const athleteIds = categoryAthletesByCategoryId.get(sample.categoryId) ?? [];
+    const athleteIds =
+      categoryAthletesByCategoryId.get(sample.categoryId) ?? [];
     const pairs = legacyAbsoluteGpPairs(athleteIds, sortedFights.length);
 
     if (!pairs) {
@@ -456,8 +468,12 @@ async function applyPlans(client: Client, plans: RepairPlan[]) {
 
 function printHistoryNotes() {
   console.log('Historical notes');
-  console.log('- FightEntity accepted only non-null athlete ids before commit 859fb98.');
-  console.log('- Legacy KEYS generation for 4 athletes created only 2 fights: seed1 vs seed4, seed2 vs seed3.');
+  console.log(
+    '- FightEntity accepted only non-null athlete ids before commit 859fb98.',
+  );
+  console.log(
+    '- Legacy KEYS generation for 4 athletes created only 2 fights: seed1 vs seed4, seed2 vs seed3.',
+  );
   console.log('- Legacy ABSOLUTE_GP generation used:');
   console.log('  2 athletes -> best of three (3 fights with the same pair)');
   console.log('  3 athletes -> round robin (3 fights)');
@@ -472,12 +488,19 @@ function printSummary(
   options: Options,
 ) {
   const affectedCompetitions = Array.from(
-    new Set(fights.map((fight) => `${fight.competitionId}:${fight.competitionName}:${fight.mode}`)),
+    new Set(
+      fights.map(
+        (fight) =>
+          `${fight.competitionId}:${fight.competitionName}:${fight.mode}`,
+      ),
+    ),
   );
 
   console.log('Diagnosis');
   console.log(`- affected fights loaded: ${fights.length}`);
-  console.log(`- competitions affected in selection: ${affectedCompetitions.length}`);
+  console.log(
+    `- competitions affected in selection: ${affectedCompetitions.length}`,
+  );
   console.log(`- repair plans built: ${plans.length}`);
   console.log(`- skipped scopes: ${skipped.length}`);
   console.log(`- mode: ${options.apply ? 'apply' : 'dry-run'}`);
@@ -538,7 +561,9 @@ async function main() {
     printSummary(fights, plans, skipped, options);
 
     if (!options.apply) {
-      console.log('No changes applied. Re-run with --apply to persist the repair.');
+      console.log(
+        'No changes applied. Re-run with --apply to persist the repair.',
+      );
       return;
     }
 

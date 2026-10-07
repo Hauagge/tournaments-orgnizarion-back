@@ -4,7 +4,9 @@ import { UserCompetitionTypeOrmEntity } from '../../src/domain/auth/entities/use
 import { User } from '../../src/domain/auth/entities/user.typeorm-entity';
 
 export function makeUser(
-  overrides: Partial<User & { competitionLinks: UserCompetitionTypeOrmEntity[] }> = {},
+  overrides: Partial<
+    User & { competitionLinks: UserCompetitionTypeOrmEntity[] }
+  > = {},
 ): User {
   return {
     id: 1,

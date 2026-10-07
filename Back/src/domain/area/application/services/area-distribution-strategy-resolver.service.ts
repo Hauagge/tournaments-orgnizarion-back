@@ -23,7 +23,9 @@ export class AreaDistributionStrategyResolverService {
   }
 
   resolve(mode: CompetitionMode): AreaDistributionStrategy {
-    const strategy = this.strategies.find((candidate) => candidate.mode === mode);
+    const strategy = this.strategies.find(
+      (candidate) => candidate.mode === mode,
+    );
 
     if (!strategy) {
       throw new ValidationError(

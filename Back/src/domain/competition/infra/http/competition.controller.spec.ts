@@ -147,7 +147,9 @@ describe('CompetitionController', () => {
   });
 
   it('should remove user from competition', async () => {
-    vi.mocked(removeUserFromCompetitionUseCase.execute).mockResolvedValue(undefined);
+    vi.mocked(removeUserFromCompetitionUseCase.execute).mockResolvedValue(
+      undefined,
+    );
 
     const result = await controller.removeUser(
       {
@@ -323,7 +325,9 @@ describe('CompetitionController', () => {
     const result = await controller.importAthletes(
       { id: 7 },
       {
-        buffer: Buffer.from('fullName,birthDate,belt,weight\nAna,2010-05-10,white,65'),
+        buffer: Buffer.from(
+          'fullName,birthDate,belt,weight\nAna,2010-05-10,white,65',
+        ),
       },
     );
 

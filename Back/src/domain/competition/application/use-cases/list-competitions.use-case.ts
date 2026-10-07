@@ -25,9 +25,7 @@ export class ListCompetitionsUseCase {
     private readonly competitionTeamsHydrator: CompetitionTeamsHydratorService,
   ) {}
 
-  async execute(
-    input: ListCompetitionsInput,
-  ): Promise<ListCompetitionsOutput> {
+  async execute(input: ListCompetitionsInput): Promise<ListCompetitionsOutput> {
     const [items, total] = await this.competitionRepository.list(input);
     const hydratedItems =
       await this.competitionTeamsHydrator.attachTeamsToMany(items);

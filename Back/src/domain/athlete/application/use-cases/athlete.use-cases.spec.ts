@@ -135,17 +135,37 @@ describe('Athlete use cases', () => {
   it('should throw NotFoundError when updating missing athlete', async () => {
     const useCase = new UpdateAthleteUseCase(repository, teamRepository);
 
-    await expect(useCase.execute({ id: 88, belt: 'orange' })).rejects.toBeInstanceOf(
-      NotFoundError,
-    );
+    await expect(
+      useCase.execute({ id: 88, belt: 'orange' }),
+    ).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it('should search athletes by partial name and academy with weigh-in status and academy name', async () => {
     repository.setAthletes([
-      makeAthlete({ id: 1, competitionId: 10, fullName: 'Ana Silva', academyId: 3 }),
-      makeAthlete({ id: 2, competitionId: 10, fullName: 'Ana Costa', academyId: 4 }),
-      makeAthlete({ id: 3, competitionId: 10, fullName: 'Bruna Silva', academyId: 3 }),
-      makeAthlete({ id: 4, competitionId: 11, fullName: 'Ana Silva', academyId: 3 }),
+      makeAthlete({
+        id: 1,
+        competitionId: 10,
+        fullName: 'Ana Silva',
+        academyId: 3,
+      }),
+      makeAthlete({
+        id: 2,
+        competitionId: 10,
+        fullName: 'Ana Costa',
+        academyId: 4,
+      }),
+      makeAthlete({
+        id: 3,
+        competitionId: 10,
+        fullName: 'Bruna Silva',
+        academyId: 3,
+      }),
+      makeAthlete({
+        id: 4,
+        competitionId: 11,
+        fullName: 'Ana Silva',
+        academyId: 3,
+      }),
     ]);
     teamRepository = new InMemoryAcademyRepository([
       makeAcademy({ id: 3, competitionId: 10, name: 'Equipe A' }),
@@ -191,7 +211,12 @@ describe('Athlete use cases', () => {
 
   it('should return null academy name and pending weigh-in status when athlete has no academy or weigh-in record', async () => {
     repository.setAthletes([
-      makeAthlete({ id: 9, competitionId: 12, fullName: 'Marina Costa', academyId: null }),
+      makeAthlete({
+        id: 9,
+        competitionId: 12,
+        fullName: 'Marina Costa',
+        academyId: null,
+      }),
     ]);
 
     const useCase = new SearchAthletesUseCase(

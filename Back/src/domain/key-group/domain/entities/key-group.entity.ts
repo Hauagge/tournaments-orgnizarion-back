@@ -13,7 +13,9 @@ export type KeyGroupProps = {
 export class KeyGroup {
   private constructor(private readonly props: KeyGroupProps) {}
 
-  static create(props: Omit<KeyGroupProps, 'id' | 'status' | 'createdAt'>): KeyGroup {
+  static create(
+    props: Omit<KeyGroupProps, 'id' | 'status' | 'createdAt'>,
+  ): KeyGroup {
     return new KeyGroup({
       ...props,
       name: props.name?.trim() || null,
@@ -49,8 +51,11 @@ export class KeyGroup {
     return new KeyGroup({
       ...this.props,
       categoryId:
-        input.categoryId !== undefined ? input.categoryId : this.props.categoryId,
-      name: input.name !== undefined ? input.name?.trim() || null : this.props.name,
+        input.categoryId !== undefined
+          ? input.categoryId
+          : this.props.categoryId,
+      name:
+        input.name !== undefined ? input.name?.trim() || null : this.props.name,
       status: input.status ?? this.props.status,
     });
   }
@@ -63,12 +68,24 @@ export class KeyGroup {
     return { ...this.props };
   }
 
-  get id(): number | undefined { return this.props.id; }
-  get competitionId(): number { return this.props.competitionId; }
-  get categoryId(): number | null { return this.props.categoryId; }
-  get name(): string | null { return this.props.name; }
-  get status(): KeyGroupStatus { return this.props.status; }
-  get createdAt(): Date { return this.props.createdAt; }
+  get id(): number | undefined {
+    return this.props.id;
+  }
+  get competitionId(): number {
+    return this.props.competitionId;
+  }
+  get categoryId(): number | null {
+    return this.props.categoryId;
+  }
+  get name(): string | null {
+    return this.props.name;
+  }
+  get status(): KeyGroupStatus {
+    return this.props.status;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt;
+  }
   get championAthleteId(): number | null {
     return this.props.championAthleteId ?? null;
   }

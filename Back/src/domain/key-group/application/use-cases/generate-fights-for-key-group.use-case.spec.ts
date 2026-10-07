@@ -35,7 +35,11 @@ function makeGroup(id: number) {
   });
 }
 
-function makeMember(input: { id: number; keyGroupId: number; athleteId: number }) {
+function makeMember(input: {
+  id: number;
+  keyGroupId: number;
+  athleteId: number;
+}) {
   return KeyGroupMember.restore({
     id: input.id,
     keyGroupId: input.keyGroupId,

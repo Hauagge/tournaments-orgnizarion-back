@@ -28,9 +28,8 @@ export class FightQueuePlannerService {
     anchoredAreaIdByCategoryId: Map<number, number>;
     existingQueueItemsByArea?: Map<number, AreaQueueItem[]>;
   }): FightQueuePlan {
-    const areaDistributionStrategy = this.areaDistributionStrategyResolver.resolve(
-      input.competitionMode,
-    );
+    const areaDistributionStrategy =
+      this.areaDistributionStrategyResolver.resolve(input.competitionMode);
     const fightsForDistribution =
       input.distributionMode === DistributionMode.FULL
         ? input.distributableFights.map((fight) => fight.assignArea(null))
@@ -72,7 +71,9 @@ export class FightQueuePlannerService {
           ? Math.max(...existingItems.map((item) => item.position)) + 1
           : 1;
       for (const group of orderedGroups) {
-        for (const fight of group.fights.sort((a, b) => a.orderIndex - b.orderIndex)) {
+        for (const fight of group.fights.sort(
+          (a, b) => a.orderIndex - b.orderIndex,
+        )) {
           queueItems.push(
             AreaQueueItem.create({
               areaId: areaDistribution.areaId,
@@ -89,9 +90,10 @@ export class FightQueuePlannerService {
 
       areas.push({
         areaId: areaDistribution.areaId,
-        queuedFights: existingItems.length + queueItems.filter(
-          (item) => item.areaId === areaDistribution.areaId,
-        ).length,
+        queuedFights:
+          existingItems.length +
+          queueItems.filter((item) => item.areaId === areaDistribution.areaId)
+            .length,
       });
     }
 
@@ -118,21 +120,25 @@ export class FightQueuePlannerService {
     const reassigned = new Map<number, FightQueueGroup[]>(
       areas.map((area) => [area.id, []]),
     );
-    const flattenedGroups = distributions.flatMap((distribution) => distribution.groups);
+    const flattenedGroups = distributions.flatMap(
+      (distribution) => distribution.groups,
+    );
 
     for (const group of flattenedGroups) {
       const preferredAreaId = group.preferredAreaId ?? null;
       const selectedArea =
         preferredAreaId !== null && reassigned.has(preferredAreaId)
-          ? areas.find((area) => area.id === preferredAreaId) ?? null
-          : areas
-              .slice()
-              .sort((left, right) => {
-                const leftLoad = loads.get(left.id) ?? 0;
-                const rightLoad = loads.get(right.id) ?? 0;
+          ? (areas.find((area) => area.id === preferredAreaId) ?? null)
+          : areas.slice().sort((left, right) => {
+              const leftLoad = loads.get(left.id) ?? 0;
+              const rightLoad = loads.get(right.id) ?? 0;
 
-                return leftLoad - rightLoad || left.order - right.order || left.id - right.id;
-              })[0];
+              return (
+                leftLoad - rightLoad ||
+                left.order - right.order ||
+                left.id - right.id
+              );
+            })[0];
 
       if (!selectedArea) {
         continue;

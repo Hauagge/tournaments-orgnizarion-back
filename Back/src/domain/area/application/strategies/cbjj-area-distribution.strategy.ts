@@ -223,8 +223,9 @@ export class CbjjAreaDistributionStrategy implements AreaDistributionStrategy {
             (left.id ?? 0) - (right.id ?? 0),
         );
       const representativeFight = sorted[0];
-      const categoryId = sorted.find((fight) => fight.categoryId !== null)
-        ?.categoryId;
+      const categoryId = sorted.find(
+        (fight) => fight.categoryId !== null,
+      )?.categoryId;
       const athleteIds = Array.from(
         new Set(
           sorted
@@ -300,7 +301,10 @@ export class CbjjAreaDistributionStrategy implements AreaDistributionStrategy {
       if (fight.areaId === null) {
         continue;
       }
-      countByAreaId.set(fight.areaId, (countByAreaId.get(fight.areaId) ?? 0) + 1);
+      countByAreaId.set(
+        fight.areaId,
+        (countByAreaId.get(fight.areaId) ?? 0) + 1,
+      );
     }
 
     if (countByAreaId.size === 0) {

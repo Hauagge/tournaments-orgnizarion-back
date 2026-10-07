@@ -23,7 +23,9 @@ export class LockKeyGroupUseCase {
 
     const members = await this.keyGroupRepository.listMembersByKeyGroupId(id);
     if (members.length < 2 || members.length > 4) {
-      throw new ValidationError('Only key groups with 2 to 4 athletes can be locked');
+      throw new ValidationError(
+        'Only key groups with 2 to 4 athletes can be locked',
+      );
     }
 
     const fights = await this.fightRepository.listByKeyGroupId(id);

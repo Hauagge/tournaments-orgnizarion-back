@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
-import { IKeyGroupRepository, KeyGroupListItemView } from '../../repository/IKeyGroupRepository.repository';
+import {
+  IKeyGroupRepository,
+  KeyGroupListItemView,
+} from '../../repository/IKeyGroupRepository.repository';
 import { KeyGroupBracketFormat } from '../../domain/value-objects/key-group-bracket-format.enum';
 
 export type KeyGroupListItemWithBracketView = KeyGroupListItemView & {
@@ -21,10 +24,14 @@ export class ListKeyGroupsUseCase {
     competitionId: number;
     categoryId?: number;
   }): Promise<KeyGroupListItemWithBracketView[]> {
-    const competition = await this.competitionRepository.findById(input.competitionId);
+    const competition = await this.competitionRepository.findById(
+      input.competitionId,
+    );
 
     if (!competition) {
-      throw new NotFoundError(`Competition with id ${input.competitionId} not found`);
+      throw new NotFoundError(
+        `Competition with id ${input.competitionId} not found`,
+      );
     }
 
     const groups = await this.keyGroupRepository.listByCompetitionId(input);

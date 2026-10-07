@@ -50,7 +50,9 @@ describe('ReportsModule', () => {
       AreaTypeOrmEntity,
       WeighInTypeOrmEntity,
     ]) {
-      builder.overrideProvider(getRepositoryToken(entity)).useValue(repositoryStub);
+      builder
+        .overrideProvider(getRepositoryToken(entity))
+        .useValue(repositoryStub);
     }
 
     const moduleRef = await builder.compile();

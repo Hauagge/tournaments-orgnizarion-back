@@ -125,9 +125,15 @@ export class CreateCompetitionTeams1760000009000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropForeignKey('team_members', 'FK_TEAM_MEMBERS_ATHLETE_ID');
+    await queryRunner.dropForeignKey(
+      'team_members',
+      'FK_TEAM_MEMBERS_ATHLETE_ID',
+    );
     await queryRunner.dropForeignKey('team_members', 'FK_TEAM_MEMBERS_TEAM_ID');
-    await queryRunner.dropIndex('team_members', 'UQ_TEAM_MEMBERS_TEAM_ID_ATHLETE_ID');
+    await queryRunner.dropIndex(
+      'team_members',
+      'UQ_TEAM_MEMBERS_TEAM_ID_ATHLETE_ID',
+    );
     await queryRunner.dropIndex('team_members', 'IDX_TEAM_MEMBERS_ATHLETE_ID');
     await queryRunner.dropIndex('team_members', 'IDX_TEAM_MEMBERS_TEAM_ID');
     await queryRunner.dropTable('team_members');

@@ -22,7 +22,8 @@ export class KeysPdfRendererStrategy implements PdfRendererStrategy {
   ) {}
 
   async render(competitionId: number): Promise<Buffer> {
-    const competition = await this.competitionRepository.findById(competitionId);
+    const competition =
+      await this.competitionRepository.findById(competitionId);
 
     if (!competition) {
       throw new NotFoundError(`Competition with id ${competitionId} not found`);
@@ -32,7 +33,9 @@ export class KeysPdfRendererStrategy implements PdfRendererStrategy {
       this.keyGroupRepository.listByCompetitionId({ competitionId }),
       this.categoryRepository.listByCompetitionId(competitionId),
     ]);
-    const categoryNames = new Map(categories.map((category) => [category.id as number, category.name]));
+    const categoryNames = new Map(
+      categories.map((category) => [category.id as number, category.name]),
+    );
     const details = await Promise.all(
       groups.map((group) => this.keyGroupRepository.getDetails(group.id)),
     );
@@ -50,7 +53,10 @@ export class KeysPdfRendererStrategy implements PdfRendererStrategy {
             `Status: ${group.status}`,
             '',
             'Atletas:',
-            ...group.members.map((member) => `- ${member.fullName} | ${member.belt} | ${member.academyName ?? 'Sem academy'}`),
+            ...group.members.map(
+              (member) =>
+                `- ${member.fullName} | ${member.belt} | ${member.academyName ?? 'Sem academy'}`,
+            ),
             '',
             'Lutas:',
             ...group.fights.map(

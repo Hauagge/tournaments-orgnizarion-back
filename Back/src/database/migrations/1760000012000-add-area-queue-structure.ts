@@ -86,10 +86,22 @@ export class AddAreaQueueStructure1760000012000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropForeignKey('area_queue_items', 'FK_AREA_QUEUE_ITEMS_FIGHT_ID');
-    await queryRunner.dropForeignKey('area_queue_items', 'FK_AREA_QUEUE_ITEMS_AREA_ID');
-    await queryRunner.dropIndex('area_queue_items', 'IDX_AREA_QUEUE_ITEMS_FIGHT_ID');
-    await queryRunner.dropIndex('area_queue_items', 'IDX_AREA_QUEUE_ITEMS_AREA_ID_POSITION');
+    await queryRunner.dropForeignKey(
+      'area_queue_items',
+      'FK_AREA_QUEUE_ITEMS_FIGHT_ID',
+    );
+    await queryRunner.dropForeignKey(
+      'area_queue_items',
+      'FK_AREA_QUEUE_ITEMS_AREA_ID',
+    );
+    await queryRunner.dropIndex(
+      'area_queue_items',
+      'IDX_AREA_QUEUE_ITEMS_FIGHT_ID',
+    );
+    await queryRunner.dropIndex(
+      'area_queue_items',
+      'IDX_AREA_QUEUE_ITEMS_AREA_ID_POSITION',
+    );
     await queryRunner.dropTable('area_queue_items');
     await queryRunner.dropIndex('areas', 'IDX_AREAS_COMPETITION_ID_ORDER');
     await queryRunner.dropColumn('areas', 'order');

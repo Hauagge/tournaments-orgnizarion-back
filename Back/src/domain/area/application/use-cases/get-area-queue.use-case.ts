@@ -37,7 +37,9 @@ export class GetAreaQueueUseCase {
         order: area.order,
       },
       highlightedFight,
-      queue: items.filter((item) => item.queueItemId !== highlightedFight?.queueItemId),
+      queue: items.filter(
+        (item) => item.queueItemId !== highlightedFight?.queueItemId,
+      ),
     };
   }
 }

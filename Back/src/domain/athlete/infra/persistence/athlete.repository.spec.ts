@@ -38,7 +38,9 @@ describe('AthleteRepository', () => {
     repositoryMock.create.mockReturnValue(ormEntity);
     repositoryMock.save.mockResolvedValue(ormEntity);
 
-    const result = await repository.create(makeAthlete({ id: 1, competitionId: 9 }));
+    const result = await repository.create(
+      makeAthlete({ id: 1, competitionId: 9 }),
+    );
 
     expect(repositoryMock.create).toHaveBeenCalledOnce();
     expect(repositoryMock.save).toHaveBeenCalledWith(ormEntity);
@@ -60,9 +62,9 @@ describe('AthleteRepository', () => {
     repositoryMock.update.mockResolvedValue(undefined);
     repositoryMock.findOneBy.mockResolvedValue(null);
 
-    await expect(repository.update(makeAthlete({ id: 1 }))).rejects.toBeInstanceOf(
-      NotFoundError,
-    );
+    await expect(
+      repository.update(makeAthlete({ id: 1 })),
+    ).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it('should find athlete by id', async () => {

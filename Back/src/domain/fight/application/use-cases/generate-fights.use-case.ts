@@ -7,9 +7,7 @@ import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { FightEntity } from '../../domain/entities/fight.entity';
 import { IFightRepository } from '../../repository/IFightRepository.repository';
-import {
-  AbsoluteGpFightGenerationInput,
-} from '../strategies/absolute-gp-fight-generation.strategy';
+import { AbsoluteGpFightGenerationInput } from '../strategies/absolute-gp-fight-generation.strategy';
 import {
   FightGenerationLink,
   FightGenerationMetadata,
@@ -31,22 +29,24 @@ export class GenerateFightsUseCase {
   ) {}
 
   async execute(competitionId: number) {
-    const competition = await this.competitionRepository.findById(competitionId);
+    const competition =
+      await this.competitionRepository.findById(competitionId);
 
     if (!competition) {
       throw new NotFoundError(`Competition with id ${competitionId} not found`);
     }
 
-    const existingFightsCount = await this.fightRepository.countByCompetitionId(
-      competitionId,
-    );
+    const existingFightsCount =
+      await this.fightRepository.countByCompetitionId(competitionId);
 
     if (existingFightsCount > 0) {
-      throw new ValidationError('Fights have already been generated for this competition');
+      throw new ValidationError(
+        'Fights have already been generated for this competition',
+      );
     }
 
-    let fightsToCreate: FightEntity[] = [];
-    let metadata: FightGenerationMetadata[] = [];
+    const fightsToCreate: FightEntity[] = [];
+    const metadata: FightGenerationMetadata[] = [];
     const links: FightGenerationLink[] = [];
     const inferredIndexes = new Set<number>();
 
@@ -60,14 +60,14 @@ export class GenerateFightsUseCase {
       competition.mode,
     ) as import('../strategies/fight-generation.strategy').FightGenerationStrategy<AbsoluteGpFightGenerationInput>;
 
-    const categories = await this.categoryRepository.listByCompetitionId(
-      competitionId,
-    );
+    const categories =
+      await this.categoryRepository.listByCompetitionId(competitionId);
 
     for (const category of categories) {
-      const athleteIds = await this.categoryRepository.listAthleteIdsByCategoryId(
-        category.id as number,
-      );
+      const athleteIds =
+        await this.categoryRepository.listAthleteIdsByCategoryId(
+          category.id as number,
+        );
       const athletes = await this.athleteRepository.findByIds(athleteIds);
       const generated = strategy.generate({
         competitionId,
@@ -101,7 +101,8 @@ export class GenerateFightsUseCase {
 
     const walkoverResolved = await this.fightRepository.withTransaction(
       async (txFightRepository) => {
-        const createdFights = await txFightRepository.createMany(fightsToCreate);
+        const createdFights =
+          await txFightRepository.createMany(fightsToCreate);
         const linkedFights = this.linkFights(
           createdFights,
           links,
@@ -136,7 +137,6 @@ export class GenerateFightsUseCase {
     );
   }
 
-
   private applyGenerationLinks(
     fights: FightEntity[],
     links: FightGenerationLink[],
@@ -144,7 +144,8 @@ export class GenerateFightsUseCase {
     const updated = new Map<number, FightEntity>();
 
     for (const link of links) {
-      const origin = updated.get(fights[link.fromIndex].id as number) ??
+      const origin =
+        updated.get(fights[link.fromIndex].id as number) ??
         fights[link.fromIndex];
 
       updated.set(
@@ -207,7 +208,9 @@ export class GenerateFightsUseCase {
         });
       }
 
-      return groupFights.map((fight) => updated.get(fight.id as number) ?? fight);
+      return groupFights.map(
+        (fight) => updated.get(fight.id as number) ?? fight,
+      );
     });
   }
 

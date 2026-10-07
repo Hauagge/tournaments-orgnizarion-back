@@ -84,7 +84,9 @@ describe('CompetitionRepository', () => {
       take: vi.fn().mockReturnThis(),
       getManyAndCount: vi.fn().mockResolvedValue([[ormEntity], 1]),
     };
-    repositoryMock.createQueryBuilder = vi.fn().mockReturnValue(queryBuilderMock);
+    repositoryMock.createQueryBuilder = vi
+      .fn()
+      .mockReturnValue(queryBuilderMock);
 
     const result = await repository.list({
       currentUserId: 7,
@@ -92,7 +94,9 @@ describe('CompetitionRepository', () => {
       pageSize: 5,
     });
 
-    expect(repositoryMock.createQueryBuilder).toHaveBeenCalledWith('competition');
+    expect(repositoryMock.createQueryBuilder).toHaveBeenCalledWith(
+      'competition',
+    );
     expect(queryBuilderMock.innerJoin).toHaveBeenCalledWith(
       UserCompetitionTypeOrmEntity,
       'userCompetition',

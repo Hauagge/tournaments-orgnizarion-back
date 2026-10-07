@@ -14,17 +14,26 @@ export class ExportCompetitionBracketsPdfUseCase {
   ) {}
 
   async execute(competitionId: number) {
-    const competition = await this.competitionRepository.findById(competitionId);
+    const competition =
+      await this.competitionRepository.findById(competitionId);
 
     if (!competition) {
       throw new NotFoundError(`Competition with id ${competitionId} not found`);
     }
 
-    if (![CompetitionMode.KEYS, CompetitionMode.ABSOLUTE_GP].includes(competition.mode)) {
-      throw new ValidationError(`Unsupported competition mode for PDF export: ${competition.mode}`);
+    if (
+      ![CompetitionMode.KEYS, CompetitionMode.ABSOLUTE_GP].includes(
+        competition.mode,
+      )
+    ) {
+      throw new ValidationError(
+        `Unsupported competition mode for PDF export: ${competition.mode}`,
+      );
     }
 
-    const buffer = await this.resolver.resolve(competition.mode).render(competitionId);
+    const buffer = await this.resolver
+      .resolve(competition.mode)
+      .render(competitionId);
 
     return {
       buffer,

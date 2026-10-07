@@ -19,7 +19,9 @@ export const UpdateAthleteSchema = z
       .pipe(z.nativeEnum(AthleteGender).nullable().optional()),
     declaredWeightGrams: z.coerce.number().int().min(0).optional(),
     paymentStatus: z.nativeEnum(PaymentStatus).optional(),
-    academyId: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
+    academyId: z
+      .union([z.coerce.number().int().positive(), z.null()])
+      .optional(),
   })
   .refine((value) => Object.keys(value).length > 0, {
     message: 'At least one field must be provided',

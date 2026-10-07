@@ -51,7 +51,12 @@ export class FightTypeOrmEntity {
   @Column({ name: 'next_fight_id', type: 'int', nullable: true })
   nextFightId: number | null;
 
-  @Column({ name: 'next_fight_slot', type: 'varchar', length: 1, nullable: true })
+  @Column({
+    name: 'next_fight_slot',
+    type: 'varchar',
+    length: 1,
+    nullable: true,
+  })
   nextFightSlot: 'A' | 'B' | null;
 
   @Column({ name: 'loser_next_fight_id', type: 'int', nullable: true })

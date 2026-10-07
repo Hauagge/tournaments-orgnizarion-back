@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 const optionalPositiveInt = z.preprocess(
-  (value) => (value === '' || value === null || value === undefined ? undefined : value),
+  (value) =>
+    value === '' || value === null || value === undefined ? undefined : value,
   z.coerce.number().int().positive().optional(),
 );
 

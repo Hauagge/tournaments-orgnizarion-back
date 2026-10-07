@@ -88,7 +88,11 @@ export class RefactorFightsForBrackets1760000022000
       }
     }
 
-    if (!fightsTable?.foreignKeys.some((fk) => fk.name === 'FK_FIGHTS_NEXT_FIGHT_ID')) {
+    if (
+      !fightsTable?.foreignKeys.some(
+        (fk) => fk.name === 'FK_FIGHTS_NEXT_FIGHT_ID',
+      )
+    ) {
       await queryRunner.createForeignKey(
         'fights',
         new TableForeignKey({
@@ -102,7 +106,11 @@ export class RefactorFightsForBrackets1760000022000
       );
     }
 
-    if (!fightsTable?.indices.some((idx) => idx.name === 'IDX_FIGHTS_NEXT_FIGHT_ID')) {
+    if (
+      !fightsTable?.indices.some(
+        (idx) => idx.name === 'IDX_FIGHTS_NEXT_FIGHT_ID',
+      )
+    ) {
       await queryRunner.createIndex(
         'fights',
         new TableIndex({
@@ -112,7 +120,10 @@ export class RefactorFightsForBrackets1760000022000
       );
     }
 
-    if (categoriesTable && !categoriesTable.findColumnByName('champion_athlete_id')) {
+    if (
+      categoriesTable &&
+      !categoriesTable.findColumnByName('champion_athlete_id')
+    ) {
       await queryRunner.addColumn(
         'categories',
         new TableColumn({
@@ -140,11 +151,19 @@ export class RefactorFightsForBrackets1760000022000
     const fightsTable = await queryRunner.getTable('fights');
     const categoriesTable = await queryRunner.getTable('categories');
 
-    if (fightsTable?.indices.some((idx) => idx.name === 'IDX_FIGHTS_NEXT_FIGHT_ID')) {
+    if (
+      fightsTable?.indices.some(
+        (idx) => idx.name === 'IDX_FIGHTS_NEXT_FIGHT_ID',
+      )
+    ) {
       await queryRunner.dropIndex('fights', 'IDX_FIGHTS_NEXT_FIGHT_ID');
     }
 
-    if (fightsTable?.foreignKeys.some((fk) => fk.name === 'FK_FIGHTS_NEXT_FIGHT_ID')) {
+    if (
+      fightsTable?.foreignKeys.some(
+        (fk) => fk.name === 'FK_FIGHTS_NEXT_FIGHT_ID',
+      )
+    ) {
       await queryRunner.dropForeignKey('fights', 'FK_FIGHTS_NEXT_FIGHT_ID');
     }
 

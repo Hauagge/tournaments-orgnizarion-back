@@ -1,9 +1,16 @@
-import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { DomainEvent, EventBus } from '@/core/events/event-bus.interface';
 import { ScoreboardGateway } from '../../scoreboard.gateway';
 
 @Injectable()
-export class ScoreboardEventRelayService implements OnModuleInit, OnModuleDestroy {
+export class ScoreboardEventRelayService
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly unsubscribers: Array<() => void> = [];
   private readonly relayedEvents = [
     'fight.started',
@@ -40,7 +47,11 @@ export class ScoreboardEventRelayService implements OnModuleInit, OnModuleDestro
     const areaId = this.toNumber(event.payload.areaId);
 
     if (competitionId !== null) {
-      this.gateway.broadcastToCompetition(event.name, competitionId, event.payload);
+      this.gateway.broadcastToCompetition(
+        event.name,
+        competitionId,
+        event.payload,
+      );
     }
 
     if (areaId !== null) {

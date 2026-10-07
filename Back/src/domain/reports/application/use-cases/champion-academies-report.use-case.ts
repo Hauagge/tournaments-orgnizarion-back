@@ -126,7 +126,11 @@ export class ChampionAcademiesReportUseCase {
 
     const championsByAcademy = new Map<
       string,
-      { academyId: number | null; academyName: string; champions: ChampionAthleteView[] }
+      {
+        academyId: number | null;
+        academyName: string;
+        champions: ChampionAthleteView[];
+      }
     >();
 
     for (const source of championSources) {
@@ -143,9 +147,8 @@ export class ChampionAcademiesReportUseCase {
       const group = championsByAcademy.get(key) ?? {
         academyId,
         academyName:
-          (academyId === null
-            ? null
-            : academyNamesById.get(academyId)) ?? UNKNOWN_ACADEMY_NAME,
+          (academyId === null ? null : academyNamesById.get(academyId)) ??
+          UNKNOWN_ACADEMY_NAME,
         champions: [],
       };
 

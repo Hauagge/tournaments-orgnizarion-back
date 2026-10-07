@@ -52,7 +52,10 @@ function parseArgs(argv: string[]): Options {
     }
   }
 
-  if (options.competitionId !== undefined && !Number.isInteger(options.competitionId)) {
+  if (
+    options.competitionId !== undefined &&
+    !Number.isInteger(options.competitionId)
+  ) {
     throw new Error(`Invalid competition id: ${options.competitionId}`);
   }
 
@@ -242,7 +245,9 @@ async function main() {
     printSummary(fights, plans, skipped, options);
 
     if (!options.apply) {
-      console.log('No changes applied. Re-run with --apply to persist the repair.');
+      console.log(
+        'No changes applied. Re-run with --apply to persist the repair.',
+      );
       return;
     }
 

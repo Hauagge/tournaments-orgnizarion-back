@@ -1,1 +1,1 @@
-export * from './find-many.adapter.interface'
+export * from './find-many.adapter.interface';

@@ -3,4 +3,3 @@ export abstract class IPasswordHasher {
   abstract compare(plainPassword: string, hashedPassword: string): boolean;
   abstract needsRehash(hashedPassword: string): boolean;
 }
-

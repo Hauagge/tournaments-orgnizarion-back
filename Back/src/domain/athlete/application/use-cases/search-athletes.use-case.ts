@@ -60,7 +60,7 @@ export class SearchAthletesUseCase {
         ...athlete.toJSON(),
         academyName:
           athlete.academyId !== null
-            ? academyNameById.get(athlete.academyId) ?? null
+            ? (academyNameById.get(athlete.academyId) ?? null)
             : null,
         weighInStatus:
           weighInStatusByAthleteId.get(athlete.id as number) ??

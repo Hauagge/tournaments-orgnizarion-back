@@ -61,7 +61,9 @@ describe('ListFightsUseCase', () => {
       new InMemoryAuthRepository([
         makeUser({
           id: 1,
-          competitionLinks: [makeUserCompetitionLink({ userId: 1, competitionId: 1 })],
+          competitionLinks: [
+            makeUserCompetitionLink({ userId: 1, competitionId: 1 }),
+          ],
         }),
       ]),
       fightRepository,
@@ -89,7 +91,10 @@ describe('ListFightsUseCase', () => {
   });
 
   it('returns the category and key group names of each fight', async () => {
-    const fights = await useCase.execute({ currentUserId: 1, competitionId: 1 });
+    const fights = await useCase.execute({
+      currentUserId: 1,
+      competitionId: 1,
+    });
 
     expect(fights.find((fight) => fight.id === 1)).toEqual(
       expect.objectContaining({
@@ -101,7 +106,10 @@ describe('ListFightsUseCase', () => {
   });
 
   it('returns null names when the fight has no category or key group', async () => {
-    const fights = await useCase.execute({ currentUserId: 1, competitionId: 1 });
+    const fights = await useCase.execute({
+      currentUserId: 1,
+      competitionId: 1,
+    });
 
     expect(fights.find((fight) => fight.id === 2)).toEqual(
       expect.objectContaining({ categoryName: null, keyGroupName: 'Chave A' }),

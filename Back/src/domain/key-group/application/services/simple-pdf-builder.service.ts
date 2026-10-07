@@ -45,7 +45,14 @@ export class SimplePdfBuilderService {
 
   private buildContentStream(page: PdfPage): string {
     const lines = [page.title, ...page.lines].map((line) => this.escape(line));
-    const commands = ['BT', '/F1 18 Tf', '50 790 Td', `(${lines[0]}) Tj`, '0 -28 Td', '/F1 12 Tf'];
+    const commands = [
+      'BT',
+      '/F1 18 Tf',
+      '50 790 Td',
+      `(${lines[0]}) Tj`,
+      '0 -28 Td',
+      '/F1 12 Tf',
+    ];
 
     for (let index = 1; index < lines.length; index++) {
       commands.push(`(${lines[index]}) Tj`);
@@ -59,6 +66,9 @@ export class SimplePdfBuilderService {
   }
 
   private escape(value: string): string {
-    return value.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+    return value
+      .replace(/\\/g, '\\\\')
+      .replace(/\(/g, '\\(')
+      .replace(/\)/g, '\\)');
   }
 }

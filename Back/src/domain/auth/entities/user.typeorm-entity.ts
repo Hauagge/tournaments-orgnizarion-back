@@ -1,9 +1,4 @@
-import {
-  Column,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { AuthRole } from '../auth-role.enum';
 import { UserCompetitionTypeOrmEntity } from './user-competition.typeorm-entity';
 

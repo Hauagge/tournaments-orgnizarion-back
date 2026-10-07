@@ -26,7 +26,9 @@ export class InMemoryAcademyRepository implements IAcademyRepository {
     const index = this.academies.findIndex((item) => item.id === academy.id);
 
     if (index < 0) {
-      throw new NotFoundError(`Academy with id ${academy.id as number} not found`);
+      throw new NotFoundError(
+        `Academy with id ${academy.id as number} not found`,
+      );
     }
 
     this.academies[index] = academy;
@@ -46,7 +48,8 @@ export class InMemoryAcademyRepository implements IAcademyRepository {
     return (
       this.academies.find(
         (academy) =>
-          academy.competitionId === competitionId && academy.name === normalizedName,
+          academy.competitionId === competitionId &&
+          academy.name === normalizedName,
       ) ?? null
     );
   }
@@ -65,7 +68,8 @@ export class InMemoryAcademyRepository implements IAcademyRepository {
 
     return this.academies.filter(
       (academy) =>
-        academy.competitionId === competitionId && normalizedNames.has(academy.name),
+        academy.competitionId === competitionId &&
+        normalizedNames.has(academy.name),
     );
   }
 

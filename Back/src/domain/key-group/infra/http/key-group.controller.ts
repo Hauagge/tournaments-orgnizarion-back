@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, StreamableFile, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  StreamableFile,
+  UseGuards,
+} from '@nestjs/common';
 import { Roles } from '@/core/auth/infra/decorators/roles.decorator';
 import { CompetitionAccess } from '@/core/auth/infra/decorators/competition-access.decorator';
 import { CompetitionAccessGuard } from '@/core/auth/infra/guards/competition-access.guard';
@@ -6,7 +17,10 @@ import { JwtAuthGuard } from '@/core/auth/infra/guards/jwt-auth.guard';
 import { RolesGuard } from '@/core/auth/infra/guards/roles.guard';
 import { AuthRole } from '@/domain/auth/auth-role.enum';
 import { ZodValidationPipe } from '@/core/pipe/zod-validation.pipe';
-import { CompetitionIdParamDto, CompetitionIdParamSchema } from '@/domain/competition/infra/http/dtos/competition-id-param.dto';
+import {
+  CompetitionIdParamDto,
+  CompetitionIdParamSchema,
+} from '@/domain/competition/infra/http/dtos/competition-id-param.dto';
 import { ApiResponse } from '@/shared/result/api-response.type';
 import { KeyGroup } from '../../domain/entities/key-group.entity';
 import { CreateKeyGroupUseCase } from '../../application/use-cases/create-key-group.use-case';
@@ -19,16 +33,34 @@ import { GenerateFightsForKeyGroupUseCase } from '../../application/use-cases/ge
 import { LockKeyGroupUseCase } from '../../application/use-cases/lock-key-group.use-case';
 import { ExportCompetitionBracketsPdfUseCase } from '../../application/use-cases/export-competition-brackets-pdf.use-case';
 import { UpdateKeyGroupUseCase } from '../../application/use-cases/update-key-group.use-case';
-import { KeyGroupDetailsView, KeyGroupListItemView } from '../../repository/IKeyGroupRepository.repository';
-import { CreateKeyGroupDto, CreateKeyGroupSchema } from './dtos/create-key-group.dto';
+import {
+  KeyGroupDetailsView,
+  KeyGroupListItemView,
+} from '../../repository/IKeyGroupRepository.repository';
+import {
+  CreateKeyGroupDto,
+  CreateKeyGroupSchema,
+} from './dtos/create-key-group.dto';
 import {
   CreateKeyGroupFightDto,
   CreateKeyGroupFightSchema,
 } from './dtos/create-key-group-fight.dto';
-import { KeyGroupIdParamDto, KeyGroupIdParamSchema } from './dtos/key-group-id-param.dto';
-import { KeyGroupMemberParamDto, KeyGroupMemberParamSchema } from './dtos/key-group-member-param.dto';
-import { ListKeyGroupsDto, ListKeyGroupsSchema } from './dtos/list-key-groups.dto';
-import { UpdateKeyGroupDto, UpdateKeyGroupSchema } from './dtos/update-key-group.dto';
+import {
+  KeyGroupIdParamDto,
+  KeyGroupIdParamSchema,
+} from './dtos/key-group-id-param.dto';
+import {
+  KeyGroupMemberParamDto,
+  KeyGroupMemberParamSchema,
+} from './dtos/key-group-member-param.dto';
+import {
+  ListKeyGroupsDto,
+  ListKeyGroupsSchema,
+} from './dtos/list-key-groups.dto';
+import {
+  UpdateKeyGroupDto,
+  UpdateKeyGroupSchema,
+} from './dtos/update-key-group.dto';
 
 type CreateKeyGroupResponse = {
   id: number;
@@ -178,7 +210,9 @@ export class KeyGroupController {
     @Param(new ZodValidationPipe(KeyGroupIdParamSchema))
     params: KeyGroupIdParamDto,
   ) {
-    const result = await this.generateFightsForKeyGroupUseCase.execute(params.id);
+    const result = await this.generateFightsForKeyGroupUseCase.execute(
+      params.id,
+    );
 
     return {
       data: result,
@@ -225,7 +259,9 @@ export class KeyGroupController {
     @Param(new ZodValidationPipe(CompetitionIdParamSchema))
     params: CompetitionIdParamDto,
   ) {
-    const pdf = await this.exportCompetitionBracketsPdfUseCase.execute(params.id);
+    const pdf = await this.exportCompetitionBracketsPdfUseCase.execute(
+      params.id,
+    );
 
     return new StreamableFile(pdf.buffer, {
       type: 'application/pdf',

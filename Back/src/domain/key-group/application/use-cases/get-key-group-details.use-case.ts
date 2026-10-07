@@ -1,6 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { NotFoundError } from '@/shared/errors/not-found.error';
-import { IKeyGroupRepository, KeyGroupDetailsView } from '../../repository/IKeyGroupRepository.repository';
+import {
+  IKeyGroupRepository,
+  KeyGroupDetailsView,
+} from '../../repository/IKeyGroupRepository.repository';
 import {
   KeyGroupBracketView,
   KeyGroupBracketViewBuilderService,

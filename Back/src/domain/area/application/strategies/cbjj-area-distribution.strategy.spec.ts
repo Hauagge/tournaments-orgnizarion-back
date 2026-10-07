@@ -100,10 +100,34 @@ describe('CbjjAreaDistributionStrategy', () => {
     // Categoria 1: chave principal (1,2 -> 3) com Serie Prata alimentada pelos
     // perdedores (4). Categoria 2 existe so para haver disputa por area.
     const fights = [
-      makeFight({ id: 1, categoryId: 1, round: 1, nextFightId: 3, loserNextFightId: 4 }),
-      makeFight({ id: 2, categoryId: 1, round: 1, nextFightId: 3, loserNextFightId: 4 }),
-      makeFight({ id: 3, categoryId: 1, round: 2, athleteAId: null, athleteBId: null }),
-      makeFight({ id: 4, categoryId: 1, round: 2, athleteAId: null, athleteBId: null }),
+      makeFight({
+        id: 1,
+        categoryId: 1,
+        round: 1,
+        nextFightId: 3,
+        loserNextFightId: 4,
+      }),
+      makeFight({
+        id: 2,
+        categoryId: 1,
+        round: 1,
+        nextFightId: 3,
+        loserNextFightId: 4,
+      }),
+      makeFight({
+        id: 3,
+        categoryId: 1,
+        round: 2,
+        athleteAId: null,
+        athleteBId: null,
+      }),
+      makeFight({
+        id: 4,
+        categoryId: 1,
+        round: 2,
+        athleteAId: null,
+        athleteBId: null,
+      }),
       makeFight({ id: 5, categoryId: 2, round: 1 }),
     ];
 
@@ -137,10 +161,14 @@ describe('CbjjAreaDistributionStrategy', () => {
       makeFight({ id: 4, categoryId: 40, athleteAId: 401, athleteBId: 402 }),
     ];
     const births = born([
-      [101, 2009], [102, 2009], // categoria 10 -> mais velha
-      [201, 2017], [202, 2017], // categoria 20 -> mais nova
-      [301, 2013], [302, 2013],
-      [401, 2015], [402, 2015],
+      [101, 2009],
+      [102, 2009], // categoria 10 -> mais velha
+      [201, 2017],
+      [202, 2017], // categoria 20 -> mais nova
+      [301, 2013],
+      [302, 2013],
+      [401, 2015],
+      [402, 2015],
     ]);
 
     const result = strategy.distribute(makeContext(fights, undefined, births));
@@ -153,19 +181,56 @@ describe('CbjjAreaDistributionStrategy', () => {
 
   it('balances the areas while following the age order', () => {
     const fights = [
-      ...[1, 2, 3].map((id) => makeFight({ id, categoryId: 10, athleteAId: 100 + id, athleteBId: 150 + id })),
-      ...[4, 5].map((id) => makeFight({ id, categoryId: 20, athleteAId: 200 + id, athleteBId: 250 + id })),
-      ...[6, 7, 8].map((id) => makeFight({ id, categoryId: 30, athleteAId: 300 + id, athleteBId: 350 + id })),
+      ...[1, 2, 3].map((id) =>
+        makeFight({
+          id,
+          categoryId: 10,
+          athleteAId: 100 + id,
+          athleteBId: 150 + id,
+        }),
+      ),
+      ...[4, 5].map((id) =>
+        makeFight({
+          id,
+          categoryId: 20,
+          athleteAId: 200 + id,
+          athleteBId: 250 + id,
+        }),
+      ),
+      ...[6, 7, 8].map((id) =>
+        makeFight({
+          id,
+          categoryId: 30,
+          athleteAId: 300 + id,
+          athleteBId: 350 + id,
+        }),
+      ),
     ];
     const births = born([
-      [101, 2016], [151, 2016], [102, 2016], [152, 2016], [103, 2016], [153, 2016],
-      [204, 2014], [254, 2014], [205, 2014], [255, 2014],
-      [306, 2012], [356, 2012], [307, 2012], [357, 2012], [308, 2012], [358, 2012],
+      [101, 2016],
+      [151, 2016],
+      [102, 2016],
+      [152, 2016],
+      [103, 2016],
+      [153, 2016],
+      [204, 2014],
+      [254, 2014],
+      [205, 2014],
+      [255, 2014],
+      [306, 2012],
+      [356, 2012],
+      [307, 2012],
+      [357, 2012],
+      [308, 2012],
+      [358, 2012],
     ]);
 
     const result = strategy.distribute(makeContext(fights, undefined, births));
     const counts = result.map((distribution) =>
-      distribution.groups.reduce((total, group) => total + group.fights.length, 0),
+      distribution.groups.reduce(
+        (total, group) => total + group.fights.length,
+        0,
+      ),
     );
 
     // 10 (mais nova) abre a area 1; 20 vai para a area vazia; 30 volta para a menos carregada.
@@ -179,7 +244,10 @@ describe('CbjjAreaDistributionStrategy', () => {
       makeFight({ id: 1, categoryId: 10, athleteAId: 101, athleteBId: 102 }),
       makeFight({ id: 2, categoryId: 20, athleteAId: null, athleteBId: null }),
     ];
-    const births = born([[101, 2010], [102, 2010]]);
+    const births = born([
+      [101, 2010],
+      [102, 2010],
+    ]);
 
     const result = strategy.distribute(
       makeContext(fights, [{ id: 1, order: 1 }], births),
@@ -230,7 +298,12 @@ describe('CbjjAreaDistributionStrategy', () => {
       makeFight({ id: 1, categoryId: 10, athleteAId: 101, athleteBId: 102 }),
       makeFight({ id: 2, categoryId: 10, athleteAId: 103, athleteBId: 104 }),
     ];
-    const births = born([[101, 2016], [102, 2016], [103, 2016], [104, 2016]]);
+    const births = born([
+      [101, 2016],
+      [102, 2016],
+      [103, 2016],
+      [104, 2016],
+    ]);
 
     const result = strategy.distribute(
       makeContext(fights, undefined, births, new Map([[10, 2]])),

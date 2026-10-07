@@ -4,4 +4,6 @@ export const CompetitionAreaParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
 
-export type CompetitionAreaParamDto = z.infer<typeof CompetitionAreaParamSchema>;
+export type CompetitionAreaParamDto = z.infer<
+  typeof CompetitionAreaParamSchema
+>;

@@ -30,11 +30,44 @@ describe('KeyGroupChampionService', () => {
   const service = new KeyGroupChampionService();
 
   it('ignores the bronze fight even when it is called before the final', () => {
-
-    const semifinalA = makeFight({ id: 1, round: 1, order: 1, winnerId: 10, nextFightId: 3, nextFightSlot: 'A', loserNextFightId: 4, loserNextFightSlot: 'A' });
-    const semifinalB = makeFight({ id: 2, round: 1, order: 2, athleteAId: 30, athleteBId: 40, winnerId: 30, nextFightId: 3, nextFightSlot: 'B', loserNextFightId: 4, loserNextFightSlot: 'B' });
-    const bronze = makeFight({ id: 4, round: 2, order: 3, athleteAId: 20, athleteBId: 40, winnerId: 40 });
-    const final = makeFight({ id: 3, round: 2, order: 4, athleteAId: 10, athleteBId: 30, winnerId: 10 });
+    const semifinalA = makeFight({
+      id: 1,
+      round: 1,
+      order: 1,
+      winnerId: 10,
+      nextFightId: 3,
+      nextFightSlot: 'A',
+      loserNextFightId: 4,
+      loserNextFightSlot: 'A',
+    });
+    const semifinalB = makeFight({
+      id: 2,
+      round: 1,
+      order: 2,
+      athleteAId: 30,
+      athleteBId: 40,
+      winnerId: 30,
+      nextFightId: 3,
+      nextFightSlot: 'B',
+      loserNextFightId: 4,
+      loserNextFightSlot: 'B',
+    });
+    const bronze = makeFight({
+      id: 4,
+      round: 2,
+      order: 3,
+      athleteAId: 20,
+      athleteBId: 40,
+      winnerId: 40,
+    });
+    const final = makeFight({
+      id: 3,
+      round: 2,
+      order: 4,
+      athleteAId: 10,
+      athleteBId: 30,
+      winnerId: 10,
+    });
 
     expect(service.resolve([semifinalA, semifinalB, bronze, final])).toBe(10);
   });
@@ -42,9 +75,32 @@ describe('KeyGroupChampionService', () => {
   it('ignores the silver series final on gold/silver brackets', () => {
     // Abertura manda vencedor para a Ouro e perdedor para a Prata; as duas
     // finais caem na mesma rodada.
-    const opening = makeFight({ id: 1, round: 1, order: 1, winnerId: 10, nextFightId: 2, nextFightSlot: 'A', loserNextFightId: 3, loserNextFightSlot: 'A' });
-    const goldFinal = makeFight({ id: 2, round: 2, order: 2, athleteAId: 10, athleteBId: 50, winnerId: 10 });
-    const silverFinal = makeFight({ id: 3, round: 2, order: 1, athleteAId: 20, athleteBId: 60, winnerId: 60 });
+    const opening = makeFight({
+      id: 1,
+      round: 1,
+      order: 1,
+      winnerId: 10,
+      nextFightId: 2,
+      nextFightSlot: 'A',
+      loserNextFightId: 3,
+      loserNextFightSlot: 'A',
+    });
+    const goldFinal = makeFight({
+      id: 2,
+      round: 2,
+      order: 2,
+      athleteAId: 10,
+      athleteBId: 50,
+      winnerId: 10,
+    });
+    const silverFinal = makeFight({
+      id: 3,
+      round: 2,
+      order: 1,
+      athleteAId: 20,
+      athleteBId: 60,
+      winnerId: 60,
+    });
 
     expect(service.resolve([opening, goldFinal, silverFinal])).toBe(10);
   });
@@ -100,9 +156,27 @@ describe('KeyGroupChampionService', () => {
 
   it('uses the win count on round robin key groups', () => {
     const champion = service.resolve([
-      makeFight({ id: 1, order: 1, athleteAId: 10, athleteBId: 20, winnerId: 20 }),
-      makeFight({ id: 2, order: 2, athleteAId: 10, athleteBId: 30, winnerId: 10 }),
-      makeFight({ id: 3, order: 3, athleteAId: 20, athleteBId: 30, winnerId: 20 }),
+      makeFight({
+        id: 1,
+        order: 1,
+        athleteAId: 10,
+        athleteBId: 20,
+        winnerId: 20,
+      }),
+      makeFight({
+        id: 2,
+        order: 2,
+        athleteAId: 10,
+        athleteBId: 30,
+        winnerId: 10,
+      }),
+      makeFight({
+        id: 3,
+        order: 3,
+        athleteAId: 20,
+        athleteBId: 30,
+        winnerId: 20,
+      }),
     ]);
 
     expect(champion).toBe(20);
@@ -110,9 +184,27 @@ describe('KeyGroupChampionService', () => {
 
   it('returns null when the round robin ends tied', () => {
     const champion = service.resolve([
-      makeFight({ id: 1, order: 1, athleteAId: 10, athleteBId: 20, winnerId: 10 }),
-      makeFight({ id: 2, order: 2, athleteAId: 20, athleteBId: 30, winnerId: 20 }),
-      makeFight({ id: 3, order: 3, athleteAId: 30, athleteBId: 10, winnerId: 30 }),
+      makeFight({
+        id: 1,
+        order: 1,
+        athleteAId: 10,
+        athleteBId: 20,
+        winnerId: 10,
+      }),
+      makeFight({
+        id: 2,
+        order: 2,
+        athleteAId: 20,
+        athleteBId: 30,
+        winnerId: 20,
+      }),
+      makeFight({
+        id: 3,
+        order: 3,
+        athleteAId: 30,
+        athleteBId: 10,
+        winnerId: 30,
+      }),
     ]);
 
     expect(champion).toBeNull();

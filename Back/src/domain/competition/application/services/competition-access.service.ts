@@ -33,13 +33,16 @@ export class CompetitionAccessService {
       return;
     }
 
-    const access = await this.userCompetitionRepository.findByUserIdAndCompetitionId({
-      userId: input.currentUserId,
-      competitionId: input.competitionId,
-    });
+    const access =
+      await this.userCompetitionRepository.findByUserIdAndCompetitionId({
+        userId: input.currentUserId,
+        competitionId: input.competitionId,
+      });
 
     if (access?.role !== CompetitionAccessRole.OWNER) {
-      throw new ForbiddenException('Apenas o dono da competição pode gerenciar usuários');
+      throw new ForbiddenException(
+        'Apenas o dono da competição pode gerenciar usuários',
+      );
     }
   }
 }

@@ -13,14 +13,16 @@ export class InMemoryEventBus implements EventBus {
   async publish(event: DomainEvent): Promise<void> {
     this.logger.log(`${event.name} ${JSON.stringify(event.payload)}`);
 
-     const handlers = this.handlers.get(event.name) ?? new Set<DomainEventHandler>();
-     for (const handler of handlers) {
-       await handler(event);
-     }
+    const handlers =
+      this.handlers.get(event.name) ?? new Set<DomainEventHandler>();
+    for (const handler of handlers) {
+      await handler(event);
+    }
   }
 
   subscribe(eventName: string, handler: DomainEventHandler): () => void {
-    const handlers = this.handlers.get(eventName) ?? new Set<DomainEventHandler>();
+    const handlers =
+      this.handlers.get(eventName) ?? new Set<DomainEventHandler>();
     handlers.add(handler);
     this.handlers.set(eventName, handlers);
 

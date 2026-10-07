@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  createHmac,
-  randomBytes,
-  scryptSync,
-  timingSafeEqual,
-} from 'crypto';
+import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { IPasswordHasher } from './IPasswordHasher.service';
 
 const SCRYPT_PREFIX = 'scrypt';
@@ -32,7 +27,10 @@ export class PasswordHasherService implements IPasswordHasher {
     return !hashedPassword.startsWith(`${SCRYPT_PREFIX}:`);
   }
 
-  private compareScrypt(plainPassword: string, hashedPassword: string): boolean {
+  private compareScrypt(
+    plainPassword: string,
+    hashedPassword: string,
+  ): boolean {
     const [, salt, hash] = hashedPassword.split(':');
 
     if (!salt || !hash) {
@@ -49,7 +47,10 @@ export class PasswordHasherService implements IPasswordHasher {
     return timingSafeEqual(hashBuffer, attempt);
   }
 
-  private compareLegacy(plainPassword: string, hashedPassword: string): boolean {
+  private compareLegacy(
+    plainPassword: string,
+    hashedPassword: string,
+  ): boolean {
     const [salt, hash] = hashedPassword.split(':');
 
     if (!salt || !hash) {

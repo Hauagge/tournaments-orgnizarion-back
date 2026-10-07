@@ -6,7 +6,9 @@ import { FightEntity } from '../../domain/entities/fight.entity';
 import { FightStatus } from '../../domain/value-objects/fight-status.enum';
 import { DeleteFightUseCase } from './delete-fight.use-case';
 
-function makeFight(overrides: Partial<Parameters<typeof FightEntity.restore>[0]> = {}) {
+function makeFight(
+  overrides: Partial<Parameters<typeof FightEntity.restore>[0]> = {},
+) {
   return FightEntity.restore({
     id: 1,
     competitionId: 1,
@@ -34,14 +36,20 @@ describe('DeleteFightUseCase', () => {
     const fightRepository = new InMemoryFightRepository([makeFight()]);
     const useCase = new DeleteFightUseCase(fightRepository);
 
-    const result = await useCase.execute({ currentUserId: 1, competitionId: 1, fightId: 1 });
+    const result = await useCase.execute({
+      currentUserId: 1,
+      competitionId: 1,
+      fightId: 1,
+    });
 
     expect(result).toEqual({ deleted: true, fightId: 1 });
     expect(await fightRepository.findById(1)).toBeNull();
   });
 
   it('throws NotFoundError when the fight does not belong to the competition', async () => {
-    const fightRepository = new InMemoryFightRepository([makeFight({ competitionId: 2 })]);
+    const fightRepository = new InMemoryFightRepository([
+      makeFight({ competitionId: 2 }),
+    ]);
     const useCase = new DeleteFightUseCase(fightRepository);
 
     await expect(

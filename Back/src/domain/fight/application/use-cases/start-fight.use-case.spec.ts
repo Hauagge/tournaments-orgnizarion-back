@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { DomainEvent, DomainEventHandler, EventBus } from '@/core/events/event-bus.interface';
+import {
+  DomainEvent,
+  DomainEventHandler,
+  EventBus,
+} from '@/core/events/event-bus.interface';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
 import { AreaQueueItem } from '@/domain/area/domain/entities/area-queue-item.entity';
@@ -24,7 +28,9 @@ class RecordingEventBus implements EventBus {
   }
 }
 
-function makeFight(overrides: Partial<Parameters<typeof FightEntity.restore>[0]> = {}) {
+function makeFight(
+  overrides: Partial<Parameters<typeof FightEntity.restore>[0]> = {},
+) {
   return FightEntity.restore({
     id: 1,
     competitionId: 1,
@@ -84,7 +90,9 @@ describe('StartFightUseCase', () => {
   });
 
   it('rejects starting a fight that has no area assigned', async () => {
-    fightRepository = new InMemoryFightRepository([makeFight({ areaId: null })]);
+    fightRepository = new InMemoryFightRepository([
+      makeFight({ areaId: null }),
+    ]);
     useCase = new StartFightUseCase(fightRepository, queueRepository, eventBus);
 
     await expect(useCase.execute(1)).rejects.toBeInstanceOf(ValidationError);

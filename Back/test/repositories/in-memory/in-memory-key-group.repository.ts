@@ -41,7 +41,10 @@ export class InMemoryKeyGroupRepository implements IKeyGroupRepository {
   }
 
   async create(group: KeyGroup): Promise<KeyGroup> {
-    const saved = KeyGroup.restore({ ...group.toJSON(), id: this.nextGroupId++ });
+    const saved = KeyGroup.restore({
+      ...group.toJSON(),
+      id: this.nextGroupId++,
+    });
     this.groups.push(saved);
     return saved;
   }
@@ -148,7 +151,10 @@ export class InMemoryKeyGroupRepository implements IKeyGroupRepository {
     );
   }
 
-  async addMember(keyGroupId: number, athleteId: number): Promise<KeyGroupMember> {
+  async addMember(
+    keyGroupId: number,
+    athleteId: number,
+  ): Promise<KeyGroupMember> {
     const member = KeyGroupMember.restore({
       id: this.nextMemberId++,
       keyGroupId,

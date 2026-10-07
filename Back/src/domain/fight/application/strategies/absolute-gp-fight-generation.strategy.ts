@@ -31,7 +31,8 @@ export class AbsoluteGpFightGenerationStrategy
       };
     }
 
-    const bracketSize = 2 ** Math.ceil(Math.log2(Math.max(2, athleteIds.length)));
+    const bracketSize =
+      2 ** Math.ceil(Math.log2(Math.max(2, athleteIds.length)));
     const rounds = Math.log2(bracketSize);
     const byesCount = bracketSize - athleteIds.length;
     const remainingAthletes = [...athleteIds];
@@ -65,9 +66,10 @@ export class AbsoluteGpFightGenerationStrategy
             order: order++,
             areaId: null,
             areaName: null,
-            athleteAId: round === 1 ? seededAthletes[index * 2] ?? null : null,
+            athleteAId:
+              round === 1 ? (seededAthletes[index * 2] ?? null) : null,
             athleteBId:
-              round === 1 ? seededAthletes[index * 2 + 1] ?? null : null,
+              round === 1 ? (seededAthletes[index * 2 + 1] ?? null) : null,
           }),
         );
       }
@@ -79,7 +81,9 @@ export class AbsoluteGpFightGenerationStrategy
         {
           categoryId: input.categoryId,
           format: 'OLYMPIC',
-          notes: ['Single elimination bracket generated with future fights pre-created'],
+          notes: [
+            'Single elimination bracket generated with future fights pre-created',
+          ],
         },
       ],
     };

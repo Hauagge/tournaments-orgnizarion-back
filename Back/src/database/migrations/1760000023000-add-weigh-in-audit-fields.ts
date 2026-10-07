@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
 
-export class AddWeighInAuditFields1760000023000
-  implements MigrationInterface
-{
+export class AddWeighInAuditFields1760000023000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     const table = await queryRunner.getTable('weigh_ins');
 

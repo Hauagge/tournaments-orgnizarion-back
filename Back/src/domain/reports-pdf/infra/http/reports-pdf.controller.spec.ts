@@ -85,10 +85,13 @@ describe('CompetitionAccessGuard protecting ReportsPdfController', () => {
     }) as unknown as ExecutionContext;
 
   it('blocks the request when there is no authenticated user', async () => {
-    const context = buildContext(ReportsPdfController.prototype.exportBrackets, {
-      params: { id: '1' },
-      user: undefined,
-    });
+    const context = buildContext(
+      ReportsPdfController.prototype.exportBrackets,
+      {
+        params: { id: '1' },
+        user: undefined,
+      },
+    );
 
     await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
       ForbiddenException,
@@ -96,10 +99,13 @@ describe('CompetitionAccessGuard protecting ReportsPdfController', () => {
   });
 
   it('blocks the request when the authenticated user has no link with the competition', async () => {
-    const context = buildContext(ReportsPdfController.prototype.exportBrackets, {
-      params: { id: '1' },
-      user: makeCurrentUser({ sub: 42 }),
-    });
+    const context = buildContext(
+      ReportsPdfController.prototype.exportBrackets,
+      {
+        params: { id: '1' },
+        user: makeCurrentUser({ sub: 42 }),
+      },
+    );
 
     await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
       ForbiddenException,
@@ -133,10 +139,13 @@ describe('CompetitionAccessGuard protecting ReportsPdfController', () => {
       role: CompetitionAccessRole.MEMBER,
     });
 
-    const context = buildContext(ReportsPdfController.prototype.exportBrackets, {
-      params: { id: '1' },
-      user: makeCurrentUser({ sub: 42 }),
-    });
+    const context = buildContext(
+      ReportsPdfController.prototype.exportBrackets,
+      {
+        params: { id: '1' },
+        user: makeCurrentUser({ sub: 42 }),
+      },
+    );
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
   });

@@ -9,7 +9,8 @@ export class AddRoleToUserCompetitions1760000020000
   implements MigrationInterface
 {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    const userCompetitionsTable = await queryRunner.getTable('user_competitions');
+    const userCompetitionsTable =
+      await queryRunner.getTable('user_competitions');
 
     if (!userCompetitionsTable) {
       return;
@@ -50,7 +51,8 @@ export class AddRoleToUserCompetitions1760000020000
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    const userCompetitionsTable = await queryRunner.getTable('user_competitions');
+    const userCompetitionsTable =
+      await queryRunner.getTable('user_competitions');
 
     if (!userCompetitionsTable) {
       return;

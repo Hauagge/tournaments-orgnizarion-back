@@ -75,9 +75,7 @@ describe('JwtTokenService', () => {
 
     const tamperedToken = `${token.slice(0, -1)}${token.endsWith('a') ? 'b' : 'a'}`;
 
-    expect(() => service.verify(tamperedToken)).toThrow(
-      UnauthorizedException,
-    );
+    expect(() => service.verify(tamperedToken)).toThrow(UnauthorizedException);
   });
 
   it('should throw UnauthorizedException for a malformed token', () => {

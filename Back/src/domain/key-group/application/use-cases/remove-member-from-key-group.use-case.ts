@@ -24,29 +24,37 @@ export class RemoveMemberFromKeyGroupUseCase {
     const group = await this.keyGroupRepository.findById(input.keyGroupId);
 
     if (!group) {
-      throw new NotFoundError(`Key group with id ${input.keyGroupId} not found`);
+      throw new NotFoundError(
+        `Key group with id ${input.keyGroupId} not found`,
+      );
     }
 
     if (group.status === KeyGroupStatus.LOCKED) {
       throw new ValidationError('Locked key groups cannot be changed');
     }
 
-    const fights = await this.fightRepository.listByKeyGroupId(group.id as number);
-    const hasActiveFights = fights.some((fight) => fight.status !== FightStatus.CANCELED);
+    const fights = await this.fightRepository.listByKeyGroupId(
+      group.id as number,
+    );
+    const hasActiveFights = fights.some(
+      (fight) => fight.status !== FightStatus.CANCELED,
+    );
 
     if (hasActiveFights) {
-      throw new ValidationError('Cannot remove members after fights have already been generated');
+      throw new ValidationError(
+        'Cannot remove members after fights have already been generated',
+      );
     }
 
-    await this.keyGroupRepository.removeMember(input.keyGroupId, input.athleteId);
-
-    const remainingMembers = await this.keyGroupRepository.listMembersByKeyGroupId(
+    await this.keyGroupRepository.removeMember(
       input.keyGroupId,
+      input.athleteId,
     );
+
+    const remainingMembers =
+      await this.keyGroupRepository.listMembersByKeyGroupId(input.keyGroupId);
     await this.keyGroupRepository.update(
-      remainingMembers.length >= 2
-        ? group.markReady()
-        : group.markDraft(),
+      remainingMembers.length >= 2 ? group.markReady() : group.markDraft(),
     );
   }
 }

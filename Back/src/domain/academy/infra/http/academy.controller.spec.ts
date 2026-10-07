@@ -57,7 +57,9 @@ describe('AcademyController', () => {
   });
 
   it('should create and return wrapped response', async () => {
-    vi.mocked(createTeamUseCase.execute).mockResolvedValue(makeAcademy({ id: 1 }));
+    vi.mocked(createTeamUseCase.execute).mockResolvedValue(
+      makeAcademy({ id: 1 }),
+    );
 
     const result = await controller.create({ id: 10 }, { name: 'Academy One' });
 
@@ -89,7 +91,10 @@ describe('AcademyController', () => {
       makeAcademy({ id: 3, name: 'Updated Academy' }),
     );
 
-    const result = await controller.update({ id: 3 }, { name: 'Updated Academy' });
+    const result = await controller.update(
+      { id: 3 },
+      { name: 'Updated Academy' },
+    );
 
     expect(result).toEqual({
       data: makeAcademy({ id: 3, name: 'Updated Academy' }).toJSON(),

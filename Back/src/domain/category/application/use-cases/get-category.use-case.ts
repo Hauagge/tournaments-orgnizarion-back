@@ -27,7 +27,8 @@ export class GetCategoryUseCase {
       throw new NotFoundError(`Category with id ${id} not found`);
     }
 
-    const athleteIds = await this.categoryRepository.listAthleteIdsByCategoryId(id);
+    const athleteIds =
+      await this.categoryRepository.listAthleteIdsByCategoryId(id);
     const [athletes, academies, weighIns] = await Promise.all([
       this.athleteRepository.findByIds(athleteIds),
       this.academyRepository.listByCompetitionId(category.competitionId),
@@ -63,7 +64,7 @@ export class GetCategoryUseCase {
           belt: athlete.belt,
           academyName:
             athlete.academyId !== null
-              ? academyNamesById.get(athlete.academyId) ?? null
+              ? (academyNamesById.get(athlete.academyId) ?? null)
               : null,
           weighInStatus:
             weighInStatusByAthleteId.get(athlete.id as number) ??

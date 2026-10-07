@@ -52,7 +52,6 @@ export class StartFightUseCase {
       fight.start(new Date()),
     );
 
-
     const queueItem = await this.areaQueueItemRepository.findByFightId(
       startedFight.id as number,
     );

@@ -103,11 +103,16 @@ export abstract class IKeyGroupRepository {
     categoryId?: number;
     areaId?: number;
   }): Promise<KeyGroupReportView[]>;
-  abstract listMembersByKeyGroupId(keyGroupId: number): Promise<KeyGroupMember[]>;
+  abstract listMembersByKeyGroupId(
+    keyGroupId: number,
+  ): Promise<KeyGroupMember[]>;
   abstract findByCompetitionIdAndAthleteId(
     competitionId: number,
     athleteId: number,
   ): Promise<KeyGroup | null>;
-  abstract addMember(keyGroupId: number, athleteId: number): Promise<KeyGroupMember>;
+  abstract addMember(
+    keyGroupId: number,
+    athleteId: number,
+  ): Promise<KeyGroupMember>;
   abstract removeMember(keyGroupId: number, athleteId: number): Promise<void>;
 }

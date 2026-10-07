@@ -6,11 +6,10 @@ import {
   TableIndex,
 } from 'typeorm';
 
-export class CreateUserCompetitions1760000019000
-  implements MigrationInterface
-{
+export class CreateUserCompetitions1760000019000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    const userCompetitionsTable = await queryRunner.getTable('user_competitions');
+    const userCompetitionsTable =
+      await queryRunner.getTable('user_competitions');
 
     if (!userCompetitionsTable) {
       await queryRunner.createTable(
@@ -32,9 +31,8 @@ export class CreateUserCompetitions1760000019000
       );
     }
 
-    const refreshedUserCompetitionsTable = await queryRunner.getTable(
-      'user_competitions',
-    );
+    const refreshedUserCompetitionsTable =
+      await queryRunner.getTable('user_competitions');
 
     if (
       refreshedUserCompetitionsTable &&
@@ -51,9 +49,8 @@ export class CreateUserCompetitions1760000019000
       );
     }
 
-    const latestUserCompetitionsTable = await queryRunner.getTable(
-      'user_competitions',
-    );
+    const latestUserCompetitionsTable =
+      await queryRunner.getTable('user_competitions');
 
     if (
       latestUserCompetitionsTable &&
@@ -74,14 +71,14 @@ export class CreateUserCompetitions1760000019000
       );
     }
 
-    const userCompetitionsWithUserForeignKey = await queryRunner.getTable(
-      'user_competitions',
-    );
+    const userCompetitionsWithUserForeignKey =
+      await queryRunner.getTable('user_competitions');
 
     if (
       userCompetitionsWithUserForeignKey &&
       !userCompetitionsWithUserForeignKey.foreignKeys.some(
-        (foreignKey) => foreignKey.name === 'FK_USER_COMPETITIONS_COMPETITION_ID',
+        (foreignKey) =>
+          foreignKey.name === 'FK_USER_COMPETITIONS_COMPETITION_ID',
       )
     ) {
       await queryRunner.createForeignKey(
@@ -133,7 +130,8 @@ export class CreateUserCompetitions1760000019000
       `);
     }
 
-    const userCompetitionsTable = await queryRunner.getTable('user_competitions');
+    const userCompetitionsTable =
+      await queryRunner.getTable('user_competitions');
 
     if (!userCompetitionsTable) {
       return;
@@ -141,7 +139,8 @@ export class CreateUserCompetitions1760000019000
 
     if (
       userCompetitionsTable.foreignKeys.some(
-        (foreignKey) => foreignKey.name === 'FK_USER_COMPETITIONS_COMPETITION_ID',
+        (foreignKey) =>
+          foreignKey.name === 'FK_USER_COMPETITIONS_COMPETITION_ID',
       )
     ) {
       await queryRunner.dropForeignKey(

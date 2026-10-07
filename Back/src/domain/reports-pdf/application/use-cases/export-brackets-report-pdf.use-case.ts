@@ -23,10 +23,13 @@ export class ExportBracketsReportPdfUseCase {
     fileName: string;
   }> {
     const report = await this.reportDataBuilderService.build(input);
-    const html = await this.templateRendererService.render('brackets-report.hbs', {
-      ...report,
-      hasBrackets: report.brackets.length > 0,
-    });
+    const html = await this.templateRendererService.render(
+      'brackets-report.hbs',
+      {
+        ...report,
+        hasBrackets: report.brackets.length > 0,
+      },
+    );
     const buffer = await this.pdfRendererService.renderFromHtml(html);
 
     return {

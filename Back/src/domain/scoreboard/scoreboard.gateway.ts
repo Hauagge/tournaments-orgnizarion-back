@@ -54,7 +54,9 @@ export class ScoreboardGateway
       );
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Falha na autenticacao do socket';
+        error instanceof Error
+          ? error.message
+          : 'Falha na autenticacao do socket';
 
       this.logger.warn(
         `Socket auth failed: client=${client.id} reason=${message}`,
@@ -145,8 +147,14 @@ export class ScoreboardGateway
     };
   }
 
-  broadcastToCompetition(eventName: string, competitionId: number, payload: unknown) {
-    this.server.to(this.getCompetitionRoom(competitionId)).emit(eventName, payload);
+  broadcastToCompetition(
+    eventName: string,
+    competitionId: number,
+    payload: unknown,
+  ) {
+    this.server
+      .to(this.getCompetitionRoom(competitionId))
+      .emit(eventName, payload);
   }
 
   broadcastToArea(eventName: string, areaId: number, payload: unknown) {

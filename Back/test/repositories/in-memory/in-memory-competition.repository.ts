@@ -4,9 +4,7 @@ import { CompetitionDashboardSummaryItem } from '../../../src/domain/competition
 import { ICompetitionRepository } from '../../../src/domain/competition/repository/ICompetitionRepository.repository';
 import { makeCompetition } from '../../factories';
 
-export class InMemoryCompetitionRepository
-  implements ICompetitionRepository
-{
+export class InMemoryCompetitionRepository implements ICompetitionRepository {
   private competitions: Competition[] = [];
   private nextId = 1;
   private accessibleCompetitionIdsByUserId = new Map<number, number[]>();
@@ -54,7 +52,9 @@ export class InMemoryCompetitionRepository
   }
 
   async findById(id: number): Promise<Competition | null> {
-    return this.competitions.find((competition) => competition.id === id) ?? null;
+    return (
+      this.competitions.find((competition) => competition.id === id) ?? null
+    );
   }
 
   async list(input: {
@@ -62,13 +62,17 @@ export class InMemoryCompetitionRepository
     page: number;
     pageSize: number;
   }): Promise<[Competition[], number]> {
-    const configuredCompetitionIds =
-      this.accessibleCompetitionIdsByUserId.get(input.currentUserId);
+    const configuredCompetitionIds = this.accessibleCompetitionIdsByUserId.get(
+      input.currentUserId,
+    );
     const accessibleCompetitionIds = new Set(
       configuredCompetitionIds ??
         this.competitions
           .map((competition) => competition.id)
-          .filter((competitionId): competitionId is number => competitionId !== undefined),
+          .filter(
+            (competitionId): competitionId is number =>
+              competitionId !== undefined,
+          ),
     );
     const filteredCompetitions = this.competitions.filter((competition) =>
       accessibleCompetitionIds.has(competition.id as number),

@@ -15,6 +15,8 @@ export class CategoryGenerationService {
     mode: CompetitionMode,
     athletes: Athlete[],
   ): GeneratedCategory[] {
-    return this.strategyResolver.resolve(mode).generate(competitionId, athletes);
+    return this.strategyResolver
+      .resolve(mode)
+      .generate(competitionId, athletes);
   }
 }

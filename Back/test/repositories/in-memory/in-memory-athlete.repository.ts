@@ -9,7 +9,8 @@ export class InMemoryAthleteRepository implements IAthleteRepository {
 
   constructor(seed: Athlete[] = []) {
     this.athletes = [...seed];
-    this.nextId = seed.reduce((max, item) => Math.max(max, item.id ?? 0), 0) + 1;
+    this.nextId =
+      seed.reduce((max, item) => Math.max(max, item.id ?? 0), 0) + 1;
   }
 
   setAthletes(athletes: Athlete[]) {
@@ -51,7 +52,9 @@ export class InMemoryAthleteRepository implements IAthleteRepository {
     const allowedIds = new Set(ids);
 
     return this.athletes
-      .filter((athlete) => athlete.id !== undefined && allowedIds.has(athlete.id))
+      .filter(
+        (athlete) => athlete.id !== undefined && allowedIds.has(athlete.id),
+      )
       .sort((left, right) => left.fullName.localeCompare(right.fullName));
   }
 

@@ -5,4 +5,6 @@ export const CompetitionUserParamSchema = z.object({
   userId: z.coerce.number().int().positive(),
 });
 
-export type CompetitionUserParamDto = z.infer<typeof CompetitionUserParamSchema>;
+export type CompetitionUserParamDto = z.infer<
+  typeof CompetitionUserParamSchema
+>;

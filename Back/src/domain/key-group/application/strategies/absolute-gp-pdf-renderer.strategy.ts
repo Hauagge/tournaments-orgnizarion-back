@@ -60,22 +60,20 @@ export class AbsoluteGpPdfRendererStrategy implements PdfRendererStrategy {
             `Total de atletas: ${category.totalAthletes}`,
             '',
             'Confrontos:',
-            ...categoryFights.map(
-              (fight) => {
-                const athleteALabel =
-                  fight.athleteAId !== null
-                    ? athleteNames.get(fight.athleteAId) ??
-                      `#${fight.athleteAId}`
-                    : 'A definir';
-                const athleteBLabel =
-                  fight.athleteBId !== null
-                    ? athleteNames.get(fight.athleteBId) ??
-                      `#${fight.athleteBId}`
-                    : 'A definir';
+            ...categoryFights.map((fight) => {
+              const athleteALabel =
+                fight.athleteAId !== null
+                  ? (athleteNames.get(fight.athleteAId) ??
+                    `#${fight.athleteAId}`)
+                  : 'A definir';
+              const athleteBLabel =
+                fight.athleteBId !== null
+                  ? (athleteNames.get(fight.athleteBId) ??
+                    `#${fight.athleteBId}`)
+                  : 'A definir';
 
-                return `${fight.orderIndex}. ${athleteALabel} vs ${athleteBLabel} (${fight.status})`;
-              },
-            ),
+              return `${fight.orderIndex}. ${athleteALabel} vs ${athleteBLabel} (${fight.status})`;
+            }),
           ],
         };
       }),

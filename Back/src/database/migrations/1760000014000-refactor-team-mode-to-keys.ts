@@ -10,7 +10,9 @@ import {
 
 export class RefactorTeamModeToKeys1760000014000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`UPDATE competitions SET mode = 'KEYS' WHERE mode = 'TEAM'`);
+    await queryRunner.query(
+      `UPDATE competitions SET mode = 'KEYS' WHERE mode = 'TEAM'`,
+    );
 
     await queryRunner.query(
       'ALTER TABLE competitions DROP CONSTRAINT IF EXISTS "CHK_competitions_mode"',
@@ -153,8 +155,14 @@ export class RefactorTeamModeToKeys1760000014000 implements MigrationInterface {
     await queryRunner.dropForeignKey('fights', 'FK_FIGHTS_KEY_GROUP_ID');
     await queryRunner.dropIndex('fights', 'IDX_FIGHTS_KEY_GROUP_ID');
 
-    await queryRunner.dropForeignKey('key_group_members', 'FK_KEY_GROUP_MEMBERS_ATHLETE_ID');
-    await queryRunner.dropForeignKey('key_group_members', 'FK_KEY_GROUP_MEMBERS_KEY_GROUP_ID');
+    await queryRunner.dropForeignKey(
+      'key_group_members',
+      'FK_KEY_GROUP_MEMBERS_ATHLETE_ID',
+    );
+    await queryRunner.dropForeignKey(
+      'key_group_members',
+      'FK_KEY_GROUP_MEMBERS_KEY_GROUP_ID',
+    );
     await queryRunner.dropIndex(
       'key_group_members',
       'IDX_KEY_GROUP_MEMBERS_KEY_GROUP_ID_ATHLETE_ID',
@@ -162,7 +170,10 @@ export class RefactorTeamModeToKeys1760000014000 implements MigrationInterface {
     await queryRunner.dropTable('key_group_members');
 
     await queryRunner.dropForeignKey('key_groups', 'FK_KEY_GROUPS_CATEGORY_ID');
-    await queryRunner.dropForeignKey('key_groups', 'FK_KEY_GROUPS_COMPETITION_ID');
+    await queryRunner.dropForeignKey(
+      'key_groups',
+      'FK_KEY_GROUPS_COMPETITION_ID',
+    );
     await queryRunner.dropIndex(
       'key_groups',
       'IDX_KEY_GROUPS_COMPETITION_ID_CATEGORY_ID',
@@ -185,6 +196,8 @@ export class RefactorTeamModeToKeys1760000014000 implements MigrationInterface {
       }),
     );
 
-    await queryRunner.query(`UPDATE competitions SET mode = 'TEAM' WHERE mode = 'KEYS'`);
+    await queryRunner.query(
+      `UPDATE competitions SET mode = 'TEAM' WHERE mode = 'KEYS'`,
+    );
   }
 }

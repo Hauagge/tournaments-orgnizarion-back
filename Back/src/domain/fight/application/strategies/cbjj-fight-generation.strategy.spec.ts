@@ -62,7 +62,10 @@ describe('CbjjFightGenerationStrategy', () => {
     expect(result.fights.filter((fight) => fight.round === 1)).toHaveLength(2);
     expect(
       result.fights.every(
-        (fight) => fight.round === 1 || fight.athleteAId === null || fight.athleteBId === null,
+        (fight) =>
+          fight.round === 1 ||
+          fight.athleteAId === null ||
+          fight.athleteBId === null,
       ),
     ).toBe(true);
   });

@@ -1,1 +1,1 @@
-export * from './generic.cto'
+export * from './generic.cto';

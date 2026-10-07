@@ -59,9 +59,7 @@ export class FinishFightUseCase {
         queueItem.areaId,
       );
       const nextQueueItem =
-        areaQueue.find(
-          (item) => item.status === AreaQueueItemStatus.CALLED,
-        ) ??
+        areaQueue.find((item) => item.status === AreaQueueItemStatus.CALLED) ??
         areaQueue.find((item) => item.status === AreaQueueItemStatus.QUEUED) ??
         null;
 

@@ -30,8 +30,7 @@ export class CreateTableUsers1760000000000 implements MigrationInterface {
         checks: [
           {
             name: 'CHK_users_role',
-            expression:
-              "role IN ('staff', 'desk', 'public', 'organization')",
+            expression: "role IN ('staff', 'desk', 'public', 'organization')",
           },
         ],
       }),

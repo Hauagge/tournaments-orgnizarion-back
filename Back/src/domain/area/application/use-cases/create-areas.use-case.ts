@@ -21,21 +21,29 @@ export class CreateAreasUseCase {
   ) {}
 
   async execute(input: CreateAreasInput) {
-    const competition = await this.competitionRepository.findById(input.competitionId);
+    const competition = await this.competitionRepository.findById(
+      input.competitionId,
+    );
 
     if (!competition) {
-      throw new NotFoundError(`Competition with id ${input.competitionId} not found`);
+      throw new NotFoundError(
+        `Competition with id ${input.competitionId} not found`,
+      );
     }
 
     const names = this.resolveNames(input);
-    const existingAreas = await this.areaRepository.listByCompetitionId(input.competitionId);
+    const existingAreas = await this.areaRepository.listByCompetitionId(
+      input.competitionId,
+    );
     const existingNames = new Set(
       existingAreas.map((area) => area.name.toLocaleLowerCase()),
     );
 
     for (const name of names) {
       if (existingNames.has(name.toLocaleLowerCase())) {
-        throw new ValidationError(`Area ${name} already exists in this competition`);
+        throw new ValidationError(
+          `Area ${name} already exists in this competition`,
+        );
       }
     }
 
@@ -53,7 +61,9 @@ export class CreateAreasUseCase {
   }
 
   private resolveNames(input: CreateAreasInput): string[] {
-    const providedNames = (input.names ?? []).map((name) => Area.normalizeName(name));
+    const providedNames = (input.names ?? []).map((name) =>
+      Area.normalizeName(name),
+    );
 
     if (input.count === undefined && providedNames.length === 0) {
       throw new ValidationError('Provide count or names to create areas');
@@ -64,15 +74,23 @@ export class CreateAreasUseCase {
       providedNames.length > 0 &&
       input.count !== providedNames.length
     ) {
-      throw new ValidationError('Count must match the number of provided area names');
+      throw new ValidationError(
+        'Count must match the number of provided area names',
+      );
     }
 
     const names =
       providedNames.length > 0
         ? providedNames
-        : Array.from({ length: input.count as number }, (_, index) => `Area ${index + 1}`);
+        : Array.from(
+            { length: input.count as number },
+            (_, index) => `Area ${index + 1}`,
+          );
 
-    if (new Set(names.map((name) => name.toLocaleLowerCase())).size !== names.length) {
+    if (
+      new Set(names.map((name) => name.toLocaleLowerCase())).size !==
+      names.length
+    ) {
       throw new ValidationError('Duplicated area names are not allowed');
     }
 

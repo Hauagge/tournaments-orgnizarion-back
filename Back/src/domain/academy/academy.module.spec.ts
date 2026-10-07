@@ -63,8 +63,12 @@ describe('AcademyModule', () => {
       })
       .compile();
 
-    expect(moduleRef.get(CreateAcademyUseCase)).toBeInstanceOf(CreateAcademyUseCase);
-    expect(moduleRef.get(UpdateAcademyUseCase)).toBeInstanceOf(UpdateAcademyUseCase);
+    expect(moduleRef.get(CreateAcademyUseCase)).toBeInstanceOf(
+      CreateAcademyUseCase,
+    );
+    expect(moduleRef.get(UpdateAcademyUseCase)).toBeInstanceOf(
+      UpdateAcademyUseCase,
+    );
     expect(moduleRef.get(ListAcademiesByCompetitionUseCase)).toBeInstanceOf(
       ListAcademiesByCompetitionUseCase,
     );

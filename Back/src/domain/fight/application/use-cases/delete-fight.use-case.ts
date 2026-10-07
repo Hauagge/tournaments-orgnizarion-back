@@ -21,11 +21,15 @@ export class DeleteFightUseCase {
     }
 
     if (!fight.createdManually) {
-      throw new ValidationError('Somente lutas manuais podem ser removidas por este endpoint');
+      throw new ValidationError(
+        'Somente lutas manuais podem ser removidas por este endpoint',
+      );
     }
 
     if (fight.winnerId !== null || fight.nextFightId !== null) {
-      throw new ValidationError('A luta manual nao pode ser removida apos gerar avancos');
+      throw new ValidationError(
+        'A luta manual nao pode ser removida apos gerar avancos',
+      );
     }
 
     await this.fightRepository.delete(input.fightId);

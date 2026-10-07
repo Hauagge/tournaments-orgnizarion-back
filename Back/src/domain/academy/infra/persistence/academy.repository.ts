@@ -27,7 +27,9 @@ export class AcademyRepository implements IAcademyRepository {
     );
 
     if (!result.affected) {
-      throw new NotFoundError(`Academy with id ${academy.id as number} not found`);
+      throw new NotFoundError(
+        `Academy with id ${academy.id as number} not found`,
+      );
     }
 
     return academy;
@@ -42,7 +44,8 @@ export class AcademyRepository implements IAcademyRepository {
     competitionId: number,
     name: string,
   ): Promise<Academy | null> {
-    const normalizedName = Academy.normalizeName(name).toLocaleLowerCase('en-US');
+    const normalizedName =
+      Academy.normalizeName(name).toLocaleLowerCase('en-US');
 
     const entity = await this.repository
       .createQueryBuilder('academy')
@@ -59,7 +62,9 @@ export class AcademyRepository implements IAcademyRepository {
   ): Promise<Academy[]> {
     const normalizedNames = [
       ...new Set(
-        names.map((name) => Academy.normalizeName(name).toLocaleLowerCase('en-US')),
+        names.map((name) =>
+          Academy.normalizeName(name).toLocaleLowerCase('en-US'),
+        ),
       ),
     ];
 

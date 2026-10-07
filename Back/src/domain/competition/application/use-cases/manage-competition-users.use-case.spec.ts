@@ -57,7 +57,9 @@ class FakeTransactionalDataSource {
           };
         }
 
-        throw new Error('Unexpected entity requested from FakeTransactionalDataSource');
+        throw new Error(
+          'Unexpected entity requested from FakeTransactionalDataSource',
+        );
       },
     });
   }

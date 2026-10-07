@@ -33,7 +33,9 @@ export class RemoveUserFromCompetitionUseCase {
       });
 
     if (targetAccess?.role === CompetitionAccessRole.OWNER) {
-      throw new ForbiddenException('O dono da competição não pode ser removido');
+      throw new ForbiddenException(
+        'O dono da competição não pode ser removido',
+      );
     }
 
     await this.userCompetitionRepository.revokeAccess({

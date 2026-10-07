@@ -36,30 +36,41 @@ export class UpdateFightUseCase {
     }
 
     const athleteIds = [input.athleteAId, input.athleteBId].filter(
-      (athleteId): athleteId is number => athleteId !== undefined && athleteId !== null,
+      (athleteId): athleteId is number =>
+        athleteId !== undefined && athleteId !== null,
     );
     if (athleteIds.length > 0) {
       const athletes = await this.athleteRepository.findByIds(athleteIds);
       if (athletes.length !== athleteIds.length) {
         throw new ValidationError('Atleta inexistente para esta competicao');
       }
-      if (athletes.some((athlete) => athlete.competitionId !== input.competitionId)) {
+      if (
+        athletes.some(
+          (athlete) => athlete.competitionId !== input.competitionId,
+        )
+      ) {
         throw new ValidationError('Os atletas precisam pertencer a competicao');
       }
       if (fight.categoryId !== null) {
         const categoryAthleteIds = new Set(
-          await this.categoryRepository.listAthleteIdsByCategoryId(fight.categoryId),
+          await this.categoryRepository.listAthleteIdsByCategoryId(
+            fight.categoryId,
+          ),
         );
         if (
           athleteIds.some((athleteId) => !categoryAthleteIds.has(athleteId))
         ) {
-          throw new ValidationError('Os atletas nao pertencem a categoria da luta');
+          throw new ValidationError(
+            'Os atletas nao pertencem a categoria da luta',
+          );
         }
       }
     }
 
-    const nextAthleteAId = input.athleteAId !== undefined ? input.athleteAId : fight.athleteAId;
-    const nextAthleteBId = input.athleteBId !== undefined ? input.athleteBId : fight.athleteBId;
+    const nextAthleteAId =
+      input.athleteAId !== undefined ? input.athleteAId : fight.athleteAId;
+    const nextAthleteBId =
+      input.athleteBId !== undefined ? input.athleteBId : fight.athleteBId;
     if (
       nextAthleteAId !== null &&
       nextAthleteBId !== null &&

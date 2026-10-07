@@ -4,4 +4,6 @@ export const ManageCompetitionUserSchema = z.object({
   userId: z.coerce.number().int().positive(),
 });
 
-export type ManageCompetitionUserDto = z.infer<typeof ManageCompetitionUserSchema>;
+export type ManageCompetitionUserDto = z.infer<
+  typeof ManageCompetitionUserSchema
+>;

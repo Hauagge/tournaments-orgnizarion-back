@@ -29,16 +29,24 @@ export class CallNextAreaFightUseCase {
     }
 
     const queueItems = await this.areaQueueItemRepository.listByAreaId(id);
-    const calledItem = queueItems.find((item) => item.status === AreaQueueItemStatus.CALLED);
+    const calledItem = queueItems.find(
+      (item) => item.status === AreaQueueItemStatus.CALLED,
+    );
 
     if (calledItem) {
-      const calledFight = await this.fightRepository.findById(calledItem.fightId);
+      const calledFight = await this.fightRepository.findById(
+        calledItem.fightId,
+      );
       if (calledFight && calledFight.status !== FightStatus.FINISHED) {
-        throw new ValidationError('This area already has a called or in-progress fight');
+        throw new ValidationError(
+          'This area already has a called or in-progress fight',
+        );
       }
     }
 
-    const nextItem = queueItems.find((item) => item.status === AreaQueueItemStatus.QUEUED);
+    const nextItem = queueItems.find(
+      (item) => item.status === AreaQueueItemStatus.QUEUED,
+    );
 
     if (!nextItem) {
       throw new ValidationError('No queued fights available for this area');
@@ -50,7 +58,9 @@ export class CallNextAreaFightUseCase {
     }
 
     const updatedFight = await this.fightRepository.update(fight.call());
-    const updatedQueueItem = await this.areaQueueItemRepository.update(nextItem.call());
+    const updatedQueueItem = await this.areaQueueItemRepository.update(
+      nextItem.call(),
+    );
 
     await this.eventBus.publish({
       name: 'queue.updated',
@@ -72,8 +82,11 @@ export class CallNextAreaFightUseCase {
         areaName: area.name,
         currentFightId: updatedFight.id as number,
         nextFightId:
-          queueItems.find((item) => item.id !== nextItem.id && item.status === AreaQueueItemStatus.QUEUED)
-            ?.fightId ?? null,
+          queueItems.find(
+            (item) =>
+              item.id !== nextItem.id &&
+              item.status === AreaQueueItemStatus.QUEUED,
+          )?.fightId ?? null,
       },
       occurredAt: new Date(),
     });

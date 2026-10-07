@@ -190,7 +190,10 @@ export class RefactorTeamsToAcademies1760000007000
     await queryRunner.dropForeignKey('athletes', 'FK_ATHLETES_ACADEMY_ID');
     await queryRunner.dropIndex('athletes', 'IDX_ATHLETES_ACADEMY_ID');
     await queryRunner.dropColumn('athletes', 'academy_id');
-    await queryRunner.dropIndex('academies', 'IDX_ACADEMIES_COMPETITION_ID_NAME');
+    await queryRunner.dropIndex(
+      'academies',
+      'IDX_ACADEMIES_COMPETITION_ID_NAME',
+    );
     await queryRunner.dropTable('academies');
   }
 }

@@ -224,7 +224,6 @@ export class CbjjFightGenerationStrategy
     };
   }
 
-
   /**
    * Monta uma chave eliminatoria sobre os participantes informados. Quem fica
    * sem par na rodada passa direto, sem gerar luta.
@@ -233,7 +232,11 @@ export class CbjjFightGenerationStrategy
     builder: Builder,
     entrants: Entrant[],
     startRound: number,
-  ): { finalIndex: number | null; semifinalIndexes: number[]; lastRound: number } {
+  ): {
+    finalIndex: number | null;
+    semifinalIndexes: number[];
+    lastRound: number;
+  } {
     let current = [...entrants];
     let round = startRound;
     let previousRoundIndexes: number[] = [];

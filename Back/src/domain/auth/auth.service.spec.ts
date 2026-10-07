@@ -147,9 +147,9 @@ describe('AuthService', () => {
 
     expect(updatedUser?.passwordHash).not.toBe(legacyPasswordHash);
     expect(updatedUser?.passwordHash.startsWith('scrypt:')).toBe(true);
-    expect(realPasswordHasher.compare('staff123', updatedUser!.passwordHash)).toBe(
-      true,
-    );
+    expect(
+      realPasswordHasher.compare('staff123', updatedUser!.passwordHash),
+    ).toBe(true);
   });
 });
 

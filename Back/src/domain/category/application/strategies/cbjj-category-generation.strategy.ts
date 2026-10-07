@@ -107,38 +107,40 @@ export class CbjjCategoryGenerationStrategy extends CategoryGenerationStrategy {
       );
     }
 
-    return Array.from(grouped.values())
-      .map((group) => ({
-        category: Category.create({
-          competitionId,
-          name: group.name,
-          belt: group.belt,
-          allowMerge: false,
-          mergeWithBelt: null,
-          ageMin: group.ageMin,
-          ageMax: group.ageMax,
-          weightMinGrams: group.weightMinGrams,
-          weightMaxGrams: group.weightMaxGrams,
-          totalAthletes: group.athleteIds.length,
-        }),
-        athleteIds: [...group.athleteIds].sort((left, right) => left - right),
-      }))
-      // Combates comecam pelas categorias de menor idade e avancam em ordem.
-      .sort((left, right) => {
-        const ageDiff =
-          (left.category.ageMin ?? 0) - (right.category.ageMin ?? 0);
-        if (ageDiff !== 0) {
-          return ageDiff;
-        }
+    return (
+      Array.from(grouped.values())
+        .map((group) => ({
+          category: Category.create({
+            competitionId,
+            name: group.name,
+            belt: group.belt,
+            allowMerge: false,
+            mergeWithBelt: null,
+            ageMin: group.ageMin,
+            ageMax: group.ageMax,
+            weightMinGrams: group.weightMinGrams,
+            weightMaxGrams: group.weightMaxGrams,
+            totalAthletes: group.athleteIds.length,
+          }),
+          athleteIds: [...group.athleteIds].sort((left, right) => left - right),
+        }))
+        // Combates comecam pelas categorias de menor idade e avancam em ordem.
+        .sort((left, right) => {
+          const ageDiff =
+            (left.category.ageMin ?? 0) - (right.category.ageMin ?? 0);
+          if (ageDiff !== 0) {
+            return ageDiff;
+          }
 
-        if (left.category.belt !== right.category.belt) {
-          return left.category.belt.localeCompare(right.category.belt);
-        }
+          if (left.category.belt !== right.category.belt) {
+            return left.category.belt.localeCompare(right.category.belt);
+          }
 
-        return (
-          (left.category.weightMaxGrams ?? Number.MAX_SAFE_INTEGER) -
-          (right.category.weightMaxGrams ?? Number.MAX_SAFE_INTEGER)
-        );
-      });
+          return (
+            (left.category.weightMaxGrams ?? Number.MAX_SAFE_INTEGER) -
+            (right.category.weightMaxGrams ?? Number.MAX_SAFE_INTEGER)
+          );
+        })
+    );
   }
 }

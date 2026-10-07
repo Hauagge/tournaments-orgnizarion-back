@@ -33,7 +33,10 @@ export class Athlete {
   private constructor(private readonly props: AthleteProps) {}
 
   static create(
-    props: Omit<AthleteProps, 'id' | 'createdAt' | 'paymentStatus' | 'gender'> & {
+    props: Omit<
+      AthleteProps,
+      'id' | 'createdAt' | 'paymentStatus' | 'gender'
+    > & {
       paymentStatus?: PaymentStatus;
       gender?: AthleteGender | null;
     },

@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
-import { makeAthlete, makeCategory, makeCompetition } from '../../../../../test/factories';
+import {
+  makeAthlete,
+  makeCategory,
+  makeCompetition,
+} from '../../../../../test/factories';
 import {
   InMemoryAthleteRepository,
   InMemoryCategoryRepository,
@@ -53,7 +57,9 @@ describe('DistributeAthletesUseCase', () => {
       new StubCategoryDistributionService({ allocated: [], rejected: [] }),
     );
 
-    await expect(useCase.execute({ competitionId: 999 })).rejects.toBeInstanceOf(NotFoundError);
+    await expect(
+      useCase.execute({ competitionId: 999 }),
+    ).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it('throws ValidationError when there are no categories registered', async () => {
@@ -66,12 +72,20 @@ describe('DistributeAthletesUseCase', () => {
       new StubCategoryDistributionService({ allocated: [], rejected: [] }),
     );
 
-    await expect(useCase.execute({ competitionId: 1 })).rejects.toBeInstanceOf(ValidationError);
+    await expect(useCase.execute({ competitionId: 1 })).rejects.toBeInstanceOf(
+      ValidationError,
+    );
   });
 
   it('groups allocated athletes by category and persists the assignments', async () => {
-    const addAthletesToCategories = vi.spyOn(categoryRepository, 'addAthletesToCategories');
-    const findWeighIns = vi.spyOn(weighInRepository, 'findByCompetitionIdAndAthleteIds');
+    const addAthletesToCategories = vi.spyOn(
+      categoryRepository,
+      'addAthletesToCategories',
+    );
+    const findWeighIns = vi.spyOn(
+      weighInRepository,
+      'findByCompetitionIdAndAthleteIds',
+    );
     const useCase = new DistributeAthletesUseCase(
       competitionRepository,
       categoryRepository,
@@ -105,7 +119,10 @@ describe('DistributeAthletesUseCase', () => {
   });
 
   it('reports rejected athletes with their reason', async () => {
-    const addAthletesToCategories = vi.spyOn(categoryRepository, 'addAthletesToCategories');
+    const addAthletesToCategories = vi.spyOn(
+      categoryRepository,
+      'addAthletesToCategories',
+    );
     const useCase = new DistributeAthletesUseCase(
       competitionRepository,
       categoryRepository,

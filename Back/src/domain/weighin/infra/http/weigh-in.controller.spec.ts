@@ -98,9 +98,10 @@ describe('CompetitionAccessGuard protecting WeighInController', () => {
     guard = new CompetitionAccessGuard(reflector, userCompetitionRepository);
   });
 
-  const buildContext = (
-    request: { params: Record<string, string>; user?: AuthenticatedUser },
-  ): ExecutionContext =>
+  const buildContext = (request: {
+    params: Record<string, string>;
+    user?: AuthenticatedUser;
+  }): ExecutionContext =>
     ({
       getHandler: () => WeighInController.prototype.confirm,
       getClass: () => WeighInController,

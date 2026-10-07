@@ -6,10 +6,7 @@ import {
   KeyGroupDetailsView,
 } from '../../repository/IKeyGroupRepository.repository';
 
-export type KeyGroupBracketFightView = Omit<
-  KeyGroupDetailsFightView,
-  'id'
-> & {
+export type KeyGroupBracketFightView = Omit<KeyGroupDetailsFightView, 'id'> & {
   id: number | null;
   enabled: boolean;
 };
@@ -110,7 +107,9 @@ export class KeyGroupBracketViewBuilderService {
     details: KeyGroupDetailsView,
   ): KeyGroupBracketFightView[] {
     const fights = this.toEnabledFights(
-      [...details.fights].sort((left, right) => left.orderIndex - right.orderIndex),
+      [...details.fights].sort(
+        (left, right) => left.orderIndex - right.orderIndex,
+      ),
     );
 
     if (fights.length >= 3) {
@@ -149,7 +148,9 @@ export class KeyGroupBracketViewBuilderService {
   private buildOlympicPhases(
     fights: KeyGroupDetailsFightView[],
   ): KeyGroupBracketPhaseView[] {
-    const sorted = [...fights].sort((left, right) => left.orderIndex - right.orderIndex);
+    const sorted = [...fights].sort(
+      (left, right) => left.orderIndex - right.orderIndex,
+    );
     const firstRound = sorted.slice(0, Math.max(sorted.length - 1, 0));
     const finalFight = sorted.at(-1);
 
@@ -188,7 +189,10 @@ export class KeyGroupBracketViewBuilderService {
     );
 
     for (const fight of details.fights) {
-      if (fight.status !== FightStatus.FINISHED || fight.winnerAthleteId === null) {
+      if (
+        fight.status !== FightStatus.FINISHED ||
+        fight.winnerAthleteId === null
+      ) {
         continue;
       }
 

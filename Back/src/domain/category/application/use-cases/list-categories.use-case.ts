@@ -14,7 +14,8 @@ export class ListCategoriesUseCase {
   ) {}
 
   async execute(competitionId: number): Promise<Category[]> {
-    const competition = await this.competitionRepository.findById(competitionId);
+    const competition =
+      await this.competitionRepository.findById(competitionId);
 
     if (!competition) {
       throw new NotFoundError(`Competition with id ${competitionId} not found`);

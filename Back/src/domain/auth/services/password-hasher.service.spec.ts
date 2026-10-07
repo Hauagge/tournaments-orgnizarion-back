@@ -41,9 +41,7 @@ describe('PasswordHasherService', () => {
     const legacyHashedPassword = legacyHash('secret123');
 
     expect(service.compare('secret123', legacyHashedPassword)).toBe(true);
-    expect(service.compare('wrong-password', legacyHashedPassword)).toBe(
-      false,
-    );
+    expect(service.compare('wrong-password', legacyHashedPassword)).toBe(false);
   });
 
   it('should report that a legacy-formatted hash needs a rehash', () => {

@@ -22,7 +22,11 @@ export class AuthService {
       throw new UnauthorizedException('Usuário ou senha inválidos');
     }
 
-    await this.rehashPasswordIfNeeded(user.id, data.password, user.passwordHash);
+    await this.rehashPasswordIfNeeded(
+      user.id,
+      data.password,
+      user.passwordHash,
+    );
 
     const competitionIds = this.extractCompetitionIds(user);
     const academyId = user.academyId ?? null;

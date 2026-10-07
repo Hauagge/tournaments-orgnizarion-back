@@ -93,16 +93,8 @@ export class CompetitionRepository implements ICompetitionRepository {
         'athlete',
         'athlete.competition_id = competition.id',
       )
-      .leftJoin(
-        'areas',
-        'area',
-        'area.competition_id = competition.id',
-      )
-      .leftJoin(
-        'fights',
-        'fight',
-        'fight.competition_id = competition.id',
-      )
+      .leftJoin('areas', 'area', 'area.competition_id = competition.id')
+      .leftJoin('fights', 'fight', 'fight.competition_id = competition.id')
       .select('competition.id', 'competitionId')
       .addSelect('competition.name', 'name')
       .addSelect('competition.mode', 'mode')

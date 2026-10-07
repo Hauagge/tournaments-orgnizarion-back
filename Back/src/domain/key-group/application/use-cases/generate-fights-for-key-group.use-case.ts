@@ -34,7 +34,9 @@ export class GenerateFightsForKeyGroupUseCase {
     }
 
     if (group.status === KeyGroupStatus.DRAFT) {
-      throw new ValidationError('At least 2 athletes are required before generating fights');
+      throw new ValidationError(
+        'At least 2 athletes are required before generating fights',
+      );
     }
 
     const competition = await this.competitionRepository.findById(
@@ -42,24 +44,34 @@ export class GenerateFightsForKeyGroupUseCase {
     );
 
     if (!competition) {
-      throw new NotFoundError(`Competition with id ${group.competitionId} not found`);
+      throw new NotFoundError(
+        `Competition with id ${group.competitionId} not found`,
+      );
     }
 
     if (competition.mode !== CompetitionMode.KEYS) {
-      throw new ValidationError('This endpoint is only available for competitions in KEYS mode');
+      throw new ValidationError(
+        'This endpoint is only available for competitions in KEYS mode',
+      );
     }
 
-    const members = await this.keyGroupRepository.listMembersByKeyGroupId(keyGroupId);
+    const members =
+      await this.keyGroupRepository.listMembersByKeyGroupId(keyGroupId);
     if (members.length < 2 || members.length > 4) {
-      throw new ValidationError('Key groups must contain between 2 and 4 athletes');
+      throw new ValidationError(
+        'Key groups must contain between 2 and 4 athletes',
+      );
     }
 
-    const existingFights = await this.fightRepository.listByKeyGroupId(keyGroupId);
+    const existingFights =
+      await this.fightRepository.listByKeyGroupId(keyGroupId);
     const hasNonCanceledFight = existingFights.some(
       (fight) => fight.status !== FightStatus.CANCELED,
     );
     if (hasNonCanceledFight) {
-      throw new ValidationError('Fights have already been generated for this key group');
+      throw new ValidationError(
+        'Fights have already been generated for this key group',
+      );
     }
 
     const strategy = this.strategyResolver.resolve(
@@ -75,7 +87,9 @@ export class GenerateFightsForKeyGroupUseCase {
 
     const linkedFights = await this.fightRepository.withTransaction(
       async (txFightRepository) => {
-        const createdFights = await txFightRepository.createMany(generated.fights);
+        const createdFights = await txFightRepository.createMany(
+          generated.fights,
+        );
         const linked = this.linkBracketFights(createdFights);
 
         return txFightRepository.updateMany(linked);

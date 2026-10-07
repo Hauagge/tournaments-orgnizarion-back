@@ -11,7 +11,9 @@ import { FightEntity } from '../../domain/entities/fight.entity';
 import { FightStatus } from '../../domain/value-objects/fight-status.enum';
 import { UpdateFightUseCase } from './update-fight.use-case';
 
-function makeFight(overrides: Partial<Parameters<typeof FightEntity.restore>[0]> = {}) {
+function makeFight(
+  overrides: Partial<Parameters<typeof FightEntity.restore>[0]> = {},
+) {
   return FightEntity.restore({
     id: 1,
     competitionId: 1,
@@ -47,7 +49,11 @@ describe('UpdateFightUseCase', () => {
   });
 
   function makeUseCase() {
-    return new UpdateFightUseCase(categoryRepository, athleteRepository, fightRepository);
+    return new UpdateFightUseCase(
+      categoryRepository,
+      athleteRepository,
+      fightRepository,
+    );
   }
 
   it('updates the fight order and area', async () => {
@@ -80,7 +86,9 @@ describe('UpdateFightUseCase', () => {
   });
 
   it('throws NotFoundError when the fight does not belong to the competition', async () => {
-    fightRepository = new InMemoryFightRepository([makeFight({ competitionId: 2 })]);
+    fightRepository = new InMemoryFightRepository([
+      makeFight({ competitionId: 2 }),
+    ]);
     const useCase = makeUseCase();
 
     await expect(
@@ -96,12 +104,19 @@ describe('UpdateFightUseCase', () => {
     const useCase = makeUseCase();
 
     await expect(
-      useCase.execute({ currentUserId: 1, competitionId: 1, fightId: 1, athleteBId: 99 }),
+      useCase.execute({
+        currentUserId: 1,
+        competitionId: 1,
+        fightId: 1,
+        athleteBId: 99,
+      }),
     ).rejects.toBeInstanceOf(ValidationError);
   });
 
   it('rejects an athlete outside the fight category', async () => {
-    fightRepository = new InMemoryFightRepository([makeFight({ categoryId: 7 })]);
+    fightRepository = new InMemoryFightRepository([
+      makeFight({ categoryId: 7 }),
+    ]);
     categoryRepository = new InMemoryCategoryRepository(
       [],
       [
@@ -112,7 +127,12 @@ describe('UpdateFightUseCase', () => {
     const useCase = makeUseCase();
 
     await expect(
-      useCase.execute({ currentUserId: 1, competitionId: 1, fightId: 1, athleteBId: 30 }),
+      useCase.execute({
+        currentUserId: 1,
+        competitionId: 1,
+        fightId: 1,
+        athleteBId: 30,
+      }),
     ).rejects.toBeInstanceOf(ValidationError);
   });
 

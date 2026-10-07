@@ -22,8 +22,18 @@ describe('ChampionAcademiesReportUseCase', () => {
     useCase = new ChampionAcademiesReportUseCase(
       new InMemoryCompetitionRepository([makeCompetition({ id: 1 })]),
       new InMemoryCategoryRepository([
-        makeCategory({ id: 1, name: 'Adulto Azul Leve', belt: 'blue', championAthleteId: 10 }),
-        makeCategory({ id: 2, name: 'Adulto Azul Medio', belt: 'blue', championAthleteId: 20 }),
+        makeCategory({
+          id: 1,
+          name: 'Adulto Azul Leve',
+          belt: 'blue',
+          championAthleteId: 10,
+        }),
+        makeCategory({
+          id: 2,
+          name: 'Adulto Azul Medio',
+          belt: 'blue',
+          championAthleteId: 20,
+        }),
         makeCategory({
           id: 3,
           name: 'Infantil Branco Leve',
@@ -63,7 +73,11 @@ describe('ChampionAcademiesReportUseCase', () => {
       }),
     );
     expect(report.academies[1]).toEqual(
-      expect.objectContaining({ position: 2, academyName: 'Alliance', totalChampions: 1 }),
+      expect.objectContaining({
+        position: 2,
+        academyName: 'Alliance',
+        totalChampions: 1,
+      }),
     );
   });
 
@@ -109,7 +123,10 @@ describe('ChampionAcademiesReportUseCase', () => {
   });
 
   it('filters by category and age division', async () => {
-    const byCategory = await useCase.execute({ competitionId: 1, categoryId: 3 });
+    const byCategory = await useCase.execute({
+      competitionId: 1,
+      categoryId: 3,
+    });
     expect(byCategory.totalChampionAthletes).toBe(1);
 
     const byAgeDivision = await useCase.execute({
@@ -233,8 +250,8 @@ describe('ChampionAcademiesReportUseCase', () => {
   });
 
   it('throws NotFoundError when the competition does not exist', async () => {
-    await expect(useCase.execute({ competitionId: 999 })).rejects.toBeInstanceOf(
-      NotFoundError,
-    );
+    await expect(
+      useCase.execute({ competitionId: 999 }),
+    ).rejects.toBeInstanceOf(NotFoundError);
   });
 });

@@ -21,7 +21,6 @@ export abstract class CategoryGenerationStrategy {
   ): GeneratedCategory[];
 
   protected calculateAge(birthDate: Date): number {
-
     return new Date().getFullYear() - birthDate.getFullYear();
   }
 

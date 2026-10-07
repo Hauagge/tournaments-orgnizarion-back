@@ -2,7 +2,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { CompetitionMode } from '@/domain/competition/domain/value-objects/competition-mode.enum';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { ValidationError } from '@/shared/errors/validation.error';
-import { makeAthlete, makeCategory, makeCompetition } from '../../../../../test/factories';
+import {
+  makeAthlete,
+  makeCategory,
+  makeCompetition,
+} from '../../../../../test/factories';
 import {
   InMemoryAthleteRepository,
   InMemoryCategoryRepository,
@@ -80,7 +84,9 @@ describe('CreateKeyGroupUseCase', () => {
   it('throws NotFoundError when the competition does not exist', async () => {
     const useCase = makeUseCase();
 
-    await expect(useCase.execute({ competitionId: 999 })).rejects.toBeInstanceOf(NotFoundError);
+    await expect(
+      useCase.execute({ competitionId: 999 }),
+    ).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it('rejects competitions that are not in KEYS mode', async () => {
@@ -89,7 +95,9 @@ describe('CreateKeyGroupUseCase', () => {
     ]);
     const useCase = makeUseCase();
 
-    await expect(useCase.execute({ competitionId: 1 })).rejects.toBeInstanceOf(ValidationError);
+    await expect(useCase.execute({ competitionId: 1 })).rejects.toBeInstanceOf(
+      ValidationError,
+    );
   });
 
   it('rejects a category that does not belong to the competition', async () => {
@@ -139,7 +147,14 @@ describe('CreateKeyGroupUseCase', () => {
           createdAt: new Date(),
         }),
       ],
-      [KeyGroupMember.restore({ id: 1, keyGroupId: 999, athleteId: 10, createdAt: new Date() })],
+      [
+        KeyGroupMember.restore({
+          id: 1,
+          keyGroupId: 999,
+          athleteId: 10,
+          createdAt: new Date(),
+        }),
+      ],
     );
     const useCase = makeUseCase();
 

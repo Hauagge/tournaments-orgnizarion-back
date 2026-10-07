@@ -5,8 +5,7 @@ export abstract class IUserCompetitionRepository {
   abstract listByCompetitionId(input: {
     competitionId: number;
     search?: string;
-  },
-  ): Promise<UserCompetitionTypeOrmEntity[]>;
+  }): Promise<UserCompetitionTypeOrmEntity[]>;
 
   abstract findByUserIdAndCompetitionId(input: {
     userId: number;

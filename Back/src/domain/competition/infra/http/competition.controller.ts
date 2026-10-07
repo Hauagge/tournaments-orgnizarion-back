@@ -143,7 +143,9 @@ export class CompetitionController {
   @Get('dashboard-summary')
   async dashboardSummary(
     @CurrentUser() currentUser: AuthenticatedUser,
-  ): Promise<ApiResponse<Awaited<ReturnType<GetDashboardSummaryUseCase['execute']>>>> {
+  ): Promise<
+    ApiResponse<Awaited<ReturnType<GetDashboardSummaryUseCase['execute']>>>
+  > {
     const data = await this.getDashboardSummaryUseCase.execute({
       currentUserId: currentUser.sub,
     });

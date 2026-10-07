@@ -32,8 +32,12 @@ export class CreateCompetitionUseCase {
     });
 
     const savedEntity = await this.dataSource.transaction(async (manager) => {
-      const competitionRepository = manager.getRepository(CompetitionTypeOrmEntity);
-      const userCompetitionRepository = manager.getRepository(UserCompetitionTypeOrmEntity);
+      const competitionRepository = manager.getRepository(
+        CompetitionTypeOrmEntity,
+      );
+      const userCompetitionRepository = manager.getRepository(
+        UserCompetitionTypeOrmEntity,
+      );
 
       const entity = competitionRepository.create(
         CompetitionMapper.toPersistence(competition),

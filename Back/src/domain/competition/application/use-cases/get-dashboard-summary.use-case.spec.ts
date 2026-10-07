@@ -24,7 +24,9 @@ class InMemoryCompetitionRepository implements ICompetitionRepository {
   }
 
   async findById(id: number): Promise<Competition | null> {
-    return this.competitions.find((competition) => competition.id === id) ?? null;
+    return (
+      this.competitions.find((competition) => competition.id === id) ?? null
+    );
   }
 
   async list(): Promise<[Competition[], number]> {

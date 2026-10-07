@@ -31,7 +31,11 @@ describe('CreateManualFightUseCase', () => {
   });
 
   function makeUseCase() {
-    return new CreateManualFightUseCase(categoryRepository, athleteRepository, fightRepository);
+    return new CreateManualFightUseCase(
+      categoryRepository,
+      athleteRepository,
+      fightRepository,
+    );
   }
 
   it('creates a manual fight between two distinct athletes of the competition', async () => {

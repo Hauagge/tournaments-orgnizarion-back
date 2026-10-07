@@ -32,21 +32,29 @@ export class CreateKeyGroupUseCase {
   ) {}
 
   async execute(input: CreateKeyGroupInput): Promise<KeyGroupDetailsView> {
-    const competition = await this.competitionRepository.findById(input.competitionId);
+    const competition = await this.competitionRepository.findById(
+      input.competitionId,
+    );
 
     if (!competition) {
-      throw new NotFoundError(`Competition with id ${input.competitionId} not found`);
+      throw new NotFoundError(
+        `Competition with id ${input.competitionId} not found`,
+      );
     }
 
     if (competition.mode !== CompetitionMode.KEYS) {
-      throw new ValidationError('Key groups are only available for competitions in KEYS mode');
+      throw new ValidationError(
+        'Key groups are only available for competitions in KEYS mode',
+      );
     }
 
     if (input.categoryId !== undefined && input.categoryId !== null) {
       const category = await this.categoryRepository.findById(input.categoryId);
 
       if (!category || category.competitionId !== input.competitionId) {
-        throw new ValidationError('Category does not belong to the selected competition');
+        throw new ValidationError(
+          'Category does not belong to the selected competition',
+        );
       }
     }
 
@@ -59,7 +67,9 @@ export class CreateKeyGroupUseCase {
     if (athleteIds.length > 0) {
       const [athletes, existingGroups] = await Promise.all([
         Promise.all(
-          athleteIds.map((athleteId) => this.athleteRepository.findById(athleteId)),
+          athleteIds.map((athleteId) =>
+            this.athleteRepository.findById(athleteId),
+          ),
         ),
         Promise.all(
           athleteIds.map((athleteId) =>
@@ -81,7 +91,9 @@ export class CreateKeyGroupUseCase {
         }
 
         if (athlete.competitionId !== input.competitionId) {
-          throw new ValidationError('Athlete does not belong to the same competition');
+          throw new ValidationError(
+            'Athlete does not belong to the same competition',
+          );
         }
 
         if (existingGroup) {
@@ -112,10 +124,14 @@ export class CreateKeyGroupUseCase {
       await this.keyGroupRepository.update(nextStatus);
     }
 
-    const details = await this.keyGroupRepository.getDetails(group.id as number);
+    const details = await this.keyGroupRepository.getDetails(
+      group.id as number,
+    );
 
     if (!details) {
-      throw new NotFoundError(`Key group with id ${group.id as number} not found`);
+      throw new NotFoundError(
+        `Key group with id ${group.id as number} not found`,
+      );
     }
 
     return details;

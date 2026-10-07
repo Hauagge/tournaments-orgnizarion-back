@@ -8,7 +8,9 @@ export type KeyGroupMemberProps = {
 export class KeyGroupMember {
   private constructor(private readonly props: KeyGroupMemberProps) {}
 
-  static create(props: Omit<KeyGroupMemberProps, 'id' | 'createdAt'>): KeyGroupMember {
+  static create(
+    props: Omit<KeyGroupMemberProps, 'id' | 'createdAt'>,
+  ): KeyGroupMember {
     return new KeyGroupMember({
       ...props,
       createdAt: new Date(),
@@ -23,8 +25,16 @@ export class KeyGroupMember {
     return { ...this.props };
   }
 
-  get id(): number | undefined { return this.props.id; }
-  get keyGroupId(): number { return this.props.keyGroupId; }
-  get athleteId(): number { return this.props.athleteId; }
-  get createdAt(): Date { return this.props.createdAt; }
+  get id(): number | undefined {
+    return this.props.id;
+  }
+  get keyGroupId(): number {
+    return this.props.keyGroupId;
+  }
+  get athleteId(): number {
+    return this.props.athleteId;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt;
+  }
 }

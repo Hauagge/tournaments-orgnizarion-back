@@ -125,11 +125,7 @@ export class CategoryRepository implements ICategoryRepository {
   ): Promise<number[]> {
     const rows = await this.categoryAthleteRepository
       .createQueryBuilder('ca')
-      .innerJoin(
-        CategoryTypeOrmEntity,
-        'c',
-        'c.id = ca.category_id',
-      )
+      .innerJoin(CategoryTypeOrmEntity, 'c', 'c.id = ca.category_id')
       .where('c.competition_id = :competitionId', { competitionId })
       .select('ca.athlete_id', 'athleteId')
       .getRawMany<{ athleteId: number }>();

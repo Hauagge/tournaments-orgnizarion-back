@@ -48,18 +48,20 @@ export class CompetitionAccessGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const resolver = this.reflector.getAllAndOverride<CompetitionAccessResolver>(
-      COMPETITION_ACCESS_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const resolver =
+      this.reflector.getAllAndOverride<CompetitionAccessResolver>(
+        COMPETITION_ACCESS_KEY,
+        [context.getHandler(), context.getClass()],
+      );
 
     if (!resolver) {
       return true;
     }
 
-    const request = context
-      .switchToHttp()
-      .getRequest<{ params: Record<string, string>; user?: AuthenticatedUser }>();
+    const request = context.switchToHttp().getRequest<{
+      params: Record<string, string>;
+      user?: AuthenticatedUser;
+    }>();
 
     const userId = request.user?.sub;
     if (!userId) {

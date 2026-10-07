@@ -26,8 +26,13 @@ export class RemoveTeamLegacy1760000015000 implements MigrationInterface {
     }
 
     const competitionsTable = await queryRunner.getTable('competitions');
-    if (competitionsTable?.findColumnByName('lock_teams_after_weigh_in_starts')) {
-      await queryRunner.dropColumn('competitions', 'lock_teams_after_weigh_in_starts');
+    if (
+      competitionsTable?.findColumnByName('lock_teams_after_weigh_in_starts')
+    ) {
+      await queryRunner.dropColumn(
+        'competitions',
+        'lock_teams_after_weigh_in_starts',
+      );
     }
 
     const teamMembersTable = await queryRunner.getTable('team_members');
@@ -37,14 +42,20 @@ export class RemoveTeamLegacy1760000015000 implements MigrationInterface {
           (foreignKey) => foreignKey.name === 'FK_TEAM_MEMBERS_TEAM_ID',
         )
       ) {
-        await queryRunner.dropForeignKey('team_members', 'FK_TEAM_MEMBERS_TEAM_ID');
+        await queryRunner.dropForeignKey(
+          'team_members',
+          'FK_TEAM_MEMBERS_TEAM_ID',
+        );
       }
       if (
         teamMembersTable.foreignKeys.some(
           (foreignKey) => foreignKey.name === 'FK_TEAM_MEMBERS_ATHLETE_ID',
         )
       ) {
-        await queryRunner.dropForeignKey('team_members', 'FK_TEAM_MEMBERS_ATHLETE_ID');
+        await queryRunner.dropForeignKey(
+          'team_members',
+          'FK_TEAM_MEMBERS_ATHLETE_ID',
+        );
       }
       await queryRunner.dropTable('team_members');
     }
@@ -56,14 +67,20 @@ export class RemoveTeamLegacy1760000015000 implements MigrationInterface {
           (foreignKey) => foreignKey.name === 'FK_TEAM_MATCHES_TEAM_A_ID',
         )
       ) {
-        await queryRunner.dropForeignKey('team_matches', 'FK_TEAM_MATCHES_TEAM_A_ID');
+        await queryRunner.dropForeignKey(
+          'team_matches',
+          'FK_TEAM_MATCHES_TEAM_A_ID',
+        );
       }
       if (
         teamMatchesTable.foreignKeys.some(
           (foreignKey) => foreignKey.name === 'FK_TEAM_MATCHES_TEAM_B_ID',
         )
       ) {
-        await queryRunner.dropForeignKey('team_matches', 'FK_TEAM_MATCHES_TEAM_B_ID');
+        await queryRunner.dropForeignKey(
+          'team_matches',
+          'FK_TEAM_MATCHES_TEAM_B_ID',
+        );
       }
       if (
         teamMatchesTable.foreignKeys.some(
@@ -78,11 +95,14 @@ export class RemoveTeamLegacy1760000015000 implements MigrationInterface {
       await queryRunner.dropTable('team_matches');
     }
 
-    const manualMatchGroupsTable = await queryRunner.getTable('manual_match_groups');
+    const manualMatchGroupsTable = await queryRunner.getTable(
+      'manual_match_groups',
+    );
     if (manualMatchGroupsTable) {
       if (
         manualMatchGroupsTable.foreignKeys.some(
-          (foreignKey) => foreignKey.name === 'FK_MANUAL_MATCH_GROUPS_TEAM_A_ID',
+          (foreignKey) =>
+            foreignKey.name === 'FK_MANUAL_MATCH_GROUPS_TEAM_A_ID',
         )
       ) {
         await queryRunner.dropForeignKey(
@@ -93,7 +113,8 @@ export class RemoveTeamLegacy1760000015000 implements MigrationInterface {
 
       if (
         manualMatchGroupsTable.foreignKeys.some(
-          (foreignKey) => foreignKey.name === 'FK_MANUAL_MATCH_GROUPS_TEAM_B_ID',
+          (foreignKey) =>
+            foreignKey.name === 'FK_MANUAL_MATCH_GROUPS_TEAM_B_ID',
         )
       ) {
         await queryRunner.dropForeignKey(
@@ -111,7 +132,8 @@ export class RemoveTeamLegacy1760000015000 implements MigrationInterface {
       }
     }
 
-    const manualMatchItemsTable = await queryRunner.getTable('manual_match_items');
+    const manualMatchItemsTable =
+      await queryRunner.getTable('manual_match_items');
     if (manualMatchItemsTable) {
       if (
         manualMatchItemsTable.foreignKeys.some(
@@ -159,7 +181,9 @@ export class RemoveTeamLegacy1760000015000 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     const competitionsTable = await queryRunner.getTable('competitions');
-    if (!competitionsTable?.findColumnByName('lock_teams_after_weigh_in_starts')) {
+    if (
+      !competitionsTable?.findColumnByName('lock_teams_after_weigh_in_starts')
+    ) {
       await queryRunner.addColumn(
         'competitions',
         new TableColumn({
@@ -194,7 +218,9 @@ export class RemoveTeamLegacy1760000015000 implements MigrationInterface {
       );
     }
 
-    const manualMatchGroupsTable = await queryRunner.getTable('manual_match_groups');
+    const manualMatchGroupsTable = await queryRunner.getTable(
+      'manual_match_groups',
+    );
     if (manualMatchGroupsTable) {
       if (!manualMatchGroupsTable.findColumnByName('team_a_id')) {
         await queryRunner.addColumn(
@@ -225,7 +251,8 @@ export class RemoveTeamLegacy1760000015000 implements MigrationInterface {
       if (
         refreshedManualMatchGroupsTable?.findColumnByName('team_a_id') &&
         !refreshedManualMatchGroupsTable.foreignKeys.some(
-          (foreignKey) => foreignKey.name === 'FK_MANUAL_MATCH_GROUPS_TEAM_A_ID',
+          (foreignKey) =>
+            foreignKey.name === 'FK_MANUAL_MATCH_GROUPS_TEAM_A_ID',
         )
       ) {
         await queryRunner.createForeignKey(
@@ -244,7 +271,8 @@ export class RemoveTeamLegacy1760000015000 implements MigrationInterface {
       if (
         refreshedManualMatchGroupsTable?.findColumnByName('team_b_id') &&
         !refreshedManualMatchGroupsTable.foreignKeys.some(
-          (foreignKey) => foreignKey.name === 'FK_MANUAL_MATCH_GROUPS_TEAM_B_ID',
+          (foreignKey) =>
+            foreignKey.name === 'FK_MANUAL_MATCH_GROUPS_TEAM_B_ID',
         )
       ) {
         await queryRunner.createForeignKey(
@@ -261,7 +289,8 @@ export class RemoveTeamLegacy1760000015000 implements MigrationInterface {
       }
     }
 
-    const manualMatchItemsTable = await queryRunner.getTable('manual_match_items');
+    const manualMatchItemsTable =
+      await queryRunner.getTable('manual_match_items');
     if (manualMatchItemsTable) {
       if (!manualMatchItemsTable.findColumnByName('team_a_id')) {
         await queryRunner.addColumn(
@@ -285,9 +314,8 @@ export class RemoveTeamLegacy1760000015000 implements MigrationInterface {
         );
       }
 
-      const refreshedManualMatchItemsTable = await queryRunner.getTable(
-        'manual_match_items',
-      );
+      const refreshedManualMatchItemsTable =
+        await queryRunner.getTable('manual_match_items');
 
       if (
         refreshedManualMatchItemsTable?.findColumnByName('team_a_id') &&

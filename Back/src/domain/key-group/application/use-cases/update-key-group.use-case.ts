@@ -40,7 +40,9 @@ export class UpdateKeyGroupUseCase {
       throw new ValidationError('Locked key groups cannot be changed');
     }
 
-    const fights = await this.fightRepository.listByKeyGroupId(group.id as number);
+    const fights = await this.fightRepository.listByKeyGroupId(
+      group.id as number,
+    );
     const hasGeneratedFights = fights.some(
       (fight) => fight.status !== FightStatus.CANCELED,
     );
@@ -53,10 +55,14 @@ export class UpdateKeyGroupUseCase {
       }
 
       if (input.categoryId !== null) {
-        const category = await this.categoryRepository.findById(input.categoryId);
+        const category = await this.categoryRepository.findById(
+          input.categoryId,
+        );
 
         if (!category || category.competitionId !== group.competitionId) {
-          throw new ValidationError('Category does not belong to the selected competition');
+          throw new ValidationError(
+            'Category does not belong to the selected competition',
+          );
         }
       }
     }
@@ -86,7 +92,10 @@ export class UpdateKeyGroupUseCase {
     return this.keyGroupRepository.update(updatedGroup);
   }
 
-  private async replaceMembers(group: KeyGroup, athleteIds: number[]): Promise<void> {
+  private async replaceMembers(
+    group: KeyGroup,
+    athleteIds: number[],
+  ): Promise<void> {
     const uniqueAthleteIds = [...new Set(athleteIds)];
 
     if (uniqueAthleteIds.length !== athleteIds.length) {
@@ -105,13 +114,16 @@ export class UpdateKeyGroupUseCase {
 
     for (const athlete of athletes) {
       if (athlete.competitionId !== group.competitionId) {
-        throw new ValidationError('All athletes must belong to the same competition');
+        throw new ValidationError(
+          'All athletes must belong to the same competition',
+        );
       }
 
-      const existingGroup = await this.keyGroupRepository.findByCompetitionIdAndAthleteId(
-        group.competitionId,
-        athlete.id as number,
-      );
+      const existingGroup =
+        await this.keyGroupRepository.findByCompetitionIdAndAthleteId(
+          group.competitionId,
+          athlete.id as number,
+        );
 
       if (existingGroup && existingGroup.id !== group.id) {
         throw new ValidationError(
@@ -120,15 +132,19 @@ export class UpdateKeyGroupUseCase {
       }
     }
 
-    const currentMembers = await this.keyGroupRepository.listMembersByKeyGroupId(
-      group.id as number,
+    const currentMembers =
+      await this.keyGroupRepository.listMembersByKeyGroupId(group.id as number);
+    const currentAthleteIds = new Set(
+      currentMembers.map((member) => member.athleteId),
     );
-    const currentAthleteIds = new Set(currentMembers.map((member) => member.athleteId));
     const nextAthleteIds = new Set(uniqueAthleteIds);
 
     for (const member of currentMembers) {
       if (!nextAthleteIds.has(member.athleteId)) {
-        await this.keyGroupRepository.removeMember(group.id as number, member.athleteId);
+        await this.keyGroupRepository.removeMember(
+          group.id as number,
+          member.athleteId,
+        );
       }
     }
 

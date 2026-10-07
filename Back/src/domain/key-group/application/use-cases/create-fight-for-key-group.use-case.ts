@@ -38,7 +38,9 @@ export class CreateFightForKeyGroupUseCase {
     const group = await this.keyGroupRepository.findById(input.keyGroupId);
 
     if (!group) {
-      throw new NotFoundError(`Key group with id ${input.keyGroupId} not found`);
+      throw new NotFoundError(
+        `Key group with id ${input.keyGroupId} not found`,
+      );
     }
 
     if (group.status === KeyGroupStatus.DRAFT) {
@@ -52,7 +54,9 @@ export class CreateFightForKeyGroupUseCase {
     );
 
     if (!competition) {
-      throw new NotFoundError(`Competition with id ${group.competitionId} not found`);
+      throw new NotFoundError(
+        `Competition with id ${group.competitionId} not found`,
+      );
     }
 
     if (competition.mode !== CompetitionMode.KEYS) {
