@@ -86,7 +86,10 @@ describe('UpdateFightOrderUseCase', () => {
       userCompetitionRepository,
       fightRepository,
       eventBus,
-      new InMemoryAreaQueueTransaction(areaQueueItemRepository, fightRepository),
+      new InMemoryAreaQueueTransaction(
+        areaQueueItemRepository,
+        fightRepository,
+      ),
     );
   });
 
@@ -156,7 +159,10 @@ describe('UpdateFightOrderUseCase', () => {
       userCompetitionRepository,
       fightRepository,
       eventBus,
-      new InMemoryAreaQueueTransaction(areaQueueItemRepository, fightRepository),
+      new InMemoryAreaQueueTransaction(
+        areaQueueItemRepository,
+        fightRepository,
+      ),
     );
 
     await expect(
@@ -213,7 +219,10 @@ describe('UpdateFightOrderUseCase', () => {
       userCompetitionRepository,
       fightRepository,
       eventBus,
-      new InMemoryAreaQueueTransaction(areaQueueItemRepository, fightRepository),
+      new InMemoryAreaQueueTransaction(
+        areaQueueItemRepository,
+        fightRepository,
+      ),
     );
 
     await useCase.execute({
@@ -271,7 +280,10 @@ describe('UpdateFightOrderUseCase', () => {
       userCompetitionRepository,
       fightRepository,
       eventBus,
-      new InMemoryAreaQueueTransaction(areaQueueItemRepository, fightRepository),
+      new InMemoryAreaQueueTransaction(
+        areaQueueItemRepository,
+        fightRepository,
+      ),
     );
 
     await useCase.execute({
@@ -319,7 +331,10 @@ describe('UpdateFightOrderUseCase', () => {
       userCompetitionRepository,
       fightRepository,
       eventBus,
-      new InMemoryAreaQueueTransaction(areaQueueItemRepository, fightRepository),
+      new InMemoryAreaQueueTransaction(
+        areaQueueItemRepository,
+        fightRepository,
+      ),
     );
 
     await useCase.execute({
@@ -353,7 +368,10 @@ describe('UpdateFightOrderUseCase', () => {
       userCompetitionRepository,
       fightRepository,
       eventBus,
-      new InMemoryAreaQueueTransaction(areaQueueItemRepository, fightRepository),
+      new InMemoryAreaQueueTransaction(
+        areaQueueItemRepository,
+        fightRepository,
+      ),
     );
 
     await expect(() =>
