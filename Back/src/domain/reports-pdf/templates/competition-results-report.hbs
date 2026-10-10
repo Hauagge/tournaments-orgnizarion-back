@@ -1,0 +1,188 @@
+<html lang='pt-BR'>
+
+<head>
+  <meta charset='UTF-8' />
+  <title>Resultados da Competição</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    @page {
+      size: A4;
+      margin: 16mm 12mm 16mm;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #111;
+      font-size: 11px;
+      background: #fff;
+    }
+
+    .header {
+      margin-bottom: 18px;
+      border-bottom: 1px solid #d8d8d8;
+      padding-bottom: 10px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+
+    .subtitle,
+    .meta {
+      color: #555;
+      font-size: 11px;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .section-break {
+      page-break-before: always;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      display: table-header-group;
+    }
+
+    tr {
+      page-break-inside: avoid;
+    }
+
+    th,
+    td {
+      border: 1px solid #dcdcdc;
+      padding: 6px 7px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f3f3f3;
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .position,
+    .total {
+      width: 70px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .category {
+      width: 26%;
+      font-weight: 700;
+    }
+
+    .pending {
+      color: #777;
+      font-style: italic;
+    }
+
+    .empty {
+      border: 1px dashed #bdbdbd;
+      padding: 14px;
+      color: #666;
+    }
+
+    .footer {
+      margin-top: 10px;
+      color: #666;
+      font-size: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <header class='header'>
+    <h1 class='title'>Resultados da Competição</h1>
+    <div class='subtitle'>{{competitionName}}</div>
+    <div class='meta'>Gerado em {{exportedAt}} · {{decidedCategories}} de
+      {{totalCategories}} categorias decididas</div>
+  </header>
+
+  <section class='section'>
+    <h2 class='section-title'>Classificação das equipes</h2>
+    {{#if academies.length}}
+    <table>
+      <thead>
+        <tr>
+          <th class='position'>Posição</th>
+          <th>Equipe</th>
+          <th class='total'>Ouro</th>
+          <th class='total'>Prata</th>
+          <th class='total'>Bronze</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each academies}}
+        <tr>
+          <td class='position'>{{position}}º</td>
+          <td>{{academyName}}</td>
+          <td class='total'>{{totalChampions}}</td>
+          <td class='total'>{{totalSilvers}}</td>
+          <td class='total'>{{totalBronzes}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    {{else}}
+    <div class='empty'>Ainda não há campeões registrados para esta competição.</div>
+    {{/if}}
+  </section>
+
+  <section class='section section-break'>
+    <h2 class='section-title'>Pódio por categoria</h2>
+    {{#if podiums.length}}
+    <table>
+      <thead>
+        <tr>
+          <th class='category'>Categoria</th>
+          <th>1º lugar</th>
+          <th>2º lugar</th>
+          <th>3º lugar</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each podiums}}
+        <tr>
+          <td class='category'>{{categoryName}}</td>
+          {{#if decided}}
+          <td>{{#if first}}{{first}}{{else}}-{{/if}}</td>
+          <td>{{#if second}}{{second}}{{else}}-{{/if}}</td>
+          <td>{{#if thirds.length}}{{#each thirds}}<div>{{this}}</div>{{/each}}{{else}}-{{/if}}</td>
+          {{else}}
+          <td class='pending' colspan='3'>Em andamento</td>
+          {{/if}}
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    {{else}}
+    <div class='empty'>Nenhuma categoria com lutas nesta competição.</div>
+    {{/if}}
+  </section>
+
+  <div class='footer'>Classificação das equipes pelo número de campeões
+    (ouro) de cada categoria. Empate: mais pratas, depois mais bronzes.</div>
+</body>
+
+</html>

@@ -8,6 +8,7 @@ import { CategoryProviderModule } from '../category/category-provider.module';
 import { CompetitionProviderModule } from '../competition/competition-provider.module';
 import { FightProviderModule } from '../fight/fight-provider.module';
 import { KeyGroupProviderModule } from '../key-group/key-group-provider.module';
+import { ReportsModule } from '../reports/reports.module';
 import { CategoryPodiumService } from '../fight/application/services/category-podium.service';
 import { FightsByAreaReportDataBuilderService } from './application/services/fights-by-area-report-data-builder.service';
 import { ReportDataBuilderService } from './application/services/report-data-builder.service';
@@ -15,6 +16,7 @@ import { PdfRendererService } from './application/services/pdf-renderer.service'
 import { TemplateRendererService } from './application/services/template-renderer.service';
 import { ExportBracketsReportPdfUseCase } from './application/use-cases/export-brackets-report-pdf.use-case';
 import { ExportFightsByAreaPdfUseCase } from './application/use-cases/export-fights-by-area-pdf.use-case';
+import { ExportCompetitionResultsPdfUseCase } from './application/use-cases/export-competition-results-pdf.use-case';
 import { ReportsPdfController } from './infra/http/reports-pdf.controller';
 
 @Module({
@@ -27,6 +29,7 @@ import { ReportsPdfController } from './infra/http/reports-pdf.controller';
     AthleteProviderModule,
     AcademyProviderModule,
     CategoryProviderModule,
+    ReportsModule,
   ],
   controllers: [ReportsPdfController],
   providers: [
@@ -37,6 +40,7 @@ import { ReportsPdfController } from './infra/http/reports-pdf.controller';
     PdfRendererService,
     ExportBracketsReportPdfUseCase,
     ExportFightsByAreaPdfUseCase,
+    ExportCompetitionResultsPdfUseCase,
     CompetitionAccessGuard,
   ],
 })

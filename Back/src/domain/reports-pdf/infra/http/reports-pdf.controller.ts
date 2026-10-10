@@ -23,6 +23,7 @@ import {
   ExportBracketsReportQuerySchema,
 } from './dtos/export-brackets-report.query.dto';
 import { ExportFightsByAreaPdfUseCase } from '../../application/use-cases/export-fights-by-area-pdf.use-case';
+import { ExportCompetitionResultsPdfUseCase } from '../../application/use-cases/export-competition-results-pdf.use-case';
 
 @Controller()
 @UseGuards(JwtAuthGuard, RolesGuard, CompetitionAccessGuard)
@@ -31,6 +32,7 @@ export class ReportsPdfController {
   constructor(
     private readonly exportBracketsReportPdfUseCase: ExportBracketsReportPdfUseCase,
     private readonly exportFightsByAreaPdfUseCase: ExportFightsByAreaPdfUseCase,
+    private readonly exportCompetitionResultsPdfUseCase: ExportCompetitionResultsPdfUseCase,
   ) {}
 
   @Get('competitions/:id/reports/pdf/brackets')
@@ -61,6 +63,22 @@ export class ReportsPdfController {
     params: CompetitionIdParamDto,
   ) {
     const pdf = await this.exportFightsByAreaPdfUseCase.execute(params.id);
+
+    return new StreamableFile(pdf.buffer, {
+      type: 'application/pdf',
+      disposition: `inline; filename="${pdf.fileName}"`,
+    });
+  }
+
+  @Get('competitions/:id/reports/pdf/results')
+  @CompetitionAccess({ type: 'competition', param: 'id' })
+  async exportResults(
+    @Param(new ZodValidationPipe(CompetitionIdParamSchema))
+    params: CompetitionIdParamDto,
+  ) {
+    const pdf = await this.exportCompetitionResultsPdfUseCase.execute(
+      params.id,
+    );
 
     return new StreamableFile(pdf.buffer, {
       type: 'application/pdf',

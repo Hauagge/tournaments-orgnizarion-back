@@ -13,6 +13,7 @@ import { InMemoryAuthRepository } from '../../../../../test/repositories/in-memo
 import { makeUser } from '../../../../../test/factories/user.factory';
 import { ExportBracketsReportPdfUseCase } from '../../application/use-cases/export-brackets-report-pdf.use-case';
 import { ExportFightsByAreaPdfUseCase } from '../../application/use-cases/export-fights-by-area-pdf.use-case';
+import { ExportCompetitionResultsPdfUseCase } from '../../application/use-cases/export-competition-results-pdf.use-case';
 import { ReportsPdfController } from './reports-pdf.controller';
 
 const makeCurrentUser = (
@@ -34,14 +35,34 @@ describe('ReportsPdfController', () => {
   const exportFightsByAreaPdfUseCase = {
     execute: vi.fn(),
   } as unknown as ExportFightsByAreaPdfUseCase;
+  const exportCompetitionResultsPdfUseCase = {
+    execute: vi.fn(),
+  } as unknown as ExportCompetitionResultsPdfUseCase;
 
   const controller = new ReportsPdfController(
     exportBracketsReportPdfUseCase,
     exportFightsByAreaPdfUseCase,
+    exportCompetitionResultsPdfUseCase,
   );
 
   beforeEach(() => {
     vi.resetAllMocks();
+  });
+
+  it('should return results pdf stream with proper headers', async () => {
+    vi.mocked(exportCompetitionResultsPdfUseCase.execute).mockResolvedValue({
+      buffer: Buffer.from('pdf'),
+      fileName: 'copa-central-resultados.pdf',
+    });
+
+    const result = await controller.exportResults({ id: 1 });
+
+    expect(exportCompetitionResultsPdfUseCase.execute).toHaveBeenCalledWith(1);
+    expect(result).toBeInstanceOf(StreamableFile);
+    expect(result.getHeaders()).toMatchObject({
+      type: 'application/pdf',
+      disposition: 'inline; filename="copa-central-resultados.pdf"',
+    });
   });
 
   it('should return fights-by-area pdf stream with proper headers', async () => {
