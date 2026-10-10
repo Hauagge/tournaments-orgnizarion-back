@@ -29,4 +29,6 @@ export type FightListItemView = {
   startedAt: Date | null;
   finishedAt: Date | null;
   orderIndex: number;
+  // Posicao na fila da area: e a ordem de chamada, igual a tela da area.
+  queuePosition: number | null;
 };

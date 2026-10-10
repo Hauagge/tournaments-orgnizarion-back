@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { AreaQueueItem } from '@/domain/area/domain/entities/area-queue-item.entity';
 import { KeyGroup } from '@/domain/key-group/domain/entities/key-group.entity';
 import { KeyGroupStatus } from '@/domain/key-group/domain/value-objects/key-group-status.enum';
 import { NotFoundError } from '@/shared/errors/not-found.error';
@@ -12,6 +13,7 @@ import { makeAthlete } from '../../../../../test/factories/athlete.factory';
 import { makeAcademy } from '../../../../../test/factories/academy.factory';
 import {
   InMemoryAcademyRepository,
+  InMemoryAreaQueueItemRepository,
   InMemoryAthleteRepository,
   InMemoryAuthRepository,
   InMemoryCategoryRepository,
@@ -48,8 +50,10 @@ function makeFight(
 describe('ListFightsUseCase', () => {
   let useCase: ListFightsUseCase;
   let fightRepository: InMemoryFightRepository;
+  let areaQueueItemRepository: InMemoryAreaQueueItemRepository;
 
   beforeEach(() => {
+    areaQueueItemRepository = new InMemoryAreaQueueItemRepository();
     fightRepository = new InMemoryFightRepository([
       makeFight({ id: 1 }),
       makeFight({ id: 2, categoryId: null, keyGroupId: 8 }),
@@ -86,6 +90,32 @@ describe('ListFightsUseCase', () => {
           status: KeyGroupStatus.READY,
           createdAt: new Date('2026-01-10T00:00:00.000Z'),
         }),
+      ]),
+      areaQueueItemRepository,
+    );
+  });
+
+  it('returns the area queue position of each fight', async () => {
+    fightRepository.setFights([
+      makeFight({ id: 1, areaId: 7, order: 1 }),
+      makeFight({ id: 2, areaId: 7, order: 1 }),
+      makeFight({ id: 3, areaId: null }),
+    ]);
+    await areaQueueItemRepository.createManyQueueItems([
+      AreaQueueItem.create({ areaId: 7, fightId: 2, position: 1 }),
+      AreaQueueItem.create({ areaId: 7, fightId: 1, position: 2 }),
+    ]);
+
+    const fights = await useCase.execute({
+      currentUserId: 1,
+      competitionId: 1,
+    });
+
+    expect(fights.map((fight) => [fight.id, fight.queuePosition])).toEqual(
+      expect.arrayContaining([
+        [1, 2],
+        [2, 1],
+        [3, null],
       ]),
     );
   });

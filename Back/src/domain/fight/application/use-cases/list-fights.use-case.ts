@@ -1,4 +1,5 @@
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { IAreaQueueItemRepository } from '@/domain/area/repository/IAreaQueueItemRepository.repository';
 import { IAcademyRepository } from '@/domain/academy/repository/IAcademyRepository.repository';
 import { IAthleteRepository } from '@/domain/athlete/repository/IAthleteRepository.repository';
 import { IUserCompetitionRepository } from '@/domain/auth/repository/IUserCompetitionRepository.repository';
@@ -27,6 +28,8 @@ export class ListFightsUseCase {
     private readonly categoryRepository: ICategoryRepository,
     @Inject(IKeyGroupRepository)
     private readonly keyGroupRepository: IKeyGroupRepository,
+    @Inject(IAreaQueueItemRepository)
+    private readonly areaQueueItemRepository: IAreaQueueItemRepository,
   ) {}
 
   async execute(input: {
@@ -72,6 +75,18 @@ export class ListFightsUseCase {
     );
     const keyGroupNamesById = new Map(
       keyGroups.map((keyGroup) => [keyGroup.id, keyGroup.name]),
+    );
+    const areaIds = Array.from(
+      new Set(
+        fights
+          .map((fight) => fight.areaId)
+          .filter((areaId): areaId is number => areaId !== null),
+      ),
+    );
+    const queueItems =
+      await this.areaQueueItemRepository.listByAreaIds(areaIds);
+    const queuePositionByFightId = new Map(
+      queueItems.map((item) => [item.fightId, item.position]),
     );
     const athleteIds = Array.from(
       new Set(
@@ -158,6 +173,10 @@ export class ListFightsUseCase {
       startedAt: fight.startedAt,
       finishedAt: fight.finishedAt,
       orderIndex: fight.order,
+      queuePosition:
+        fight.id !== undefined
+          ? (queuePositionByFightId.get(fight.id) ?? null)
+          : null,
     }));
   }
 }
