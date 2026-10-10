@@ -26,4 +26,6 @@ export abstract class ICategoryRepository {
   abstract addAthletesToCategories(
     additions: CategoryAthleteAddition[],
   ): Promise<void>;
+
+  abstract countByCompetitionId(competitionId: number): Promise<number>;
 }

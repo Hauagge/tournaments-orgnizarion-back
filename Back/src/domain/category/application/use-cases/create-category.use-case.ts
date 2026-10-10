@@ -7,10 +7,10 @@ import { ICategoryRepository } from '../../repository/ICategoryRepository.reposi
 
 export type CreateCategoryInput = {
   competitionId: number;
-  name: string;
   belt: string;
   allowMerge?: boolean;
   mergeWithBelt?: string | null;
+  name?: string;
   ageMin?: number | null;
   ageMax?: number | null;
   weightMinGrams?: number | null;
@@ -51,9 +51,13 @@ export class CreateCategoryUseCase {
       );
     }
 
+    const countCategories = await this.categoryRepository.countByCompetitionId(
+      input.competitionId,
+    );
+
     const category = Category.create({
       competitionId: input.competitionId,
-      name: input.name,
+      name: input.name ?? `Chave ${countCategories + 1}`,
       belt: input.belt,
       allowMerge: input.allowMerge ?? false,
       mergeWithBelt: input.allowMerge ? (input.mergeWithBelt ?? null) : null,

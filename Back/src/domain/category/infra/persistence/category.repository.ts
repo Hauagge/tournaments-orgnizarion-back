@@ -193,4 +193,11 @@ export class CategoryRepository implements ICategoryRepository {
       );
     });
   }
+
+  async countByCompetitionId(competitionId: number): Promise<number> {
+    const count = await this.categoryRepository.count({
+      where: { competitionId },
+    });
+    return count;
+  }
 }

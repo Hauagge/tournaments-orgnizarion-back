@@ -23,6 +23,13 @@ export class InMemoryCategoryRepository implements ICategoryRepository {
     this.setCategories(seedCategories);
     this.setCategoryAthletes(seedLinks);
   }
+  async countByCompetitionId(competitionId: number): Promise<number> {
+    return Promise.resolve(
+      this.categories.filter(
+        (category) => category.competitionId === competitionId,
+      ).length,
+    );
+  }
 
   setCategories(categories: Category[]) {
     this.categories = [...categories];

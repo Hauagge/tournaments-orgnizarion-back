@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const CreateCategorySchema = z
   .object({
-    name: z.string().trim().min(1).max(120),
+    name: z.string().trim().min(1).max(120).optional(),
     belt: z.string().trim().min(1).max(50),
     ageMin: z.coerce.number().int().nonnegative().nullable().optional(),
     ageMax: z.coerce.number().int().nonnegative().nullable().optional(),
