@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# Sobe back (3333) e front (3000) para operacao offline na rede do roteador.
+# Builda e sobe back (3333) e front (3000) para operacao offline na rede do
+# roteador. Sem internet o front nao e rebuildado (usa o build anterior).
 # Uso: ./scripts/start-offline.sh [interface]   (default: interface do wifi)
 #
 set -euo pipefail
@@ -17,12 +18,14 @@ else
   # ignora docker/virbr/tailscale
   IP="$(ip -4 -o addr show scope global \
         | grep -vE ' (docker|br-|virbr|tailscale)' \
-        | awk '{print $4}' | cut -d/ -f1 | head -1)"
+        | awk '{print $4}' | cut -d/ -f1 | head -1 || true)"
 fi
 
+# Sem rede nenhuma ainda da pra operar no proprio notebook.
 if [ -z "${IP:-}" ]; then
-  echo "ERRO: nao achei IP de LAN. Conecte no wifi do roteador e rode de novo." >&2
-  exit 1
+  echo "AVISO: sem IP de LAN; so este notebook acessa (http://localhost:3000)." >&2
+  echo "       Para celulares/tablets, conecte no wifi do roteador e rode de novo." >&2
+  IP="localhost"
 fi
 
 # --- pre-checagens ------------------------------------------------------------
@@ -30,6 +33,19 @@ if ! pg_isready -h localhost -p 5432 -q; then
   echo "ERRO: Postgres nao esta respondendo em localhost:5432." >&2
   echo "      sudo systemctl start postgresql" >&2
   exit 1
+fi
+
+# --- build: sempre sobe a versao mais atual do codigo -------------------------
+echo "==> Build do back"
+(cd "$BACK" && yarn -s build)
+
+# O build do front baixa fontes do Google: sem internet ele falha e pode
+# deixar o .next quebrado, entao offline segue com o build que ja existe.
+if curl -sI --max-time 5 https://fonts.googleapis.com >/dev/null; then
+  echo "==> Build do front"
+  (cd "$FRONT" && yarn -s build)
+else
+  echo "AVISO: sem internet, front NAO foi rebuildado; usando o build anterior." >&2
 fi
 
 [ -f "$BACK/dist/src/main.js" ] || [ -f "$BACK/dist/main.js" ] || {
