@@ -46,11 +46,31 @@ export class ImportAthletesUseCase {
       parsedRows,
     );
 
+    const knownAthleteKeys = new Set(
+      (
+        await this.athleteRepository.search({
+          competitionId: input.competitionId,
+        })
+      ).flatMap((athlete) => this.buildAthleteKeys(athlete)),
+    );
+
     for (const row of parsedRows) {
       if (!row.athlete) {
         errors.push({
           lineNumber: row.lineNumber,
           errors: row.errors,
+        });
+        continue;
+      }
+
+      // Reimportar o arquivo, ou a mesma inscricao repetida nele, nao pode
+      // gravar o atleta duas vezes.
+      const athleteKeys = this.buildAthleteKeys(row.athlete);
+
+      if (athleteKeys.some((key) => knownAthleteKeys.has(key))) {
+        errors.push({
+          lineNumber: row.lineNumber,
+          errors: ['Atleta ja cadastrado nesta competicao.'],
         });
         continue;
       }
@@ -106,6 +126,7 @@ export class ImportAthletesUseCase {
         );
 
         importedAthletes.push(athlete);
+        athleteKeys.forEach((key) => knownAthleteKeys.add(key));
       } catch (error) {
         errors.push({
           lineNumber: row.lineNumber,
@@ -158,6 +179,25 @@ export class ImportAthletesUseCase {
           academy.id as number,
         ]),
     );
+  }
+
+  // Documento identifica o atleta; sem ele, nome + data de nascimento.
+  private buildAthleteKeys(athlete: {
+    fullName: string;
+    documentNumber: string | null;
+    birthDate: Date;
+  }): string[] {
+    const name = athlete.fullName
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLocaleLowerCase('pt-BR');
+    const birthDate = athlete.birthDate.toISOString().slice(0, 10);
+    const document = athlete.documentNumber?.replace(/\D/g, '');
+
+    return [
+      `name:${name}|${birthDate}`,
+      ...(document ? [`document:${document}`] : []),
+    ];
   }
 
   private buildAcademyCacheKey(value: string): string {

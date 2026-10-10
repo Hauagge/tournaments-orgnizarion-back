@@ -119,4 +119,55 @@ describe('ImportAthletesUseCase', () => {
       }),
     ]);
   });
+
+  it('should skip an athlete repeated in the same file by document number', async () => {
+    const result = await useCase.execute({
+      competitionId: 10,
+      csvText: [
+        'nome,cpf,datadenasc,faixa,peso',
+        'Lorenzo Pereira,142.112.289-86,15/05/2018,gray,35.8',
+        'LORENZO DA SILVA PEREIRA,14211228986,15/05/2018,gray,35.6',
+      ].join('\n'),
+    });
+
+    expect(result.importedCount).toBe(1);
+    expect(result.failedCount).toBe(1);
+    expect(result.errors).toEqual([
+      { lineNumber: 3, errors: ['Atleta ja cadastrado nesta competicao.'] },
+    ]);
+  });
+
+  it('should not duplicate athletes when the same file is imported twice', async () => {
+    const csvText = [
+      'nome,datadenasc,faixa,peso',
+      'Ana Silva,10/05/2010,white,65',
+      'Bruno Souza,20/08/2012,blue,72.5',
+    ].join('\n');
+
+    await useCase.execute({ competitionId: 10, csvText });
+    const secondRun = await useCase.execute({ competitionId: 10, csvText });
+
+    expect(secondRun.importedCount).toBe(0);
+    expect(secondRun.failedCount).toBe(2);
+    expect(await athleteRepository.search({ competitionId: 10 })).toHaveLength(
+      2,
+    );
+  });
+
+  it('should match by name and birth date without document, keeping namesakes born on another date', async () => {
+    const result = await useCase.execute({
+      competitionId: 10,
+      csvText: [
+        'nome,datadenasc,faixa,peso',
+        'Ana Silva,10/05/2010,white,65',
+        '  ana   SILVA ,10/05/2010,white,66',
+        'Ana Silva,11/05/2010,white,65',
+      ].join('\n'),
+    });
+
+    expect(result.importedCount).toBe(2);
+    expect(result.errors).toEqual([
+      { lineNumber: 3, errors: ['Atleta ja cadastrado nesta competicao.'] },
+    ]);
+  });
 });
