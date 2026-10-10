@@ -15,6 +15,9 @@ export type ChampionAcademyRankingView = {
   academyId: number | null;
   academyName: string;
   totalChampions: number;
+  /** Pratas e bronzes so desempatam: a posicao sai primeiro dos campeoes. */
+  totalSilvers: number;
+  totalBronzes: number;
   champions: ChampionAthleteView[];
 };
 

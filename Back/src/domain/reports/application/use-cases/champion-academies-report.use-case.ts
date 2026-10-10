@@ -9,11 +9,13 @@ import {
   KeyGroupListItemView,
 } from '@/domain/key-group/repository/IKeyGroupRepository.repository';
 import { NotFoundError } from '@/shared/errors/not-found.error';
+import { countSilversAndBronzes } from './academy-medal-count';
 import {
   ChampionAcademiesReportView,
   ChampionAcademyRankingView,
   ChampionAthleteView,
 } from './champion-academies-report.view';
+import { CompetitionResultsUseCase } from './competition-results.use-case';
 
 export type ChampionAcademiesReportInput = {
   competitionId: number;
@@ -43,6 +45,7 @@ export class ChampionAcademiesReportUseCase {
     private readonly academyRepository: IAcademyRepository,
     @Inject(IKeyGroupRepository)
     private readonly keyGroupRepository: IKeyGroupRepository,
+    private readonly competitionResultsUseCase: CompetitionResultsUseCase,
   ) {}
 
   async execute(
@@ -169,14 +172,21 @@ export class ChampionAcademiesReportUseCase {
       championsByAcademy.set(key, group);
     }
 
+    const results = await this.competitionResultsUseCase.execute({
+      competitionId: input.competitionId,
+    });
+    const medals = countSilversAndBronzes(results.categories, input);
+
     const ranking: ChampionAcademyRankingView[] = Array.from(
-      championsByAcademy.values(),
+      championsByAcademy.entries(),
     )
-      .map((group) => ({
+      .map(([key, group]) => ({
         position: 0,
         academyId: group.academyId,
         academyName: group.academyName,
         totalChampions: group.champions.length,
+        totalSilvers: medals.silvers.get(key) ?? 0,
+        totalBronzes: medals.bronzes.get(key) ?? 0,
         champions: group.champions.sort((left, right) =>
           left.athleteName.localeCompare(right.athleteName),
         ),
@@ -184,6 +194,8 @@ export class ChampionAcademiesReportUseCase {
       .sort(
         (left, right) =>
           right.totalChampions - left.totalChampions ||
+          right.totalSilvers - left.totalSilvers ||
+          right.totalBronzes - left.totalBronzes ||
           left.academyName.localeCompare(right.academyName),
       )
       .map((group, index) => ({ ...group, position: index + 1 }));

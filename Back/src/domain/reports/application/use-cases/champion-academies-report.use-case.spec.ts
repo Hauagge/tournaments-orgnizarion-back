@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { makeAcademy } from '../../../../../test/factories/academy.factory';
 import { makeAthlete } from '../../../../../test/factories/athlete.factory';
@@ -14,11 +14,59 @@ import {
   InMemoryKeyGroupRepository,
 } from '../../../../../test/repositories/in-memory';
 import { ChampionAcademiesReportUseCase } from './champion-academies-report.use-case';
+import { CompetitionResultsUseCase } from './competition-results.use-case';
+import {
+  CategoryResultView,
+  ResultAthleteView,
+} from './competition-results.view';
+
+function medalist(athleteId: number, academyId: number): ResultAthleteView {
+  return {
+    athleteId,
+    athleteName: `Atleta ${athleteId}`,
+    academyId,
+    academyName: null,
+  };
+}
+
+function makePodium(
+  overrides: Partial<CategoryResultView> = {},
+): CategoryResultView {
+  return {
+    categoryId: 1,
+    keyGroupId: null,
+    categoryName: 'Adulto Azul Leve',
+    belt: 'blue',
+    ageDivision: null,
+    weightDivision: null,
+    totalAthletes: 4,
+    decided: true,
+    first: null,
+    second: null,
+    thirds: [],
+    secondarySeries: null,
+    ...overrides,
+  };
+}
 
 describe('ChampionAcademiesReportUseCase', () => {
   let useCase: ChampionAcademiesReportUseCase;
+  const competitionResults = {
+    execute: vi.fn(),
+  } as unknown as CompetitionResultsUseCase;
+
+  function mockPodiums(categories: CategoryResultView[]) {
+    vi.mocked(competitionResults.execute).mockResolvedValue({
+      competitionId: 1,
+      totalCategories: categories.length,
+      decidedCategories: categories.filter((category) => category.decided)
+        .length,
+      categories,
+    });
+  }
 
   beforeEach(() => {
+    mockPodiums([]);
     useCase = new ChampionAcademiesReportUseCase(
       new InMemoryCompetitionRepository([makeCompetition({ id: 1 })]),
       new InMemoryCategoryRepository([
@@ -56,7 +104,87 @@ describe('ChampionAcademiesReportUseCase', () => {
         makeAcademy({ id: 2, competitionId: 1, name: 'Alliance' }),
       ]),
       new InMemoryKeyGroupRepository(),
+      competitionResults,
     );
+  });
+
+  // Com filtro de faixa azul: Gracie Barra e Alliance tem 1 campeao cada.
+  it('breaks a champion tie by silvers instead of the academy name', async () => {
+    mockPodiums([makePodium({ second: medalist(40, 1) })]);
+
+    const report = await useCase.execute({ competitionId: 1, belt: 'blue' });
+
+    expect(
+      report.academies.map((academy) => [
+        academy.academyName,
+        academy.totalSilvers,
+        academy.totalBronzes,
+      ]),
+    ).toEqual([
+      ['Gracie Barra', 1, 0],
+      ['Alliance', 0, 0],
+    ]);
+  });
+
+  it('breaks a champion and silver tie by bronzes', async () => {
+    mockPodiums([
+      makePodium({
+        second: medalist(40, 1),
+        thirds: [medalist(41, 1)],
+      }),
+      makePodium({ categoryId: 2, second: medalist(43, 2) }),
+    ]);
+
+    const report = await useCase.execute({ competitionId: 1, belt: 'blue' });
+
+    expect(
+      report.academies.map((academy) => [
+        academy.academyName,
+        academy.totalSilvers,
+        academy.totalBronzes,
+      ]),
+    ).toEqual([
+      ['Gracie Barra', 1, 1],
+      ['Alliance', 1, 0],
+    ]);
+  });
+
+  it('keeps the academy name as the last tie breaker', async () => {
+    const report = await useCase.execute({ competitionId: 1, belt: 'blue' });
+
+    expect(report.academies.map((academy) => academy.academyName)).toEqual([
+      'Alliance',
+      'Gracie Barra',
+    ]);
+  });
+
+  it('ignores undecided, filtered out and silver series podiums', async () => {
+    mockPodiums([
+      makePodium({ decided: false, second: medalist(40, 1) }),
+      makePodium({ categoryId: 3, belt: 'white', second: medalist(41, 1) }),
+      makePodium({
+        categoryId: 2,
+        secondarySeries: {
+          label: 'Série Prata',
+          countsForAcademyRanking: false,
+          first: medalist(42, 1),
+          second: medalist(43, 1),
+          thirds: [medalist(44, 1)],
+        },
+      }),
+    ]);
+
+    const report = await useCase.execute({ competitionId: 1, belt: 'blue' });
+
+    expect(
+      report.academies.map((academy) => [
+        academy.totalSilvers,
+        academy.totalBronzes,
+      ]),
+    ).toEqual([
+      [0, 0],
+      [0, 0],
+    ]);
   });
 
   it('ranks academies by champion count', async () => {
@@ -143,6 +271,7 @@ describe('ChampionAcademiesReportUseCase', () => {
       new InMemoryAthleteRepository([]),
       new InMemoryAcademyRepository([]),
       new InMemoryKeyGroupRepository(),
+      competitionResults,
     );
 
     const report = await emptyUseCase.execute({ competitionId: 1 });
@@ -195,6 +324,7 @@ describe('ChampionAcademiesReportUseCase', () => {
           championAthleteId: null,
         }),
       ]),
+      competitionResults,
     );
 
     const report = await useCase.execute({ competitionId: 1 });
@@ -239,6 +369,7 @@ describe('ChampionAcademiesReportUseCase', () => {
           championAthleteId: 10,
         }),
       ]),
+      competitionResults,
     );
 
     const report = await useCase.execute({ competitionId: 1 });
