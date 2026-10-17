@@ -18,6 +18,14 @@ const makeRow = (
   athleteBName: 'Lucas Silva',
   keyGroupId: null,
   orderIndex: '3',
+  academyAName: 'Gracie',
+  academyBName: null,
+  keyGroupName: 'Juvenil Azul -60kg',
+  categoryId: '44',
+  categoryName: 'Juvenil - AZUL - Pena',
+  roundNumber: '2',
+  nextFightId: '610',
+  nextFightSlot: 'B',
   ...override,
 });
 
@@ -47,5 +55,29 @@ describe('AreaMapper.queueFightDetailsToDomain', () => {
 
     expect(details.athleteAId).toBeNull();
     expect(details.athleteBId).toBeNull();
+  });
+
+  it('repassa academia, chave, rodada e luta seguinte para montar a chave na tela', () => {
+    const details = AreaMapper.queueFightDetailsToDomain(makeRow());
+
+    expect(details).toMatchObject({
+      academyAName: 'Gracie',
+      academyBName: null,
+      keyGroupName: 'Juvenil Azul -60kg',
+      categoryId: 44,
+      categoryName: 'Juvenil - AZUL - Pena',
+      roundNumber: 2,
+      nextFightId: 610,
+      nextFightSlot: 'B',
+    });
+  });
+
+  it('mantem nula a luta seguinte quando a luta e a final', () => {
+    const details = AreaMapper.queueFightDetailsToDomain(
+      makeRow({ nextFightId: null, nextFightSlot: null }),
+    );
+
+    expect(details.nextFightId).toBeNull();
+    expect(details.nextFightSlot).toBeNull();
   });
 });

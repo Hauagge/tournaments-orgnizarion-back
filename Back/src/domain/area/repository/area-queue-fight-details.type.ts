@@ -13,4 +13,12 @@ export type AreaQueueFightDetails = {
   athleteBName: string | null;
   keyGroupId: number | null;
   orderIndex: number;
+  academyAName: string | null;
+  academyBName: string | null;
+  keyGroupName: string | null;
+  categoryId: number | null;
+  categoryName: string | null;
+  roundNumber: number;
+  nextFightId: number | null;
+  nextFightSlot: 'A' | 'B' | null;
 };

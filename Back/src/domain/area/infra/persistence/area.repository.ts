@@ -3,6 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { FightTypeOrmEntity } from '@/domain/fight/entities/fight.typeorm-entity';
 import { AthleteTypeOrmEntity } from '@/domain/athlete/infra/persistence/entities/athlete.typeorm-entity';
+import { AcademyTypeOrmEntity } from '@/domain/academy/infra/persistence/entities/academy.typeorm-entity';
+import { CategoryTypeOrmEntity } from '@/domain/category/infra/persistence/entities/category.typeorm-entity';
+import { KeyGroupTypeOrmEntity } from '@/domain/key-group/infra/persistence/entities/key-group.typeorm-entity';
 import { NotFoundError } from '@/shared/errors/not-found.error';
 import { Area } from '../../domain/entities/area.entity';
 import { AreaQueueItem } from '../../domain/entities/area-queue-item.entity';
@@ -146,6 +149,26 @@ export class AreaRepository
         'athlete_b',
         'athlete_b.id = fight.athlete_b_id',
       )
+      .leftJoin(
+        AcademyTypeOrmEntity,
+        'academy_a',
+        'academy_a.id = athlete_a.academy_id',
+      )
+      .leftJoin(
+        AcademyTypeOrmEntity,
+        'academy_b',
+        'academy_b.id = athlete_b.academy_id',
+      )
+      .leftJoin(
+        KeyGroupTypeOrmEntity,
+        'key_group',
+        'key_group.id = fight.key_group_id',
+      )
+      .leftJoin(
+        CategoryTypeOrmEntity,
+        'category',
+        'category.id = fight.category_id',
+      )
       .where('queue_item.area_id = :areaId', { areaId })
       .orderBy('queue_item.position', 'ASC')
       .addOrderBy('queue_item.id', 'ASC')
@@ -161,6 +184,14 @@ export class AreaRepository
         'athlete_b.full_name AS "athleteBName"',
         'fight.key_group_id AS "keyGroupId"',
         'fight.order_index AS "orderIndex"',
+        'academy_a.name AS "academyAName"',
+        'academy_b.name AS "academyBName"',
+        'key_group.name AS "keyGroupName"',
+        'fight.category_id AS "categoryId"',
+        'category.name AS "categoryName"',
+        'fight.round_number AS "roundNumber"',
+        'fight.next_fight_id AS "nextFightId"',
+        'fight.next_fight_slot AS "nextFightSlot"',
       ])
       .getRawMany<AreaQueueFightDetailsRow>();
 

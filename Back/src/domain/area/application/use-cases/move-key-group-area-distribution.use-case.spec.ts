@@ -118,6 +118,14 @@ class InMemoryAreaRepository
         athleteBName: null,
         keyGroupId: fight?.keyGroupId ?? null,
         orderIndex: fight?.orderIndex ?? item.position,
+        academyAName: null,
+        academyBName: null,
+        keyGroupName: null,
+        categoryId: fight?.categoryId ?? null,
+        categoryName: null,
+        roundNumber: fight?.roundNumber ?? 1,
+        nextFightId: fight?.nextFightId ?? null,
+        nextFightSlot: fight?.nextFightSlot ?? null,
       };
     });
   }

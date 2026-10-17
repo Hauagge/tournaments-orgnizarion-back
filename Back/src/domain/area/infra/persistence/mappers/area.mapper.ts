@@ -68,6 +68,14 @@ export class AreaMapper {
       athleteBName: row.athleteBName,
       keyGroupId: toNullableNumber(row.keyGroupId),
       orderIndex: Number(row.orderIndex),
+      academyAName: row.academyAName,
+      academyBName: row.academyBName,
+      keyGroupName: row.keyGroupName,
+      categoryId: toNullableNumber(row.categoryId),
+      categoryName: row.categoryName,
+      roundNumber: Number(row.roundNumber),
+      nextFightId: toNullableNumber(row.nextFightId),
+      nextFightSlot: row.nextFightSlot,
     };
   }
 }
