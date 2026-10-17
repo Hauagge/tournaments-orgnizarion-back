@@ -14,6 +14,7 @@ import { ListFightsUseCase } from '../../application/use-cases/list-fights.use-c
 import { MarkFightWinnerUseCase } from '../../application/use-cases/mark-fight-winner.use-case';
 import { StartFightUseCase } from '../../application/use-cases/start-fight.use-case';
 import { SetFightCalledUseCase } from '../../application/use-cases/set-fight-called.use-case';
+import { SwapFightSidesUseCase } from '../../application/use-cases/swap-fight-sides.use-case';
 import { UpdateFightOrderUseCase } from '../../application/use-cases/update-fight-order.use-case';
 import { UpdateFightUseCase } from '../../application/use-cases/update-fight.use-case';
 import { FightController } from './fight.controller';
@@ -26,6 +27,7 @@ describe('FightController route order (integration)', () => {
   let app: INestApplication;
   let updateFightOrderUseCase: { execute: ReturnType<typeof vi.fn> };
   let markFightWinnerUseCase: { execute: ReturnType<typeof vi.fn> };
+  let swapFightSidesUseCase: { execute: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     updateFightOrderUseCase = { execute: vi.fn().mockResolvedValue({}) };
@@ -34,6 +36,12 @@ describe('FightController route order (integration)', () => {
         fight: { id: 2, status: 'FINISHED', winnerId: 3, loserId: null },
         nextFight: null,
         categoryChampion: null,
+      }),
+    };
+
+    swapFightSidesUseCase = {
+      execute: vi.fn().mockResolvedValue({
+        toJSON: () => ({ id: 2, athleteAId: 20, athleteBId: 10 }),
       }),
     };
 
@@ -50,6 +58,7 @@ describe('FightController route order (integration)', () => {
         { provide: MarkFightWinnerUseCase, useValue: markFightWinnerUseCase },
         { provide: UpdateFightUseCase, useValue: { execute: vi.fn() } },
         { provide: DeleteFightUseCase, useValue: { execute: vi.fn() } },
+        { provide: SwapFightSidesUseCase, useValue: swapFightSidesUseCase },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -110,5 +119,18 @@ describe('FightController route order (integration)', () => {
         winType: 'SUBMISSION',
       }),
     );
+  });
+
+  it('POST /fights/:id/swap-sides troca os lados da luta', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/fights/2/swap-sides')
+      .expect(201);
+
+    expect(swapFightSidesUseCase.execute).toHaveBeenCalledWith({ fightId: 2 });
+    expect(response.body.data).toEqual({
+      id: 2,
+      athleteAId: 20,
+      athleteBId: 10,
+    });
   });
 });

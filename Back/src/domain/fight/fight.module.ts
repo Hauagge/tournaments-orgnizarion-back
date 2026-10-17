@@ -19,6 +19,7 @@ import { ListFightsUseCase } from './application/use-cases/list-fights.use-case'
 import { MarkFightWinnerUseCase } from './application/use-cases/mark-fight-winner.use-case';
 import { StartFightUseCase } from './application/use-cases/start-fight.use-case';
 import { SetFightCalledUseCase } from './application/use-cases/set-fight-called.use-case';
+import { SwapFightSidesUseCase } from './application/use-cases/swap-fight-sides.use-case';
 import { UpdateFightUseCase } from './application/use-cases/update-fight.use-case';
 import { UpdateFightOrderUseCase } from './application/use-cases/update-fight-order.use-case';
 import { FightController } from './infra/http/fight.controller';
@@ -43,6 +44,7 @@ import { FightProviderModule } from './fight-provider.module';
     GenerateFightsUseCase,
     StartFightUseCase,
     SetFightCalledUseCase,
+    SwapFightSidesUseCase,
     FinishFightUseCase,
     ListFightsUseCase,
     UpdateFightOrderUseCase,
@@ -59,6 +61,7 @@ import { FightProviderModule } from './fight-provider.module';
     GenerateFightsUseCase,
     StartFightUseCase,
     SetFightCalledUseCase,
+    SwapFightSidesUseCase,
     FinishFightUseCase,
     ListFightsUseCase,
     UpdateFightOrderUseCase,

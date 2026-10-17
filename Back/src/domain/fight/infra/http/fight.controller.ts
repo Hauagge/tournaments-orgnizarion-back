@@ -28,6 +28,7 @@ import { DeleteFightUseCase } from '../../application/use-cases/delete-fight.use
 import { MarkFightWinnerUseCase } from '../../application/use-cases/mark-fight-winner.use-case';
 import { StartFightUseCase } from '../../application/use-cases/start-fight.use-case';
 import { SetFightCalledUseCase } from '../../application/use-cases/set-fight-called.use-case';
+import { SwapFightSidesUseCase } from '../../application/use-cases/swap-fight-sides.use-case';
 import { UpdateFightUseCase } from '../../application/use-cases/update-fight.use-case';
 import { UpdateFightOrderUseCase } from '../../application/use-cases/update-fight-order.use-case';
 import {
@@ -74,6 +75,7 @@ export class FightController {
     private readonly markFightWinnerUseCase: MarkFightWinnerUseCase,
     private readonly updateFightUseCase: UpdateFightUseCase,
     private readonly deleteFightUseCase: DeleteFightUseCase,
+    private readonly swapFightSidesUseCase: SwapFightSidesUseCase,
   ) {}
 
   @Post('competitions/:id/fights/generate')
@@ -132,6 +134,22 @@ export class FightController {
     const fight = await this.setFightCalledUseCase.execute({
       fightId: params.id,
       called: false,
+    });
+
+    return {
+      data: fight.toJSON(),
+      error: null,
+    };
+  }
+
+  @Post('fights/:id/swap-sides')
+  @CompetitionAccess({ type: 'fight', param: 'id' })
+  async swapSides(
+    @Param(new ZodValidationPipe(FightIdParamSchema))
+    params: FightIdParamDto,
+  ) {
+    const fight = await this.swapFightSidesUseCase.execute({
+      fightId: params.id,
     });
 
     return {

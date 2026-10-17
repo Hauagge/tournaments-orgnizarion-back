@@ -133,6 +133,24 @@ export class FightEntity {
     });
   }
 
+  // Lado esquerdo/direito no tatame: o chamador troca para alinhar com a cor
+  // do kimono. So antes da luta comecar, para nao mexer em placar em curso.
+  swapSides(): FightEntity {
+    if (
+      this.props.status !== FightStatus.PENDING &&
+      this.props.status !== FightStatus.CALLED
+    ) {
+      throw new ValidationError('Only pending or called fights can swap sides');
+    }
+
+    return new FightEntity({
+      ...this.props,
+      athleteAId: this.props.athleteBId,
+      athleteBId: this.props.athleteAId,
+      updatedAt: new Date(),
+    });
+  }
+
   start(startedAt: Date): FightEntity {
     if (this.props.status === FightStatus.CANCELED) {
       throw new ValidationError('Canceled fights cannot be started');
