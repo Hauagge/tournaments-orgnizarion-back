@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Patch,
+  Put,
   Post,
   Query,
   StreamableFile,
@@ -33,6 +34,11 @@ import { GenerateFightsForKeyGroupUseCase } from '../../application/use-cases/ge
 import { LockKeyGroupUseCase } from '../../application/use-cases/lock-key-group.use-case';
 import { ExportCompetitionBracketsPdfUseCase } from '../../application/use-cases/export-competition-brackets-pdf.use-case';
 import { UpdateKeyGroupUseCase } from '../../application/use-cases/update-key-group.use-case';
+import { SetKeyGroupPodiumUseCase } from '../../application/use-cases/set-key-group-podium.use-case';
+import {
+  SetKeyGroupPodiumDto,
+  SetKeyGroupPodiumSchema,
+} from './dtos/set-key-group-podium.dto';
 import {
   KeyGroupDetailsView,
   KeyGroupListItemView,
@@ -87,6 +93,7 @@ export class KeyGroupController {
     private readonly generateFightsForKeyGroupUseCase: GenerateFightsForKeyGroupUseCase,
     private readonly lockKeyGroupUseCase: LockKeyGroupUseCase,
     private readonly updateKeyGroupUseCase: UpdateKeyGroupUseCase,
+    private readonly setKeyGroupPodiumUseCase: SetKeyGroupPodiumUseCase,
     private readonly exportCompetitionBracketsPdfUseCase: ExportCompetitionBracketsPdfUseCase,
   ) {}
 
@@ -160,6 +167,25 @@ export class KeyGroupController {
     body: UpdateKeyGroupDto,
   ): Promise<ApiResponse<ReturnType<KeyGroup['toJSON']>>> {
     const group = await this.updateKeyGroupUseCase.execute({
+      id: params.id,
+      ...body,
+    });
+
+    return {
+      data: group.toJSON(),
+      error: null,
+    };
+  }
+
+  @Put('key-groups/:id/podium')
+  @CompetitionAccess({ type: 'keyGroup', param: 'id' })
+  async setPodium(
+    @Param(new ZodValidationPipe(KeyGroupIdParamSchema))
+    params: KeyGroupIdParamDto,
+    @Body(new ZodValidationPipe(SetKeyGroupPodiumSchema))
+    body: SetKeyGroupPodiumDto,
+  ): Promise<ApiResponse<ReturnType<KeyGroup['toJSON']>>> {
+    const group = await this.setKeyGroupPodiumUseCase.execute({
       id: params.id,
       ...body,
     });

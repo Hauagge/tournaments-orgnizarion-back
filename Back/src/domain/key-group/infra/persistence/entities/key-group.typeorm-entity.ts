@@ -26,6 +26,12 @@ export class KeyGroupTypeOrmEntity {
   @Column({ name: 'champion_athlete_id', type: 'int', nullable: true })
   championAthleteId: number | null;
 
+  @Column({ name: 'manual_first_athlete_id', type: 'int', nullable: true })
+  manualFirstAthleteId: number | null;
+
+  @Column({ name: 'manual_second_athlete_id', type: 'int', nullable: true })
+  manualSecondAthleteId: number | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
 }

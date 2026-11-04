@@ -13,6 +13,8 @@ export class KeyGroupMapper {
       status: entity.status,
       createdAt: entity.createdAt,
       championAthleteId: entity.championAthleteId ?? null,
+      manualFirstAthleteId: entity.manualFirstAthleteId ?? null,
+      manualSecondAthleteId: entity.manualSecondAthleteId ?? null,
     });
   }
 
@@ -25,6 +27,8 @@ export class KeyGroupMapper {
     entity.status = group.status;
     entity.createdAt = group.createdAt;
     entity.championAthleteId = group.championAthleteId;
+    entity.manualFirstAthleteId = group.manualFirstAthleteId;
+    entity.manualSecondAthleteId = group.manualSecondAthleteId;
     return entity;
   }
 

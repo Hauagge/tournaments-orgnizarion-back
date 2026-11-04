@@ -94,6 +94,8 @@ export class KeyGroupRepository implements IKeyGroupRepository {
       .addSelect('keyGroup.status', 'status')
       .addSelect('keyGroup.created_at', 'createdAt')
       .addSelect('keyGroup.champion_athlete_id', 'championAthleteId')
+      .addSelect('keyGroup.manual_first_athlete_id', 'manualFirstAthleteId')
+      .addSelect('keyGroup.manual_second_athlete_id', 'manualSecondAthleteId')
       .addSelect('COUNT(member.id)', 'membersCount')
       .groupBy('keyGroup.id')
       .orderBy('keyGroup.category_id', 'ASC')
@@ -107,6 +109,8 @@ export class KeyGroupRepository implements IKeyGroupRepository {
         createdAt: Date;
         membersCount: string;
         championAthleteId: string | null;
+        manualFirstAthleteId: string | null;
+        manualSecondAthleteId: string | null;
       }>();
 
     return rows.map((row) => ({
@@ -119,6 +123,14 @@ export class KeyGroupRepository implements IKeyGroupRepository {
       membersCount: Number(row.membersCount),
       championAthleteId:
         row.championAthleteId === null ? null : Number(row.championAthleteId),
+      manualFirstAthleteId:
+        row.manualFirstAthleteId === null
+          ? null
+          : Number(row.manualFirstAthleteId),
+      manualSecondAthleteId:
+        row.manualSecondAthleteId === null
+          ? null
+          : Number(row.manualSecondAthleteId),
     }));
   }
 
@@ -254,6 +266,8 @@ export class KeyGroupRepository implements IKeyGroupRepository {
       name: group.name,
       status: group.status,
       createdAt: group.createdAt,
+      manualFirstAthleteId: group.manualFirstAthleteId,
+      manualSecondAthleteId: group.manualSecondAthleteId,
       members,
       fights,
     };

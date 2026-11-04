@@ -417,13 +417,15 @@ export class MarkFightWinnerUseCase {
       where: { keyGroupId: input.keyGroupId },
       order: { order: 'ASC', id: 'ASC' },
     });
-    const championAthleteId = this.keyGroupChampionService.resolve(
-      keyGroupFights.map(FightMapper.toDomain),
-    );
-
     const keyGroup = await input.keyGroupRepository.findOneBy({
       id: input.keyGroupId,
     });
+    // Primeiro lugar marcado a mao pela mesa vale mais que o das lutas.
+    const championAthleteId =
+      keyGroup?.manualFirstAthleteId ??
+      this.keyGroupChampionService.resolve(
+        keyGroupFights.map(FightMapper.toDomain),
+      );
 
     if (keyGroup && keyGroup.championAthleteId !== championAthleteId) {
       keyGroup.championAthleteId = championAthleteId;

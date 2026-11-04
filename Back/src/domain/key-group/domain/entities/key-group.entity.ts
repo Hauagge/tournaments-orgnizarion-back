@@ -8,6 +8,8 @@ export type KeyGroupProps = {
   status: KeyGroupStatus;
   createdAt: Date;
   championAthleteId?: number | null;
+  manualFirstAthleteId?: number | null;
+  manualSecondAthleteId?: number | null;
 };
 
 export class KeyGroup {
@@ -60,6 +62,23 @@ export class KeyGroup {
     });
   }
 
+  /**
+   * Podio marcado a mao pela mesa. Vale mais que o resultado das lutas; null
+   * devolve a posicao ao que as lutas disserem.
+   */
+  setManualPodium(input: {
+    firstAthleteId: number | null;
+    secondAthleteId: number | null;
+    championAthleteId: number | null;
+  }): KeyGroup {
+    return new KeyGroup({
+      ...this.props,
+      manualFirstAthleteId: input.firstAthleteId,
+      manualSecondAthleteId: input.secondAthleteId,
+      championAthleteId: input.championAthleteId,
+    });
+  }
+
   rename(name: string | null): KeyGroup {
     return new KeyGroup({ ...this.props, name: name?.trim() || null });
   }
@@ -88,5 +107,11 @@ export class KeyGroup {
   }
   get championAthleteId(): number | null {
     return this.props.championAthleteId ?? null;
+  }
+  get manualFirstAthleteId(): number | null {
+    return this.props.manualFirstAthleteId ?? null;
+  }
+  get manualSecondAthleteId(): number | null {
+    return this.props.manualSecondAthleteId ?? null;
   }
 }

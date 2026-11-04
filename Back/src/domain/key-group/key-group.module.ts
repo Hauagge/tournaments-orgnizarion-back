@@ -19,6 +19,9 @@ import { ListKeyGroupsUseCase } from './application/use-cases/list-key-groups.us
 import { LockKeyGroupUseCase } from './application/use-cases/lock-key-group.use-case';
 import { RemoveMemberFromKeyGroupUseCase } from './application/use-cases/remove-member-from-key-group.use-case';
 import { UpdateKeyGroupUseCase } from './application/use-cases/update-key-group.use-case';
+import { SetKeyGroupPodiumUseCase } from './application/use-cases/set-key-group-podium.use-case';
+import { KeyGroupChampionService } from './application/services/key-group-champion.service';
+import { CategoryPodiumService } from '@/domain/fight/application/services/category-podium.service';
 import { AbsoluteGpPdfRendererStrategy } from './application/strategies/absolute-gp-pdf-renderer.strategy';
 import { KeysPdfRendererStrategy } from './application/strategies/keys-pdf-renderer.strategy';
 import { PdfRendererResolverService } from './application/services/pdf-renderer-resolver.service';
@@ -49,6 +52,9 @@ import { KeyGroupProviderModule } from './key-group-provider.module';
     ListKeyGroupsUseCase,
     GetKeyGroupDetailsUseCase,
     UpdateKeyGroupUseCase,
+    SetKeyGroupPodiumUseCase,
+    CategoryPodiumService,
+    KeyGroupChampionService,
     GenerateFightsForKeyGroupUseCase,
     LockKeyGroupUseCase,
     ExportCompetitionBracketsPdfUseCase,

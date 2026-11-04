@@ -4,7 +4,10 @@ import { IAthleteRepository } from '@/domain/athlete/repository/IAthleteReposito
 import { Category } from '@/domain/category/domain/entities/category.entity';
 import { ICategoryRepository } from '@/domain/category/repository/ICategoryRepository.repository';
 import { ICompetitionRepository } from '@/domain/competition/repository/ICompetitionRepository.repository';
-import { CategoryPodiumService } from '@/domain/fight/application/services/category-podium.service';
+import {
+  CategoryPodiumService,
+  Podium,
+} from '@/domain/fight/application/services/category-podium.service';
 import { FightEntity } from '@/domain/fight/domain/entities/fight.entity';
 import { IFightRepository } from '@/domain/fight/repository/IFightRepository.repository';
 import { IKeyGroupRepository } from '@/domain/key-group/repository/IKeyGroupRepository.repository';
@@ -32,6 +35,16 @@ type ResultSource = Pick<
   | 'weightDivision'
   | 'totalAthletes'
 >;
+
+type ManualPodium = {
+  firstAthleteId: number | null;
+  secondAthleteId: number | null;
+};
+
+const NO_MANUAL_PODIUM: ManualPodium = {
+  firstAthleteId: null,
+  secondAthleteId: null,
+};
 
 @Injectable()
 export class CompetitionResultsUseCase {
@@ -90,6 +103,7 @@ export class CompetitionResultsUseCase {
       .map((category) => ({
         source: this.categorySource(category),
         fights: fightsByCategoryId.get(category.id as number) ?? [],
+        manual: NO_MANUAL_PODIUM,
       }));
     // Chave nao tem faixa propria (mistura faixas); o filtro de faixa a exclui,
     // como ja faz o relatorio de academias campeas.
@@ -107,15 +121,32 @@ export class CompetitionResultsUseCase {
               totalAthletes: keyGroup.membersCount,
             },
             fights: fightsByKeyGroupId.get(keyGroup.id) ?? [],
+            manual: {
+              firstAthleteId: keyGroup.manualFirstAthleteId,
+              secondAthleteId: keyGroup.manualSecondAthleteId,
+            },
           }));
 
-    // Categoria ou chave sem luta nao tem podio; nem entra na listagem.
+    // Categoria ou chave sem luta nao tem podio; nem entra na listagem — a
+    // nao ser que a mesa tenha marcado o podio da chave a mao.
     const podiums = [...categorySources, ...keyGroupSources]
-      .filter(({ fights }) => fights.length > 0)
-      .map(({ source, fights }) => ({
-        source,
-        podiums: this.categoryPodiumService.resolveAll(fights),
-      }))
+      .filter(
+        ({ fights, manual }) =>
+          fights.length > 0 ||
+          manual.firstAthleteId !== null ||
+          manual.secondAthleteId !== null,
+      )
+      .map(({ source, fights, manual }) => {
+        const resolved = this.categoryPodiumService.resolveAll(fights);
+
+        return {
+          source,
+          podiums: {
+            ...resolved,
+            main: this.applyManualPodium(resolved.main, manual),
+          },
+        };
+      })
       .filter(({ podiums }) =>
         input.onlyDecided ? podiums.main.decided : true,
       );
@@ -205,6 +236,27 @@ export class CompetitionResultsUseCase {
       totalCategories: categoryResults.length,
       decidedCategories: categoryResults.filter((item) => item.decided).length,
       categories: categoryResults,
+    };
+  }
+
+  /** O que a mesa marcou a mao vale mais que o resultado das lutas. */
+  private applyManualPodium(podium: Podium, manual: ManualPodium): Podium {
+    if (manual.firstAthleteId === null && manual.secondAthleteId === null) {
+      return podium;
+    }
+
+    const firstAthleteId = manual.firstAthleteId ?? podium.firstAthleteId;
+    const secondAthleteId = manual.secondAthleteId ?? podium.secondAthleteId;
+
+    return {
+      firstAthleteId,
+      secondAthleteId:
+        secondAthleteId === firstAthleteId ? null : secondAthleteId,
+      thirdAthleteIds: podium.thirdAthleteIds.filter(
+        (athleteId) =>
+          athleteId !== firstAthleteId && athleteId !== secondAthleteId,
+      ),
+      decided: podium.decided || manual.firstAthleteId !== null,
     };
   }
 

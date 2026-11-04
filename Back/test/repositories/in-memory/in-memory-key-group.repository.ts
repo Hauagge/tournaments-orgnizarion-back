@@ -76,6 +76,8 @@ export class InMemoryKeyGroupRepository implements IKeyGroupRepository {
         competitionId: group.competitionId,
         categoryId: group.categoryId,
         championAthleteId: group.championAthleteId,
+        manualFirstAthleteId: group.manualFirstAthleteId,
+        manualSecondAthleteId: group.manualSecondAthleteId,
         name: group.name,
         status: group.status,
         createdAt: group.createdAt,
@@ -102,6 +104,8 @@ export class InMemoryKeyGroupRepository implements IKeyGroupRepository {
       name: group.name,
       status: group.status,
       createdAt: group.createdAt,
+      manualFirstAthleteId: group.manualFirstAthleteId,
+      manualSecondAthleteId: group.manualSecondAthleteId,
       members: this.members
         .filter((member) => member.keyGroupId === id)
         .map((member) => ({

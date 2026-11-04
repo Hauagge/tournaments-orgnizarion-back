@@ -12,6 +12,8 @@ export type KeyGroupListItemView = {
   createdAt: Date;
   membersCount: number;
   championAthleteId: number | null;
+  manualFirstAthleteId: number | null;
+  manualSecondAthleteId: number | null;
 };
 
 export type KeyGroupDetailsAthleteView = {
@@ -85,6 +87,8 @@ export type KeyGroupDetailsView = {
   name: string | null;
   status: string;
   createdAt: Date;
+  manualFirstAthleteId: number | null;
+  manualSecondAthleteId: number | null;
   members: KeyGroupDetailsAthleteView[];
   fights: KeyGroupDetailsFightView[];
 };

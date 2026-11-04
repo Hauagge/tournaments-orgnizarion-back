@@ -343,6 +343,55 @@ describe('CompetitionResultsUseCase', () => {
       expect(chave.totalAthletes).toBe(4);
     });
 
+    it('uses the manually marked first and second over the fights result', async () => {
+      const { useCase } = setup(
+        keysBracketOfFour(5),
+        [
+          makeKeyGroup(5, null).setManualPodium({
+            firstAthleteId: 3,
+            secondAthleteId: 2,
+            championAthleteId: 3,
+          }),
+        ],
+        membersOf(5, [1, 2, 3, 4]),
+      );
+
+      const [chave] = (await useCase.execute({ competitionId: 1 })).categories;
+
+      expect(chave.first?.athleteId).toBe(3);
+      expect(chave.second?.athleteId).toBe(2);
+      // Quem foi marcado a mao sai da lista de terceiros.
+      expect(chave.thirds.map((athlete) => athlete.athleteId)).toEqual([4]);
+    });
+
+    it('lists a key group marked by hand even without fights, as decided', async () => {
+      const { useCase } = setup(
+        [],
+        [
+          makeKeyGroup(5, 'Chave Leve').setManualPodium({
+            firstAthleteId: 1,
+            secondAthleteId: 2,
+            championAthleteId: 1,
+          }),
+        ],
+        membersOf(5, [1, 2]),
+      );
+
+      const report = await useCase.execute({
+        competitionId: 1,
+        onlyDecided: true,
+      });
+
+      expect(report.categories).toHaveLength(1);
+      expect(report.categories[0]).toMatchObject({
+        keyGroupId: 5,
+        decided: true,
+        first: { athleteId: 1 },
+        second: { athleteId: 2 },
+        thirds: [],
+      });
+    });
+
     it('leaves key groups out when filtering by belt, like the academies report', async () => {
       const { useCase } = setup(keysBracketOfFour(5), [makeKeyGroup(5, null)]);
 
